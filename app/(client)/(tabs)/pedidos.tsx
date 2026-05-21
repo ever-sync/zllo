@@ -35,7 +35,7 @@ export default function Pedidos() {
     if (!session) return;
     const { data, error } = await supabase
       .from('repair_requests')
-      .select('id, description, status, created_at, device:devices(brand, model, nickname), quotes(count)')
+      .select('id, description, status, created_at, device:devices(brand, model, nickname), quotes!quotes_request_id_fkey(count)')
       .order('created_at', { ascending: false });
     if (error) {
       setLoadError(true);

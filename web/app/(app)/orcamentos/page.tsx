@@ -31,7 +31,7 @@ export default async function OrcamentosPage() {
 
   const { data } = await supabase
     .from('quotes')
-    .select('id, value, description, status, created_at, request:repair_requests(description, device:devices(brand, model, nickname))')
+    .select('id, value, description, status, created_at, request:repair_requests!quotes_request_id_fkey(description, device:devices(brand, model, nickname))')
     .eq('shop_id', shop.id)
     .order('created_at', { ascending: false });
   const quotes = (data as unknown as Quote[]) ?? [];
