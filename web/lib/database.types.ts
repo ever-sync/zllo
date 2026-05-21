@@ -266,41 +266,121 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          photos: string[]
+          price: number
+          shop_id: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          photos?: string[]
+          price: number
+          shop_id: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          photos?: string[]
+          price?: number
+          shop_id?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           asaas_customer_id: string | null
           avatar_url: string | null
+          cep: string | null
+          city: string | null
+          complement: string | null
           cpf: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          lgpd_accepted_at: string | null
+          lgpd_version: string | null
+          location: unknown
+          neighborhood: string | null
+          number: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          street: string | null
+          uf: string | null
           updated_at: string
         }
         Insert: {
           asaas_customer_id?: string | null
           avatar_url?: string | null
+          cep?: string | null
+          city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          lgpd_accepted_at?: string | null
+          lgpd_version?: string | null
+          location?: unknown
+          neighborhood?: string | null
+          number?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          street?: string | null
+          uf?: string | null
           updated_at?: string
         }
         Update: {
           asaas_customer_id?: string | null
           avatar_url?: string | null
+          cep?: string | null
+          city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          lgpd_accepted_at?: string | null
+          lgpd_version?: string | null
+          location?: unknown
+          neighborhood?: string | null
+          number?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          street?: string | null
+          uf?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -759,13 +839,23 @@ export type Database = {
         Returns: {
           asaas_customer_id: string | null
           avatar_url: string | null
+          cep: string | null
+          city: string | null
+          complement: string | null
           cpf: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          lgpd_accepted_at: string | null
+          lgpd_version: string | null
+          location: unknown
+          neighborhood: string | null
+          number: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          street: string | null
+          uf: string | null
           updated_at: string
         }
         SetofOptions: {
@@ -803,6 +893,10 @@ export type Database = {
       }
       register_push_token: {
         Args: { p_platform?: string; p_token: string }
+        Returns: undefined
+      }
+      set_my_location: {
+        Args: { p_lat: number; p_lng: number }
         Returns: undefined
       }
       set_my_wallet: { Args: { p_wallet_id: string }; Returns: undefined }

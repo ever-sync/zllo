@@ -8,6 +8,7 @@ type NavItem = { label: string; href: string; soon?: boolean };
 
 const NAV: NavItem[] = [
   { label: 'Operação', href: '/operacao' },
+  { label: 'Produtos', href: '/produtos' },
   { label: 'Orçamentos', href: '/orcamentos', soon: true },
   { label: 'Ordens', href: '/ordens', soon: true },
   { label: 'Chat', href: '/chat', soon: true },
