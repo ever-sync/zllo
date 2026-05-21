@@ -21,6 +21,13 @@ export default function ClientTabs() {
         }}
       />
       <Tabs.Screen
+        name="loja"
+        options={{
+          title: 'Loja',
+          tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="aparelhos"
         options={{
           title: 'Aparelhos',

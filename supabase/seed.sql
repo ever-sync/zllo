@@ -69,3 +69,15 @@ begin
   values (cid, 'Meu iPhone', 'Apple', 'iPhone 13 Pro', '128 GB', 'Grafite')
   on conflict do nothing;
 end $$;
+
+-- ---------- Produtos de exemplo no marketplace (lojas do seed) ----------
+insert into public.products (shop_id, name, description, category, price, stock, is_active)
+select s.id, p.name, p.description, p.category, p.price, p.stock, true
+from (values
+  ('Reparo Smart', 'Película 3D iPhone 13', 'Vidro temperado com borda preta. Cobertura total.', 'Película', 29.90, 50),
+  ('Reparo Smart', 'Carregador Turbo 20W USB-C', 'Carregamento rápido, compatível com iPhone e Android.', 'Carregador', 89.00, 15),
+  ('Tech Reparos', 'Capinha Anti-impacto', 'Proteção militar, transparente, não amarela.', 'Capinha', 49.90, 30),
+  ('iFix SP', 'Bateria iPhone 11 (kit)', 'Bateria + ferramentas + adesivo. Instalação à parte.', 'Bateria', 119.90, 8)
+) as p(shop, name, description, category, price, stock)
+join public.shops s on s.name = p.shop
+on conflict do nothing;
