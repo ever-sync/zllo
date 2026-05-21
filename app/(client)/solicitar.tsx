@@ -7,7 +7,8 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { useAuth } from '@/lib/auth';
+import { useAuth, type Profile } from '@/lib/auth';
+import { geocodeCEP } from '@/lib/geocode';
 import { pickImage } from '@/lib/pick-image';
 import { uploadPhoto } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +16,16 @@ import { colors, fonts, radius } from '@/theme';
 import type { Device } from './(tabs)/aparelhos';
 
 type Shipping = 'levar_local' | 'frete';
+type LocSource = 'cadastrado' | 'atual';
 const FALLBACK = { lat: -23.5614, lng: -46.6559 }; // Av. Paulista, SP (combina com o seed)
+
+/** Endereço cadastrado em uma linha legível, ou null se incompleto. */
+function formatAddress(p: Profile | null): string | null {
+  if (!p?.street || !p?.city) return null;
+  const linha1 = [p.street, p.number].filter(Boolean).join(', ');
+  const local = p.uf ? `${p.city}/${p.uf}` : p.city;
+  return [linha1, p.complement, p.neighborhood, local].filter(Boolean).join(' · ');
+}
 
 async function getCoords(): Promise<{ lat: number; lng: number; approx: boolean }> {
   try {
@@ -32,14 +42,19 @@ async function getCoords(): Promise<{ lat: number; lng: number; approx: boolean 
 
 export default function Solicitar() {
   const router = useRouter();
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<{ uri: string; base64: string }[]>([]);
   const [shipping, setShipping] = useState<Shipping>('levar_local');
+  const [locSource, setLocSource] = useState<LocSource>('cadastrado');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const savedAddress = formatAddress(profile);
+  const hasAddress = !!(savedAddress && profile?.cep);
+  const source: LocSource = hasAddress ? locSource : 'atual';
 
   const loadDevices = useCallback(async () => {
     if (!session) return;
@@ -78,7 +93,28 @@ export default function Solicitar() {
 
     setLoading(true);
     try {
-      const coords = await getCoords();
+      let lat: number;
+      let lng: number;
+      let address: string | null = null;
+
+      if (source === 'cadastrado') {
+        // Geocodifica o endereço cadastrado (por CEP) e reaproveita no perfil.
+        const geo = await geocodeCEP(profile!.cep!);
+        if (!geo) {
+          setError('Não consegui localizar seu endereço cadastrado. Use "Localização atual".');
+          setLoading(false);
+          return;
+        }
+        lat = geo.lat;
+        lng = geo.lng;
+        address = savedAddress;
+        await supabase.rpc('set_my_location', { p_lat: lat, p_lng: lng });
+      } else {
+        const gps = await getCoords();
+        lat = gps.lat;
+        lng = gps.lng;
+      }
+
       const urls: string[] = [];
       for (const p of photos) {
         urls.push(await uploadPhoto({ base64: p.base64, userId: session.user.id, folder: 'requests' }));
@@ -88,9 +124,9 @@ export default function Solicitar() {
         p_description: description.trim(),
         p_photos: urls,
         p_shipping_type: shipping,
-        p_lat: coords.lat,
-        p_lng: coords.lng,
-        p_address: null,
+        p_lat: lat,
+        p_lng: lng,
+        p_address: address,
       });
       if (rpcErr) throw rpcErr;
 
@@ -171,6 +207,20 @@ export default function Solicitar() {
         <ShipOption icon="bicycle-outline" label="Pago frete" active={shipping === 'frete'} onPress={() => setShipping('frete')} />
       </View>
 
+      {/* Localização (para encontrar assistências perto) */}
+      {hasAddress ? (
+        <>
+          <Text style={[styles.label, { marginTop: 20 }]}>De onde buscar assistências?</Text>
+          <View style={styles.shipRow}>
+            <ShipOption icon="home-outline" label="Meu endereço" active={source === 'cadastrado'} onPress={() => setLocSource('cadastrado')} />
+            <ShipOption icon="locate-outline" label="Localização atual" active={source === 'atual'} onPress={() => setLocSource('atual')} />
+          </View>
+          <Text style={styles.locHint}>
+            {source === 'cadastrado' ? savedAddress : 'Vamos usar o GPS do aparelho.'}
+          </Text>
+        </>
+      ) : null}
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Button
@@ -180,7 +230,7 @@ export default function Solicitar() {
         disabled={!deviceId}
         style={{ marginTop: 22 }}
       />
-      <Text style={styles.note}>Sua solicitação vai para assistências num raio de 10 km.</Text>
+      <Text style={styles.note}>Sua solicitação vai para as assistências próximas de você.</Text>
     </Screen>
   );
 }
@@ -277,6 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   shipText: { fontFamily: fonts.bodyBold, fontSize: 13 },
+  locHint: { fontFamily: fonts.body, fontSize: 12.5, color: colors.gray600, marginTop: 8 },
   error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 14 },
   note: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, textAlign: 'center', marginTop: 10 },
 });
