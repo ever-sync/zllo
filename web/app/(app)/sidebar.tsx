@@ -10,11 +10,11 @@ const NAV: NavItem[] = [
   { label: 'Operação', href: '/operacao' },
   { label: 'Produtos', href: '/produtos' },
   { label: 'Pedidos', href: '/pedidos' },
-  { label: 'Orçamentos', href: '/orcamentos', soon: true },
-  { label: 'Ordens', href: '/ordens', soon: true },
-  { label: 'Chat', href: '/chat', soon: true },
-  { label: 'Financeiro', href: '/financeiro', soon: true },
-  { label: 'Configurações', href: '/configuracoes', soon: true },
+  { label: 'Orçamentos', href: '/orcamentos' },
+  { label: 'Ordens', href: '/ordens' },
+  { label: 'Chat', href: '/chat' },
+  { label: 'Financeiro', href: '/financeiro' },
+  { label: 'Configurações', href: '/configuracoes' },
 ];
 
 export function Sidebar({ shopName, isOnline }: { shopName: string; isOnline: boolean }) {
