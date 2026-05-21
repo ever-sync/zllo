@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
+import { useCart } from '@/lib/cart';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -27,6 +28,8 @@ const PHOTO_W = Dimensions.get('window').width - 40;
 
 export default function ProdutoDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { add, replaceWith } = useCart();
   const [p, setP] = useState<Detail | null | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
 
@@ -74,8 +77,37 @@ export default function ProdutoDetail() {
   }
 
   const outOfStock = p.stock <= 0;
-  const onBuy = () =>
-    Alert.alert('Em breve', 'O carrinho e o pagamento via Pix chegam na próxima fase.');
+
+  const confirmAdded = () =>
+    Alert.alert('Adicionado ✓', `${p.name} foi para o carrinho.`, [
+      { text: 'Continuar comprando' },
+      { text: 'Ver carrinho', onPress: () => router.push('/(client)/carrinho') },
+    ]);
+
+  const onBuy = () => {
+    const item = { product_id: p.id, name: p.name, price: p.price, photo: p.photos?.[0] ?? null };
+    const shopName = p.shop?.name ?? 'Loja';
+    const res = add(p.shop_id, shopName, item);
+    if (res === 'other_shop') {
+      Alert.alert(
+        'Carrinho de outra loja',
+        'Seu carrinho tem itens de outra assistência. Limpar e começar um novo com este produto?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Limpar e adicionar',
+            style: 'destructive',
+            onPress: () => {
+              replaceWith(p.shop_id, shopName, item);
+              confirmAdded();
+            },
+          },
+        ],
+      );
+      return;
+    }
+    confirmAdded();
+  };
 
   return (
     <Screen>

@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
+import { useCart } from '@/lib/cart';
 import { geocodeCEP } from '@/lib/geocode';
 import { CATEGORIES, distanceLabel, priceBRL, type BrowseProduct } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +15,7 @@ import { colors, fonts, radius } from '@/theme';
 export default function Loja() {
   const router = useRouter();
   const { profile } = useAuth();
+  const { count } = useCart();
   const [rows, setRows] = useState<BrowseProduct[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [q, setQ] = useState('');
@@ -56,8 +58,20 @@ export default function Loja() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Loja</Text>
-      <Text style={styles.sub}>Produtos das assistências perto de você</Text>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Loja</Text>
+          <Text style={styles.sub}>Produtos das assistências perto de você</Text>
+        </View>
+        <Pressable style={styles.cartBtn} onPress={() => router.push('/(client)/carrinho')} hitSlop={8}>
+          <Ionicons name="cart-outline" size={24} color={colors.ink} />
+          {count > 0 ? (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{count}</Text>
+            </View>
+          ) : null}
+        </Pressable>
+      </View>
 
       <View style={styles.search}>
         <Ionicons name="search-outline" size={18} color={colors.gray400} />
@@ -139,8 +153,23 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 }
 
 const styles = StyleSheet.create({
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   title: { fontFamily: fonts.headBlack, fontSize: 26, color: colors.ink, letterSpacing: -0.5 },
   sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
+  cartBtn: { padding: 4 },
+  cartBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBadgeText: { fontFamily: fonts.headBold, fontSize: 10, color: colors.white },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
