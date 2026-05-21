@@ -266,6 +266,120 @@ export type Database = {
           },
         ]
       }
+      product_order_items: {
+        Row: {
+          id: string
+          name: string
+          order_id: string
+          product_id: string | null
+          qty: number
+          subtotal: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          name: string
+          order_id: string
+          product_id?: string | null
+          qty: number
+          subtotal: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          name?: string
+          order_id?: string
+          product_id?: string | null
+          qty?: number
+          subtotal?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "product_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_orders: {
+        Row: {
+          address: string | null
+          client_id: string
+          commission: number | null
+          created_at: string
+          id: string
+          paid_at: string | null
+          pix_payload: string | null
+          pix_qr: string | null
+          provider_payment_id: string | null
+          shipping_type: Database["public"]["Enums"]["product_shipping"]
+          shop_amount: number | null
+          shop_id: string
+          status: Database["public"]["Enums"]["product_order_status"]
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          client_id: string
+          commission?: number | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          pix_payload?: string | null
+          pix_qr?: string | null
+          provider_payment_id?: string | null
+          shipping_type?: Database["public"]["Enums"]["product_shipping"]
+          shop_amount?: number | null
+          shop_id: string
+          status?: Database["public"]["Enums"]["product_order_status"]
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          client_id?: string
+          commission?: number | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          pix_payload?: string | null
+          pix_qr?: string | null
+          provider_payment_id?: string | null
+          shipping_type?: Database["public"]["Enums"]["product_shipping"]
+          shop_amount?: number | null
+          shop_id?: string
+          status?: Database["public"]["Enums"]["product_order_status"]
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -814,6 +928,13 @@ export type Database = {
     }
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string }
+      advance_product_order: {
+        Args: {
+          p_order_id: string
+          p_status: Database["public"]["Enums"]["product_order_status"]
+        }
+        Returns: undefined
+      }
       advance_service_order: {
         Args: {
           p_note?: string
@@ -821,6 +942,36 @@ export type Database = {
           p_status: Database["public"]["Enums"]["service_order_status"]
         }
         Returns: undefined
+      }
+      browse_products: {
+        Args: {
+          p_category?: string
+          p_lat?: number
+          p_lng?: number
+          p_search?: string
+        }
+        Returns: {
+          category: string
+          description: string
+          distance_m: number
+          id: string
+          name: string
+          photos: string[]
+          price: number
+          shop_id: string
+          shop_name: string
+          stock: number
+        }[]
+      }
+      cancel_product_order: { Args: { p_order_id: string }; Returns: undefined }
+      create_product_order: {
+        Args: {
+          p_address?: string
+          p_items: Json
+          p_shipping_type: string
+          p_shop_id: string
+        }
+        Returns: string
       }
       create_repair_request: {
         Args: {
@@ -915,6 +1066,14 @@ export type Database = {
     }
     Enums: {
       payment_status: "pendente" | "pago" | "cancelado" | "estornado"
+      product_order_status:
+        | "aguardando_pagamento"
+        | "pago"
+        | "separando"
+        | "pronto"
+        | "concluido"
+        | "cancelado"
+      product_shipping: "retirada" | "entrega"
       quote_status: "enviado" | "aceito" | "recusado" | "expirado"
       request_status: "aberta" | "fechada" | "cancelada" | "expirada"
       service_order_status:
@@ -1066,6 +1225,15 @@ export const Constants = {
   public: {
     Enums: {
       payment_status: ["pendente", "pago", "cancelado", "estornado"],
+      product_order_status: [
+        "aguardando_pagamento",
+        "pago",
+        "separando",
+        "pronto",
+        "concluido",
+        "cancelado",
+      ],
+      product_shipping: ["retirada", "entrega"],
       quote_status: ["enviado", "aceito", "recusado", "expirado"],
       request_status: ["aberta", "fechada", "cancelada", "expirada"],
       service_order_status: [
