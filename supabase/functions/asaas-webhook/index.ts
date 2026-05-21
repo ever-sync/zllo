@@ -20,12 +20,22 @@ Deno.serve(async (req) => {
     );
 
     if (event === 'PAYMENT_RECEIVED' || event === 'PAYMENT_CONFIRMED') {
+      const paidAt = new Date().toISOString();
+      // reparo (service_orders → payments)
       await admin
         .from('payments')
-        .update({ status: 'pago', paid_at: new Date().toISOString() })
+        .update({ status: 'pago', paid_at: paidAt })
         .eq('provider_payment_id', providerId);
+      // marketplace (product_orders); o guard de status mantém idempotência e
+      // dispara a baixa de estoque só na transição para 'pago'.
+      await admin
+        .from('product_orders')
+        .update({ status: 'pago', paid_at: paidAt })
+        .eq('provider_payment_id', providerId)
+        .eq('status', 'aguardando_pagamento');
     } else if (event === 'PAYMENT_REFUNDED') {
       await admin.from('payments').update({ status: 'estornado' }).eq('provider_payment_id', providerId);
+      await admin.from('product_orders').update({ status: 'cancelado' }).eq('provider_payment_id', providerId);
     }
 
     return new Response('ok', { status: 200 });
