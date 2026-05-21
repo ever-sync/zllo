@@ -34,8 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       return;
     }
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-    setProfile((data as Profile) ?? null);
+    // RPC security definer: o dono lê o próprio perfil completo (inclui CPF/
+    // telefone/email), que ficam fora do alcance de SELECT direto das contrapartes.
+    const { data } = await supabase.rpc('get_my_profile');
+    const row = Array.isArray(data) ? data[0] : data;
+    setProfile((row as Profile) ?? null);
   };
 
   useEffect(() => {
