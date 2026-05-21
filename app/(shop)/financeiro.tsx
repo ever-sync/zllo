@@ -8,31 +8,37 @@ import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
-type Order = { id: string; status: string; value: number; created_at: string; device: { brand: string | null; model: string | null } | null };
+type Payment = {
+  id: string;
+  amount: number;
+  commission: number;
+  shop_amount: number;
+  status: 'pendente' | 'pago' | 'cancelado' | 'estornado';
+  created_at: string;
+  order: { device: { brand: string | null; model: string | null } | null } | null;
+};
 const brl = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Financeiro() {
   const { shop } = useShop();
-  const [orders, setOrders] = useState<Order[] | null>(null);
+  const [payments, setPayments] = useState<Payment[] | null>(null);
 
   const load = useCallback(async () => {
     if (!shop) return;
     const { data } = await supabase
-      .from('service_orders')
-      .select('id, status, value, created_at, device:devices(brand, model)')
+      .from('payments')
+      .select('id, amount, commission, shop_amount, status, created_at, order:service_orders(device:devices(brand, model))')
       .eq('shop_id', shop.id)
       .order('created_at', { ascending: false });
-    setOrders((data as unknown as Order[]) ?? []);
+    setPayments((data as unknown as Payment[]) ?? []);
   }, [shop]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const all = orders ?? [];
-  const done = all.filter((o) => o.status === 'concluida');
-  const inProg = all.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada');
-  const available = done.reduce((s, o) => s + Number(o.value) * 0.97, 0);
-  const pending = inProg.reduce((s, o) => s + Number(o.value) * 0.97, 0);
-  const month = all.reduce((s, o) => s + Number(o.value), 0);
+  const all = payments ?? [];
+  const available = all.filter((p) => p.status === 'pago').reduce((s, p) => s + Number(p.shop_amount), 0);
+  const pending = all.filter((p) => p.status === 'pendente').reduce((s, p) => s + Number(p.shop_amount), 0);
+  const month = all.filter((p) => p.status === 'pago').reduce((s, p) => s + Number(p.amount), 0);
 
   return (
     <Screen>
@@ -57,26 +63,26 @@ export default function Financeiro() {
 
       <Card>
         <Text style={styles.section}>Histórico de transações</Text>
-        {orders === null ? (
+        {payments === null ? (
           <ActivityIndicator color={colors.blue} style={{ marginVertical: 20 }} />
         ) : all.length === 0 ? (
-          <Text style={styles.muted}>Nenhuma transação ainda.</Text>
+          <Text style={styles.muted}>Nenhuma transação ainda. Os pagamentos aparecem aqui quando o cliente paga.</Text>
         ) : (
-          all.map((o) => {
-            const dev = o.device;
+          all.map((p) => {
+            const dev = p.order?.device;
             const name = `${dev?.brand ?? ''} ${dev?.model ?? ''}`.trim() || 'Reparo';
-            const paid = o.status === 'concluida';
-            const commission = Number(o.value) * 0.03;
+            const paid = p.status === 'pago';
+            const tone = paid ? { bg: colors.greenBg, fg: colors.greenText } : p.status === 'pendente' ? { bg: colors.amberBg, fg: colors.amberText } : { bg: colors.gray100, fg: colors.gray600 };
             return (
-              <View key={o.id} style={styles.tx}>
+              <View key={p.id} style={styles.tx}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.txName}>{name}</Text>
-                  <Text style={styles.txSub}>Comissão {brl(commission)}</Text>
+                  <Text style={styles.txSub}>Comissão {brl(Number(p.commission))}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.txValue}>{brl(Number(o.value) - commission)}</Text>
-                  <View style={[styles.txBadge, { backgroundColor: paid ? colors.greenBg : colors.amberBg }]}>
-                    <Text style={[styles.txBadgeText, { color: paid ? colors.greenText : colors.amberText }]}>{paid ? 'pago' : 'pendente'}</Text>
+                  <Text style={styles.txValue}>{brl(Number(p.shop_amount))}</Text>
+                  <View style={[styles.txBadge, { backgroundColor: tone.bg }]}>
+                    <Text style={[styles.txBadgeText, { color: tone.fg }]}>{p.status}</Text>
                   </View>
                 </View>
               </View>

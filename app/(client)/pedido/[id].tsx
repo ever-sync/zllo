@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
@@ -32,6 +34,8 @@ type Order = { id: string; status: string; value: number; shop_id: string; shop:
 
 type Review = { id: string; rating: number; comment: string | null };
 
+type Payment = { id: string; status: 'pendente' | 'pago' | 'cancelado' | 'estornado'; amount: number };
+
 function fmt(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -51,6 +55,12 @@ export default function PedidoDetail() {
   const [reviewStars, setReviewStars] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [payment, setPayment] = useState<Payment | null>(null);
+  const [pix, setPix] = useState<{ payload: string; encodedImage: string } | null>(null);
+  const [payModal, setPayModal] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     if (!id || !session) return;
@@ -98,6 +108,13 @@ export default function PedidoDetail() {
         .eq('order_id', o.id)
         .maybeSingle();
       setMyReview((rev as Review) ?? null);
+
+      const { data: pay } = await supabase
+        .from('payments')
+        .select('id, status, amount')
+        .eq('order_id', o.id)
+        .maybeSingle();
+      setPayment((pay as Payment) ?? null);
     }
   }, [id, session]);
 
@@ -116,6 +133,19 @@ export default function PedidoDetail() {
       supabase.removeChannel(channel);
     };
   }, [id, load]);
+
+  // Realtime: confirmação do pagamento da OS.
+  useEffect(() => {
+    const orderId = order?.id;
+    if (!orderId) return;
+    const channel = supabase
+      .channel(`pay-${orderId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: `order_id=eq.${orderId}` }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [order?.id, load]);
 
   const onChoose = (q: Quote) => {
     Alert.alert(
@@ -167,6 +197,40 @@ export default function PedidoDetail() {
     load();
   };
 
+  const payWithPix = async () => {
+    if (!order) return;
+    setPayLoading(true);
+    setPayError(null);
+    const { data, error } = await supabase.functions.invoke('create-pix-payment', {
+      body: { order_id: order.id },
+    });
+    setPayLoading(false);
+    if (error) {
+      let msg = 'Não foi possível gerar o Pix.';
+      try {
+        const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } }).context?.json?.();
+        if (body?.error) msg = body.error;
+      } catch {
+        // mantém a mensagem genérica
+      }
+      setPayError(msg);
+      return;
+    }
+    if (data?.error) {
+      setPayError(data.error);
+      return;
+    }
+    setPix({ payload: data.payload, encodedImage: data.encodedImage });
+    setPayModal(true);
+  };
+
+  const copyPix = async () => {
+    if (!pix) return;
+    await Clipboard.setStringAsync(pix.payload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (loadError) {
     return (
       <Screen>
@@ -207,6 +271,27 @@ export default function PedidoDetail() {
             </View>
             <Text style={styles.osValue}>R$ {order.value.toLocaleString('pt-BR')}</Text>
           </View>
+
+          {payment?.status === 'pago' ? (
+            <View style={styles.paidBanner}>
+              <Ionicons name="checkmark-circle" size={18} color={colors.greenText} />
+              <Text style={styles.paidText}>Pagamento confirmado</Text>
+            </View>
+          ) : (
+            <>
+              <Pressable style={styles.payBtn} onPress={payWithPix} disabled={payLoading}>
+                {payLoading ? (
+                  <ActivityIndicator color={colors.ink} />
+                ) : (
+                  <>
+                    <Ionicons name="qr-code-outline" size={18} color={colors.ink} />
+                    <Text style={styles.payText}>Pagar com Pix</Text>
+                  </>
+                )}
+              </Pressable>
+              {payError ? <Text style={styles.payErrorText}>{payError}</Text> : null}
+            </>
+          )}
 
           <Text style={styles.section}>Acompanhamento</Text>
           <View style={styles.card}>
@@ -305,6 +390,42 @@ export default function PedidoDetail() {
           )}
         </>
       )}
+
+      <Modal visible={payModal} transparent animationType="slide" onRequestClose={() => setPayModal(false)}>
+        <View style={styles.overlay}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            {payment?.status === 'pago' ? (
+              <View style={styles.paySuccess}>
+                <Ionicons name="checkmark-circle" size={48} color={colors.greenText} />
+                <Text style={styles.sheetTitle}>Pagamento confirmado!</Text>
+                <Pressable onPress={() => setPayModal(false)} style={[styles.copyBtn, { marginTop: 16 }]}>
+                  <Text style={styles.copyText}>Fechar</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.sheetTitle}>Pague com Pix</Text>
+                <Text style={styles.sheetSub}>Escaneie o QR Code ou copie o código abaixo.</Text>
+                {pix?.encodedImage ? (
+                  <Image source={{ uri: `data:image/png;base64,${pix.encodedImage}` }} style={styles.qr} contentFit="contain" />
+                ) : null}
+                <Pressable style={styles.copyBtn} onPress={copyPix}>
+                  <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={colors.white} />
+                  <Text style={styles.copyText}>{copied ? 'Copiado!' : 'Copiar código Pix'}</Text>
+                </Pressable>
+                <View style={styles.waitRow}>
+                  <ActivityIndicator color={colors.gray400} size="small" />
+                  <Text style={styles.waitText}>Aguardando pagamento…</Text>
+                </View>
+                <Pressable onPress={() => setPayModal(false)} style={{ marginTop: 6, alignSelf: 'center' }}>
+                  <Text style={styles.closeLink}>Fechar</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -326,6 +447,23 @@ const styles = StyleSheet.create({
   chooseText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
   osChatBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.ink, borderRadius: radius.lg, paddingVertical: 14, marginTop: 16 },
   osChatText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
+  paidBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: 14, marginTop: 14 },
+  paidText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.greenText },
+  payBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.lime, borderRadius: radius.lg, paddingVertical: 14, marginTop: 14 },
+  payText: { fontFamily: fonts.headBold, fontSize: 13, color: colors.ink, textTransform: 'uppercase', letterSpacing: 0.4 },
+  payErrorText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 10 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 34, alignItems: 'center' },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.gray200, marginBottom: 14 },
+  sheetTitle: { fontFamily: fonts.headBlack, fontSize: 20, color: colors.ink, textAlign: 'center' },
+  sheetSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 4, textAlign: 'center' },
+  qr: { width: 220, height: 220, marginVertical: 18, backgroundColor: colors.white },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.ink, borderRadius: radius.lg, paddingVertical: 13, paddingHorizontal: 20, alignSelf: 'stretch' },
+  copyText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
+  waitRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
+  waitText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
+  closeLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.gray600, paddingVertical: 8 },
+  paySuccess: { alignItems: 'center', gap: 10, alignSelf: 'stretch' },
   reviewBox: { marginTop: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 16 },
   starRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   reviewInput: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 12, minHeight: 70, textAlignVertical: 'top', fontFamily: fonts.body, fontSize: 14, color: colors.ink },

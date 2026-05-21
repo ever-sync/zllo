@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,19 @@ export default function ShopSetup() {
   const [address, setAddress] = useState(shop?.address ?? '');
   const [brands, setBrands] = useState<string[]>(['Apple', 'Samsung']);
   const [radiusKm, setRadiusKm] = useState('10');
+  const [walletId, setWalletId] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // walletId é privado (não vem no contexto da loja); lê via RPC do próprio dono.
+  useEffect(() => {
+    supabase.rpc('get_my_shop').then(({ data }) => {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.asaas_wallet_id) setWalletId(row.asaas_wallet_id);
+    });
+  }, []);
 
   const toggleBrand = (b: string) =>
     setBrands((cur) => (cur.includes(b) ? cur.filter((x) => x !== b) : [...cur, b]));
@@ -65,6 +74,7 @@ export default function ShopSetup() {
         p_is_online: true,
       });
       if (rpcErr) throw rpcErr;
+      await supabase.rpc('set_my_wallet', { p_wallet_id: walletId });
       await refresh();
       router.replace('/(shop)/(tabs)');
     } catch (e) {
@@ -101,6 +111,15 @@ export default function ShopSetup() {
         </View>
 
         <TextField label="Raio de atendimento (km)" placeholder="10" keyboardType="number-pad" value={radiusKm} onChangeText={setRadiusKm} />
+
+        <TextField
+          label="Conta de recebimento (walletId Asaas)"
+          placeholder="Cole aqui o walletId da sua conta Asaas"
+          autoCapitalize="none"
+          value={walletId}
+          onChangeText={setWalletId}
+          hint="Necessário para receber os pagamentos por Pix (97% do valor; 3% é a comissão zllo)."
+        />
 
         <View>
           <Text style={styles.label}>Localização da loja</Text>
