@@ -13,6 +13,15 @@ export type Profile = {
   phone: string | null;
   email: string | null;
   avatar_url: string | null;
+  cep: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  uf: string | null;
+  lgpd_accepted_at: string | null;
+  lgpd_version: string | null;
 };
 
 type AuthState = {
