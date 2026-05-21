@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { registerPushToken } from './push';
 import { supabase } from './supabase';
 
 export type UserRole = 'cliente' | 'assistencia';
@@ -49,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       await loadProfile(data.session?.user.id);
       setLoading(false);
+      if (data.session) registerPushToken();
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!active) return;
       setSession(nextSession);
       await loadProfile(nextSession?.user.id);
+      if (event === 'SIGNED_IN') registerPushToken();
     });
 
     return () => {
