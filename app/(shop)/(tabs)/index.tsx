@@ -124,6 +124,16 @@ export default function Painel() {
         <Kpi label="Faturamento" value={`R$ ${revenue.toLocaleString('pt-BR')}`} lime />
       </View>
 
+      {/* Vendas do marketplace */}
+      <Pressable style={styles.salesCard} onPress={() => router.push('/(shop)/vendas')}>
+        <View style={styles.salesIcon}><Text style={{ fontSize: 20 }}>🛍️</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.salesTitle}>Vendas do marketplace</Text>
+          <Text style={styles.salesSub}>Pedidos de produtos · separar e entregar</Text>
+        </View>
+        <Text style={styles.salesArrow}>→</Text>
+      </Pressable>
+
       {/* Orçamentos pendentes */}
       <Card style={{ marginTop: 4 }}>
         <CardHeader title="Orçamentos pendentes" count={pending.length} actionLabel="Ver todos →" onAction={() => router.push('/(shop)/(tabs)/orcamentos')} />
@@ -255,6 +265,11 @@ const styles = StyleSheet.create({
   kpiValue: { fontFamily: fonts.headBlack, fontSize: 24, letterSpacing: -1, marginTop: 6 },
   kpiDelta: { fontFamily: fonts.bodyMedium, fontSize: 11, marginTop: 6 },
   muted: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, paddingVertical: 6 },
+  salesCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, marginBottom: 14 },
+  salesIcon: { width: 44, height: 44, borderRadius: radius.lg, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
+  salesTitle: { fontFamily: fonts.head, fontSize: 15, color: colors.ink },
+  salesSub: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, marginTop: 2 },
+  salesArrow: { fontFamily: fonts.headBold, fontSize: 18, color: colors.blue },
   rowItem: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 12, marginBottom: 8 },
   thumb: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },

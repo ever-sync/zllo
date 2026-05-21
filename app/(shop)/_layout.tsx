@@ -17,6 +17,7 @@ export default function ShopLayout() {
         <Stack.Screen name="solicitacao/[id]" />
         <Stack.Screen name="os/[id]" />
         <Stack.Screen name="conversa/[id]" />
+        <Stack.Screen name="vendas" />
         <Stack.Screen name="financeiro" />
         <Stack.Screen name="reputacao" />
         <Stack.Screen name="configuracoes" />
