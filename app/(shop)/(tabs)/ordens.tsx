@@ -57,7 +57,7 @@ export default function Ordens() {
   const finalizadasCount = all.filter((o) => o.status === 'concluida').length;
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <Text style={styles.title}>Ordens de serviço</Text>
       <Text style={styles.sub}>Reparos em andamento e histórico</Text>
 

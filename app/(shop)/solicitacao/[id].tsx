@@ -96,14 +96,14 @@ export default function SolicitacaoDetail() {
 
   if (request === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (request === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Solicitação" />
         <Text style={styles.muted}>Solicitação não encontrada ou indisponível.</Text>
       </Screen>
@@ -117,7 +117,7 @@ export default function SolicitacaoDetail() {
   const expired = t?.expired || request.status !== 'aberta';
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Solicitação" subtitle={request.client?.full_name ?? 'Cliente'} />
 
       <View style={styles.deviceHead}>

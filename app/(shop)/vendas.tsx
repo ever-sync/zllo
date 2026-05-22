@@ -101,7 +101,7 @@ export default function Vendas() {
   const list = useMemo(() => (rows ?? []).filter((o) => active.match(o.status)), [rows, active]);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Vendas" subtitle="Pedidos do marketplace" />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>

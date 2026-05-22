@@ -69,14 +69,14 @@ export default function ShopOrderDetail() {
 
   if (order === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (order === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Ordem de serviço" />
         <Text style={styles.muted}>OS não encontrada.</Text>
       </Screen>
@@ -88,7 +88,7 @@ export default function ShopOrderDetail() {
   const next = nextStep(order.status);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title={deviceName} subtitle={order.client?.full_name ?? 'Cliente'} />
 
       <View style={styles.head}>

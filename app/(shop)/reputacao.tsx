@@ -67,7 +67,7 @@ export default function Reputacao() {
 
   if (loadError) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Reputação" subtitle="Notas, ranking e avaliações" />
         <ErrorState onRetry={load} />
       </Screen>
@@ -75,7 +75,7 @@ export default function Reputacao() {
   }
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Reputação" subtitle="Notas, ranking e avaliações" />
 
       <Card style={{ backgroundColor: colors.ink, marginBottom: 14 }}>

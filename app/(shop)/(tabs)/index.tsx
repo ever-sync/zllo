@@ -76,9 +76,9 @@ export default function Painel() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading) return <Screen scroll={false}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+  if (loading) return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
   if (!shop) return <Redirect href="/(shop)/setup" />;
-  if (loadError) return <Screen scroll={false}><ErrorState onRetry={load} /></Screen>;
+  if (loadError) return <Screen scroll={false} background={colors.canvas}><ErrorState onRetry={load} /></Screen>;
 
   const pending = targets.filter((t) => t.request && t.request.status === 'aberta');
   const orcou = targets.filter((t) => t.status === 'orcou').length;
@@ -91,7 +91,7 @@ export default function Painel() {
   const weekMax = Math.max(...week.map((b) => b.total), 1);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       {/* Saudação + online */}
       <View style={styles.greetRow}>
         <View style={{ flex: 1 }}>

@@ -13,7 +13,7 @@ const SECTIONS = [
 
 export default function Configuracoes() {
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Configurações" subtitle="Preferências e conta" />
       {SECTIONS.map((sec) => (
         <Card key={sec.title} style={{ marginBottom: 12 }}>

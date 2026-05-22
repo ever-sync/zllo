@@ -41,7 +41,7 @@ export default function Financeiro() {
   const month = all.filter((p) => p.status === 'pago').reduce((s, p) => s + Number(p.amount), 0);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Financeiro" subtitle="Saldo e histórico" />
 
       <Card style={{ backgroundColor: colors.lime, marginBottom: 12 }}>

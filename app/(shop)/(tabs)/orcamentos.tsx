@@ -62,14 +62,14 @@ export default function Orcamentos() {
   }, [shop, load]);
 
   if (loading) {
-    return <Screen scroll={false}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+    return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
   }
   if (!shop) return <Redirect href="/(shop)/setup" />;
 
   const active = (items ?? []).filter((it) => it.request && it.request.status === 'aberta');
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <Text style={styles.title}>Orçamentos</Text>
       <Text style={styles.sub}>Solicitações esperando sua resposta</Text>
 

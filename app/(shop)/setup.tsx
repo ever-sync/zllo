@@ -85,7 +85,7 @@ export default function ShopSetup() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title={shop ? 'Editar loja' : 'Configurar loja'} subtitle="Para receber solicitações por perto" />
 
       <View style={{ gap: 13 }}>

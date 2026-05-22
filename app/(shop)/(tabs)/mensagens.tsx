@@ -42,13 +42,13 @@ export default function Mensagens() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading) return <Screen scroll={false}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+  if (loading) return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
   if (!shop) return <Redirect href="/(shop)/setup" />;
 
   const convos = (items ?? []).filter((c) => c.request);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <Text style={styles.title}>Mensagens</Text>
       <Text style={styles.sub}>Converse com seus clientes</Text>
 
