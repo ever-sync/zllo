@@ -43,11 +43,11 @@ export default function ClientHome() {
 
     const { count: ativos } = await supabase
       .from('repair_requests')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .in('status', ['aberta', 'fechada']);
     const { count: aparelhos } = await supabase
       .from('devices')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
     setStats({ ativos: ativos ?? 0, aparelhos: aparelhos ?? 0 });
   }, []);
 
