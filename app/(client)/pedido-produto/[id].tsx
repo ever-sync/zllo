@@ -3,7 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -23,6 +23,15 @@ type Order = {
   paid_at: string | null;
   shop: { name: string } | null;
   items: OrderItem[];
+};
+type Dispute = { id: string; status: string; reason: string; resolution: string | null };
+
+const DISPUTE_LABEL: Record<string, string> = {
+  aberta: 'Disputa aberta',
+  em_analise: 'Disputa em análise',
+  resolvida: 'Disputa resolvida',
+  recusada: 'Disputa recusada',
+  cancelada: 'Disputa cancelada',
 };
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -45,6 +54,10 @@ export default function PedidoProduto() {
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [dispute, setDispute] = useState<Dispute | null>(null);
+  const [showDispute, setShowDispute] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeBusy, setDisputeBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -61,6 +74,14 @@ export default function PedidoProduto() {
     }
     setLoadError(false);
     setOrder((data as unknown as Order) ?? null);
+
+    const { data: d } = await supabase
+      .from('disputes')
+      .select('id, status, reason, resolution')
+      .eq('product_order_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    setDispute((d?.[0] as Dispute) ?? null);
   }, [id]);
 
   useEffect(() => {
@@ -103,6 +124,28 @@ export default function PedidoProduto() {
   const st = STATUS[order.status] ?? { label: order.status, color: colors.gray600, bg: colors.gray100 };
   const isPending = order.status === 'aguardando_pagamento';
   const isPaid = order.status !== 'aguardando_pagamento' && order.status !== 'cancelado';
+  const canDispute = isPaid && (!dispute || dispute.status === 'recusada' || dispute.status === 'cancelada');
+
+  const openDispute = async () => {
+    if (disputeReason.trim().length < 5) {
+      Alert.alert('Disputa', 'Descreva o motivo com mais detalhes.');
+      return;
+    }
+    setDisputeBusy(true);
+    const { error } = await supabase.rpc('open_dispute', {
+      p_kind: 'produto',
+      p_order_id: id,
+      p_reason: disputeReason.trim(),
+    });
+    setDisputeBusy(false);
+    if (error) {
+      Alert.alert('Ops', error.message);
+      return;
+    }
+    setDisputeReason('');
+    setShowDispute(false);
+    load();
+  };
 
   const payWithPix = async () => {
     setPayLoading(true);
@@ -189,6 +232,42 @@ export default function PedidoProduto() {
         </Text>
       </View>
 
+      {dispute && dispute.status !== 'recusada' && dispute.status !== 'cancelada' ? (
+        <>
+          <Text style={styles.section}>Disputa</Text>
+          <View style={styles.box}>
+            <Text style={styles.disputeStatus}>{DISPUTE_LABEL[dispute.status] ?? dispute.status}</Text>
+            <Text style={styles.disputeReason}>“{dispute.reason}”</Text>
+            {dispute.resolution ? (
+              <Text style={styles.disputeResolution}>Resolução: {dispute.resolution}</Text>
+            ) : null}
+          </View>
+        </>
+      ) : canDispute ? (
+        showDispute ? (
+          <View style={[styles.box, { marginTop: 22, gap: 10 }]}>
+            <Text style={styles.disputeStatus}>Abrir disputa</Text>
+            <TextInput
+              value={disputeReason}
+              onChangeText={setDisputeReason}
+              placeholder="O que houve com o pedido?"
+              placeholderTextColor={colors.gray400}
+              multiline
+              style={styles.disputeInput}
+            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Button label="Enviar" onPress={openDispute} loading={disputeBusy} style={{ flex: 1 }} />
+              <Button label="Cancelar" variant="secondary" onPress={() => setShowDispute(false)} style={{ flex: 1 }} />
+            </View>
+          </View>
+        ) : (
+          <Pressable style={styles.disputeLink} onPress={() => setShowDispute(true)}>
+            <Ionicons name="alert-circle-outline" size={16} color={colors.gray600} />
+            <Text style={styles.disputeLinkText}>Tive um problema com este pedido</Text>
+          </Pressable>
+        )
+      ) : null}
+
       {isPaid ? (
         <View style={styles.paidBanner}>
           <Ionicons name="checkmark-circle" size={18} color={colors.greenText} />
@@ -274,6 +353,12 @@ const styles = StyleSheet.create({
   totalLabel: { fontFamily: fonts.headBold, fontSize: 15, color: colors.ink },
   totalValue: { fontFamily: fonts.headBlack, fontSize: 18, color: colors.blue, letterSpacing: -0.5 },
   deliveryText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  disputeStatus: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  disputeReason: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 4, fontStyle: 'italic' },
+  disputeResolution: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.greenText, marginTop: 8 },
+  disputeInput: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 12, minHeight: 64, textAlignVertical: 'top', fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  disputeLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18, paddingVertical: 8 },
+  disputeLinkText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.gray600, textDecorationLine: 'underline' },
   paidBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: 14, marginTop: 22 },
   paidText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.greenText },
   payBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.lime, borderRadius: radius.lg, paddingVertical: 14, marginTop: 22 },

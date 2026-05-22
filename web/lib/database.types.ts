@@ -104,6 +104,97 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          kind: string
+          opened_by: string
+          product_order_id: string | null
+          reason: string
+          resolution: string | null
+          resolved_by: string | null
+          service_order_id: string | null
+          shop_id: string
+          status: Database["public"]["Enums"]["dispute_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          opened_by: string
+          product_order_id?: string | null
+          reason: string
+          resolution?: string | null
+          resolved_by?: string | null
+          service_order_id?: string | null
+          shop_id: string
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          opened_by?: string
+          product_order_id?: string | null
+          reason?: string
+          resolution?: string | null
+          resolved_by?: string | null
+          service_order_id?: string | null
+          shop_id?: string
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_product_order_id_fkey"
+            columns: ["product_order_id"]
+            isOneToOne: false
+            referencedRelation: "product_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           brand: string | null
@@ -948,9 +1039,18 @@ export type Database = {
     }
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string }
+      admin_disputes: { Args: never; Returns: Json }
       admin_metrics: { Args: never; Returns: Json }
       admin_orders: { Args: never; Returns: Json }
       admin_products: { Args: never; Returns: Json }
+      admin_resolve_dispute: {
+        Args: {
+          p_id: string
+          p_resolution: string
+          p_status: Database["public"]["Enums"]["dispute_status"]
+        }
+        Returns: undefined
+      }
       admin_set_product_active: {
         Args: { p_active: boolean; p_id: string }
         Returns: undefined
@@ -1070,6 +1170,10 @@ export type Database = {
         }
       }
       is_admin: { Args: never; Returns: boolean }
+      open_dispute: {
+        Args: { p_kind: string; p_order_id: string; p_reason: string }
+        Returns: string
+      }
       register_push_token: {
         Args: { p_platform?: string; p_token: string }
         Returns: undefined
@@ -1093,6 +1197,12 @@ export type Database = {
       }
     }
     Enums: {
+      dispute_status:
+        | "aberta"
+        | "em_analise"
+        | "resolvida"
+        | "recusada"
+        | "cancelada"
       payment_status: "pendente" | "pago" | "cancelado" | "estornado"
       product_order_status:
         | "aguardando_pagamento"
@@ -1252,6 +1362,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      dispute_status: [
+        "aberta",
+        "em_analise",
+        "resolvida",
+        "recusada",
+        "cancelada",
+      ],
       payment_status: ["pendente", "pago", "cancelado", "estornado"],
       product_order_status: [
         "aguardando_pagamento",
