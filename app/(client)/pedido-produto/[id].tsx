@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
+import { useAuth } from '@/lib/auth';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -15,6 +16,7 @@ import { colors, fonts, radius } from '@/theme';
 type OrderItem = { id: string; name: string; qty: number; unit_price: number; subtotal: number };
 type Order = {
   id: string;
+  shop_id: string;
   total: number;
   status: string;
   shipping_type: 'retirada' | 'entrega';
@@ -25,6 +27,7 @@ type Order = {
   items: OrderItem[];
 };
 type Dispute = { id: string; status: string; reason: string; resolution: string | null };
+type Review = { id: string; rating: number; comment: string | null };
 
 const DISPUTE_LABEL: Record<string, string> = {
   aberta: 'Disputa aberta',
@@ -46,6 +49,7 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
 export default function PedidoProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { session } = useAuth();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -58,13 +62,17 @@ export default function PedidoProduto() {
   const [showDispute, setShowDispute] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [disputeBusy, setDisputeBusy] = useState(false);
+  const [myReview, setMyReview] = useState<Review | null>(null);
+  const [reviewStars, setReviewStars] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
     const { data, error } = await supabase
       .from('product_orders')
       .select(
-        'id, total, status, shipping_type, address, created_at, paid_at, shop:shops(name), items:product_order_items(id, name, qty, unit_price, subtotal)',
+        'id, shop_id, total, status, shipping_type, address, created_at, paid_at, shop:shops(name), items:product_order_items(id, name, qty, unit_price, subtotal)',
       )
       .eq('id', id)
       .maybeSingle();
@@ -82,6 +90,13 @@ export default function PedidoProduto() {
       .order('created_at', { ascending: false })
       .limit(1);
     setDispute((d?.[0] as Dispute) ?? null);
+
+    const { data: rev } = await supabase
+      .from('reviews')
+      .select('id, rating, comment')
+      .eq('product_order_id', id)
+      .maybeSingle();
+    setMyReview((rev as Review) ?? null);
   }, [id]);
 
   useEffect(() => {
@@ -144,6 +159,25 @@ export default function PedidoProduto() {
     }
     setDisputeReason('');
     setShowDispute(false);
+    load();
+  };
+
+  const submitReview = async () => {
+    if (!order || !session || reviewStars < 1) return;
+    setSubmittingReview(true);
+    const { error } = await supabase.from('reviews').insert({
+      product_order_id: order.id,
+      shop_id: order.shop_id,
+      client_id: session.user.id,
+      rating: reviewStars,
+      comment: reviewComment.trim() || null,
+    });
+    setSubmittingReview(false);
+    if (error) {
+      Alert.alert('Ops', error.message);
+      return;
+    }
+    setReviewComment('');
     load();
   };
 
@@ -268,6 +302,38 @@ export default function PedidoProduto() {
         )
       ) : null}
 
+      {order.status === 'concluido' ? (
+        myReview ? (
+          <View style={styles.reviewDone}>
+            <Text style={styles.reviewDoneLabel}>Sua avaliação</Text>
+            <Text style={styles.reviewDoneStars}>
+              {'★'.repeat(myReview.rating)}{'☆'.repeat(5 - myReview.rating)}
+            </Text>
+            {myReview.comment ? <Text style={styles.reviewDoneText}>{myReview.comment}</Text> : null}
+          </View>
+        ) : (
+          <View style={styles.reviewBox}>
+            <Text style={styles.reviewTitle}>Avaliar a compra</Text>
+            <View style={styles.starRow}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Pressable key={s} onPress={() => setReviewStars(s)} hitSlop={6}>
+                  <Ionicons name={s <= reviewStars ? 'star' : 'star-outline'} size={32} color={colors.amber} />
+                </Pressable>
+              ))}
+            </View>
+            <TextInput
+              value={reviewComment}
+              onChangeText={setReviewComment}
+              placeholder="Conte como foi (opcional)"
+              placeholderTextColor={colors.gray400}
+              multiline
+              style={styles.disputeInput}
+            />
+            <Button label="Enviar avaliação" onPress={submitReview} loading={submittingReview} disabled={reviewStars < 1} style={{ marginTop: 12 }} />
+          </View>
+        )
+      ) : null}
+
       {isPaid ? (
         <View style={styles.paidBanner}>
           <Ionicons name="checkmark-circle" size={18} color={colors.greenText} />
@@ -359,6 +425,13 @@ const styles = StyleSheet.create({
   disputeInput: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 12, minHeight: 64, textAlignVertical: 'top', fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   disputeLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18, paddingVertical: 8 },
   disputeLinkText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.gray600, textDecorationLine: 'underline' },
+  reviewBox: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 16, marginTop: 22 },
+  reviewTitle: { fontFamily: fonts.head, fontSize: 16, color: colors.ink, marginBottom: 12 },
+  starRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  reviewDone: { marginTop: 22, backgroundColor: colors.gray100, borderRadius: radius['2xl'], padding: 16, gap: 6 },
+  reviewDoneLabel: { fontFamily: fonts.headBold, fontSize: 11, color: colors.gray600, textTransform: 'uppercase', letterSpacing: 0.6 },
+  reviewDoneStars: { fontFamily: fonts.body, fontSize: 18, color: colors.amber },
+  reviewDoneText: { fontFamily: fonts.body, fontSize: 13.5, color: colors.gray600, lineHeight: 19 },
   paidBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: 14, marginTop: 22 },
   paidText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.greenText },
   payBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.lime, borderRadius: radius.lg, paddingVertical: 14, marginTop: 22 },
