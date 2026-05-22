@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { Timeline } from '@/components/ui/timeline';
+import { notify } from '@/lib/confirm';
 import { nextStep, statusLabel } from '@/lib/order-status';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -61,7 +62,7 @@ export default function ShopOrderDetail() {
     const { error } = await supabase.rpc('advance_service_order', { p_order_id: id, p_status: next.key, p_note: null });
     setSaving(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     load();

@@ -3,12 +3,13 @@ import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { Timeline } from '@/components/ui/timeline';
 import { useAuth } from '@/lib/auth';
+import { confirmAsync, notify } from '@/lib/confirm';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import { supabase } from '@/lib/supabase';
@@ -175,27 +176,20 @@ export default function PedidoDetail() {
     };
   }, [order?.id, load]);
 
-  const onChoose = (q: Quote) => {
-    Alert.alert(
+  const onChoose = async (q: Quote) => {
+    const ok = await confirmAsync(
       'Escolher esta assistência?',
       `${q.shop?.name ?? 'Assistência'} — R$ ${q.value.toLocaleString('pt-BR')}`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            setAccepting(q.id);
-            const { error } = await supabase.rpc('accept_quote', { p_quote_id: q.id });
-            setAccepting(null);
-            if (error) {
-              Alert.alert('Ops', error.message);
-              return;
-            }
-            load();
-          },
-        },
-      ],
     );
+    if (!ok) return;
+    setAccepting(q.id);
+    const { error } = await supabase.rpc('accept_quote', { p_quote_id: q.id });
+    setAccepting(null);
+    if (error) {
+      notify('Ops', error.message);
+      return;
+    }
+    load();
   };
 
   const openChat = (shopId: string, shopName?: string | null) => {
@@ -218,7 +212,7 @@ export default function PedidoDetail() {
     });
     setSubmittingReview(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     setReviewComment('');
@@ -265,7 +259,7 @@ export default function PedidoDetail() {
     const { error } = await supabase.rpc('confirm_payment_test', { p_kind: 'reparo', p_order_id: order.id });
     setPayLoading(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     load();
@@ -273,7 +267,7 @@ export default function PedidoDetail() {
 
   const openDispute = async () => {
     if (!order || disputeReason.trim().length < 5) {
-      Alert.alert('Disputa', 'Descreva o motivo com mais detalhes.');
+      notify('Disputa', 'Descreva o motivo com mais detalhes.');
       return;
     }
     setDisputeBusy(true);
@@ -284,7 +278,7 @@ export default function PedidoDetail() {
     });
     setDisputeBusy(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     setDisputeReason('');

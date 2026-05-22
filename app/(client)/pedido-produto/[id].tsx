@@ -3,12 +3,13 @@ import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
+import { confirmAsync, notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -145,7 +146,7 @@ export default function PedidoProduto() {
 
   const openDispute = async () => {
     if (disputeReason.trim().length < 5) {
-      Alert.alert('Disputa', 'Descreva o motivo com mais detalhes.');
+      notify('Disputa', 'Descreva o motivo com mais detalhes.');
       return;
     }
     setDisputeBusy(true);
@@ -156,7 +157,7 @@ export default function PedidoProduto() {
     });
     setDisputeBusy(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     setDisputeReason('');
@@ -176,7 +177,7 @@ export default function PedidoProduto() {
     });
     setSubmittingReview(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     setReviewComment('');
@@ -218,24 +219,17 @@ export default function PedidoProduto() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const onCancel = () => {
-    Alert.alert('Cancelar pedido?', 'Esta ação não pode ser desfeita.', [
-      { text: 'Voltar', style: 'cancel' },
-      {
-        text: 'Cancelar pedido',
-        style: 'destructive',
-        onPress: async () => {
-          setBusy(true);
-          const { error } = await supabase.rpc('cancel_product_order', { p_order_id: id });
-          setBusy(false);
-          if (error) {
-            Alert.alert('Ops', error.message);
-            return;
-          }
-          load();
-        },
-      },
-    ]);
+  const onCancel = async () => {
+    const ok = await confirmAsync('Cancelar pedido?', 'Esta ação não pode ser desfeita.', 'Cancelar pedido', true);
+    if (!ok) return;
+    setBusy(true);
+    const { error } = await supabase.rpc('cancel_product_order', { p_order_id: id });
+    setBusy(false);
+    if (error) {
+      notify('Ops', error.message);
+      return;
+    }
+    load();
   };
 
   const payTest = async () => {
@@ -243,7 +237,7 @@ export default function PedidoProduto() {
     const { error } = await supabase.rpc('confirm_payment_test', { p_kind: 'produto', p_order_id: id });
     setBusy(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     setPayModal(false);

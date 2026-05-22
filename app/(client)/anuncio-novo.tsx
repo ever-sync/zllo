@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/lib/auth';
+import { notify } from '@/lib/confirm';
 import { pickImage } from '@/lib/pick-image';
 import { uploadPhoto } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -63,7 +64,7 @@ export default function AnuncioNovo() {
       });
       if (insErr) throw insErr;
 
-      Alert.alert('Anúncio publicado!', 'Seu celular já está na vitrine.');
+      notify('Anúncio publicado!', 'Seu celular já está na vitrine.');
       router.replace('/(client)/vitrine');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível publicar.');

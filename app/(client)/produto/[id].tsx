@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useCart } from '@/lib/cart';
+import { confirmAsync } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -78,32 +79,26 @@ export default function ProdutoDetail() {
 
   const outOfStock = p.stock <= 0;
 
-  const confirmAdded = () =>
-    Alert.alert('Adicionado ✓', `${p.name} foi para o carrinho.`, [
-      { text: 'Continuar comprando' },
-      { text: 'Ver carrinho', onPress: () => router.push('/(client)/carrinho') },
-    ]);
+  const confirmAdded = async () => {
+    if (await confirmAsync('Adicionado ✓', `${p.name} foi para o carrinho.`, 'Ver carrinho')) {
+      router.push('/(client)/carrinho');
+    }
+  };
 
-  const onBuy = () => {
+  const onBuy = async () => {
     const item = { product_id: p.id, name: p.name, price: p.price, photo: p.photos?.[0] ?? null };
     const shopName = p.shop?.name ?? 'Loja';
     const res = add(p.shop_id, shopName, item);
     if (res === 'other_shop') {
-      Alert.alert(
+      const ok = await confirmAsync(
         'Carrinho de outra loja',
         'Seu carrinho tem itens de outra assistência. Limpar e começar um novo com este produto?',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Limpar e adicionar',
-            style: 'destructive',
-            onPress: () => {
-              replaceWith(p.shop_id, shopName, item);
-              confirmAdded();
-            },
-          },
-        ],
+        'Limpar e adicionar',
+        true,
       );
+      if (!ok) return;
+      replaceWith(p.shop_id, shopName, item);
+      confirmAdded();
       return;
     }
     confirmAdded();

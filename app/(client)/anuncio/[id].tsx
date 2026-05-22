@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
+import { confirmAsync, notify } from '@/lib/confirm';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
@@ -53,25 +54,18 @@ export default function AnuncioDetail() {
     load();
   }, [load]);
 
-  const onDelete = () => {
-    Alert.alert('Excluir anúncio?', 'Esta ação não pode ser desfeita.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          if (!id) return;
-          setDeleting(true);
-          const { error } = await supabase.from('listings').delete().eq('id', id);
-          setDeleting(false);
-          if (error) {
-            Alert.alert('Ops', error.message);
-            return;
-          }
-          router.back();
-        },
-      },
-    ]);
+  const onDelete = async () => {
+    if (!id) return;
+    const ok = await confirmAsync('Excluir anúncio?', 'Esta ação não pode ser desfeita.', 'Excluir', true);
+    if (!ok) return;
+    setDeleting(true);
+    const { error } = await supabase.from('listings').delete().eq('id', id);
+    setDeleting(false);
+    if (error) {
+      notify('Ops', error.message);
+      return;
+    }
+    router.back();
   };
 
   if (loadError) {

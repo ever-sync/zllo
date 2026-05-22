@@ -1,9 +1,10 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
+import { confirmAsync, notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -84,17 +85,16 @@ export default function Vendas() {
     const { error } = await supabase.rpc('advance_product_order', { p_order_id: id, p_status: status });
     setBusy(null);
     if (error) {
-      Alert.alert('Ops', error.message);
+      notify('Ops', error.message);
       return;
     }
     load();
   };
 
-  const cancel = (id: string) => {
-    Alert.alert('Cancelar pedido?', 'Esta ação não pode ser desfeita.', [
-      { text: 'Voltar', style: 'cancel' },
-      { text: 'Cancelar', style: 'destructive', onPress: () => advance(id, 'cancelado') },
-    ]);
+  const cancel = async (id: string) => {
+    if (await confirmAsync('Cancelar pedido?', 'Esta ação não pode ser desfeita.', 'Cancelar', true)) {
+      advance(id, 'cancelado');
+    }
   };
 
   const active = FILTERS.find((f) => f.key === filter)!;

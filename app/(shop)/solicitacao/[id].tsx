@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -15,6 +14,7 @@ import {
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { notify } from '@/lib/confirm';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -90,7 +90,7 @@ export default function SolicitacaoDetail() {
     await supabase.from('request_targets').update({ status: 'orcou' }).eq('request_id', id).eq('shop_id', shop.id);
     setSending(false);
     setModal(false);
-    Alert.alert('Orçamento enviado!', 'O cliente vai receber sua proposta.');
+    notify('Orçamento enviado!', 'O cliente vai receber sua proposta.');
     router.back();
   };
 

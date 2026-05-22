@@ -3,11 +3,12 @@ import { Image } from 'expo-image';
 import * as Location from 'expo-location';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { useAuth, type Profile } from '@/lib/auth';
+import { notify } from '@/lib/confirm';
 import { geocodeCEP } from '@/lib/geocode';
 import { pickImage } from '@/lib/pick-image';
 import { uploadPhoto } from '@/lib/storage';
@@ -130,7 +131,7 @@ export default function Solicitar() {
       });
       if (rpcErr) throw rpcErr;
 
-      Alert.alert('Solicitação enviada!', 'As assistências próximas já foram notificadas.');
+      notify('Solicitação enviada!', 'As assistências próximas já foram notificadas.');
       router.replace('/(client)/(tabs)/pedidos');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível enviar.');

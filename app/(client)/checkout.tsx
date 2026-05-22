@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { useAuth, type Profile } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
+import { notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -56,11 +57,8 @@ export default function Checkout() {
       // Carrinho desatualizado (loja/produto não existe mais) → esvazia e manda pra Loja.
       if (/indispon|carrinho|constraint|foreign key/i.test(rpcErr.message)) {
         clear();
-        Alert.alert(
-          'Carrinho desatualizado',
-          'Os itens não estão mais disponíveis. Esvaziamos o carrinho — escolha novamente na Loja.',
-          [{ text: 'Ir para a Loja', onPress: () => router.replace('/(client)/(tabs)/loja') }],
-        );
+        notify('Carrinho desatualizado', 'Os itens não estão mais disponíveis. Esvaziamos o carrinho — escolha novamente na Loja.');
+        router.replace('/(client)/(tabs)/loja');
         return;
       }
       setError(rpcErr.message);
