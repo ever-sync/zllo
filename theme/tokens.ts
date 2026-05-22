@@ -14,6 +14,7 @@ export const colors = {
 
   // Superfícies
   paper: '#FAFAFA',
+  canvas: '#F2F4F6',
   white: '#FFFFFF',
 
   // Escala de cinza

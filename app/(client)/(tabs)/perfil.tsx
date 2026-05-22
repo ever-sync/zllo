@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { formatCPF, formatPhone } from '@/lib/cpf';
 import { useAuth } from '@/lib/auth';
@@ -11,7 +12,8 @@ export default function ClientProfile() {
     profile?.full_name?.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() ?? '?';
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
+      <ClientHeader title="Perfil" />
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>

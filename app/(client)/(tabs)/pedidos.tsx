@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
@@ -76,9 +77,8 @@ export default function Pedidos() {
   const list = tab === 'reparos' ? rows : porders;
 
   return (
-    <Screen>
-      <Text style={styles.title}>Meus pedidos</Text>
-      <Text style={styles.sub}>Acompanhe seus reparos e compras.</Text>
+    <Screen background={colors.canvas}>
+      <ClientHeader title="Meus pedidos" subtitle="Acompanhe seus reparos e compras." />
 
       <View style={styles.seg}>
         <SegBtn label="Reparos" active={tab === 'reparos'} onPress={() => setTab('reparos')} />
@@ -158,8 +158,6 @@ function SegBtn({ label, active, onPress }: { label: string; active: boolean; on
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   seg: { flexDirection: 'row', gap: 6, backgroundColor: colors.gray100, borderRadius: radius.full, padding: 4, marginTop: 16 },
   segBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: radius.full },
   segBtnActive: { backgroundColor: colors.ink },

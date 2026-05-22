@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
@@ -57,21 +58,21 @@ export default function Loja() {
   }, [rows, q, cat]);
 
   return (
-    <Screen>
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Loja</Text>
-          <Text style={styles.sub}>Produtos das assistências perto de você</Text>
-        </View>
-        <Pressable style={styles.cartBtn} onPress={() => router.push('/(client)/carrinho')} hitSlop={8}>
-          <Ionicons name="cart-outline" size={24} color={colors.ink} />
-          {count > 0 ? (
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>{count}</Text>
-            </View>
-          ) : null}
-        </Pressable>
-      </View>
+    <Screen background={colors.canvas}>
+      <ClientHeader
+        title="Loja"
+        subtitle="Produtos das assistências perto de você"
+        right={
+          <Pressable style={styles.cartBtn} onPress={() => router.push('/(client)/carrinho')} hitSlop={8}>
+            <Ionicons name="cart-outline" size={22} color={colors.ink} />
+            {count > 0 ? (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{count}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        }
+      />
 
       <View style={styles.search}>
         <Ionicons name="search-outline" size={18} color={colors.gray400} />
@@ -153,9 +154,6 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 }
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  title: { fontFamily: fonts.headBlack, fontSize: 26, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   cartBtn: { padding: 4 },
   cartBadge: {
     position: 'absolute',

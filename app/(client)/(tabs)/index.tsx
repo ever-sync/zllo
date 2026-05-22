@@ -1,16 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
-import { useAuth } from '@/lib/auth';
 import { getDeviceName } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
-
-const BG = '#F2F4F6';
 
 type RecentRequest = {
   id: string;
@@ -33,9 +30,6 @@ function fmtDate(iso: string): string {
 
 export default function ClientHome() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'tudo bem';
-  const initial = (profile?.full_name?.trim()?.[0] ?? 'Z').toUpperCase();
   const [recent, setRecent] = useState<RecentRequest[] | null>(null);
   const [stats, setStats] = useState<{ ativos: number; aparelhos: number }>({ ativos: 0, aparelhos: 0 });
 
@@ -60,28 +54,10 @@ export default function ClientHome() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
-    <Screen background={BG}>
+    <Screen background={colors.canvas}>
       <StatusBar style="dark" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.hello}>Olá, <Text style={styles.helloName}>{firstName}!</Text></Text>
-          <Text style={styles.helloSub}>O que você precisa hoje?</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Pressable style={styles.bell} onPress={() => router.push('/(client)/(tabs)/pedidos')} hitSlop={8}>
-            <Ionicons name="notifications-outline" size={20} color={colors.ink} />
-          </Pressable>
-          {profile?.avatar_url ? (
-            <Image source={{ uri: profile.avatar_url }} style={styles.avatar} contentFit="cover" />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <Text style={styles.avatarText}>{initial}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+      <ClientHeader greeting subtitle="O que você precisa hoje?" />
 
       {/* Card destaque: faixa lima + corpo escuro (CTA) */}
       <Pressable style={styles.heroCard} onPress={() => router.push('/(client)/solicitar')}>
@@ -154,16 +130,6 @@ export default function ClientHome() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 },
-  hello: { fontFamily: fonts.head, fontSize: 20, color: colors.ink },
-  helloName: { fontFamily: fonts.headBlack, color: colors.ink },
-  helloSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, alignItems: 'center', justifyContent: 'center' },
-  avatar: { width: 40, height: 40, borderRadius: 20 },
-  avatarFallback: { backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.headBlack, fontSize: 16, color: colors.ink },
-
   heroCard: { borderRadius: radius['3xl'], overflow: 'hidden', marginTop: 20 },
   heroBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.lime, paddingHorizontal: 18, paddingVertical: 11 },
   heroBannerLabel: { fontFamily: fonts.headBold, fontSize: 11, color: colors.ink, textTransform: 'uppercase', letterSpacing: 0.6 },

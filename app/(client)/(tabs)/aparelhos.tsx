@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
@@ -48,9 +49,8 @@ export default function Aparelhos() {
   );
 
   return (
-    <Screen>
-      <Text style={styles.title}>Meus aparelhos</Text>
-      <Text style={styles.sub}>Cadastre seus celulares para pedir reparo mais rápido.</Text>
+    <Screen background={colors.canvas}>
+      <ClientHeader title="Meus aparelhos" subtitle="Cadastre seus celulares para pedir reparo mais rápido." />
 
       {loadError ? (
         <ErrorState onRetry={load} />
@@ -93,8 +93,6 @@ export default function Aparelhos() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
   emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center' },
   card: {
