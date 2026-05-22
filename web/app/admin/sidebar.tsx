@@ -6,7 +6,9 @@ import { signOut } from '../(app)/actions';
 
 const NAV = [
   { label: 'Visão geral', href: '/admin' },
+  { label: 'Transações', href: '/admin/transacoes' },
   { label: 'Lojas', href: '/admin/lojas' },
+  { label: 'Produtos', href: '/admin/produtos' },
 ];
 
 export function AdminSidebar() {

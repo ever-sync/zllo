@@ -949,6 +949,12 @@ export type Database = {
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string }
       admin_metrics: { Args: never; Returns: Json }
+      admin_orders: { Args: never; Returns: Json }
+      admin_products: { Args: never; Returns: Json }
+      admin_set_product_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: undefined
+      }
       admin_shops: { Args: never; Returns: Json }
       advance_product_order: {
         Args: {
