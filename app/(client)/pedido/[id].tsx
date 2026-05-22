@@ -36,6 +36,16 @@ type Review = { id: string; rating: number; comment: string | null };
 
 type Payment = { id: string; status: 'pendente' | 'pago' | 'cancelado' | 'estornado'; amount: number };
 
+type Dispute = { id: string; status: string; reason: string; resolution: string | null };
+
+const DISPUTE_LABEL: Record<string, string> = {
+  aberta: 'Disputa aberta',
+  em_analise: 'Disputa em análise',
+  resolvida: 'Disputa resolvida',
+  recusada: 'Disputa recusada',
+  cancelada: 'Disputa cancelada',
+};
+
 function fmt(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -61,6 +71,10 @@ export default function PedidoDetail() {
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [dispute, setDispute] = useState<Dispute | null>(null);
+  const [showDispute, setShowDispute] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeBusy, setDisputeBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!id || !session) return;
@@ -115,6 +129,14 @@ export default function PedidoDetail() {
         .eq('order_id', o.id)
         .maybeSingle();
       setPayment((pay as Payment) ?? null);
+
+      const { data: disp } = await supabase
+        .from('disputes')
+        .select('id, status, reason, resolution')
+        .eq('service_order_id', o.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      setDispute((disp?.[0] as Dispute) ?? null);
     }
   }, [id, session]);
 
@@ -231,6 +253,27 @@ export default function PedidoDetail() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const openDispute = async () => {
+    if (!order || disputeReason.trim().length < 5) {
+      Alert.alert('Disputa', 'Descreva o motivo com mais detalhes.');
+      return;
+    }
+    setDisputeBusy(true);
+    const { error } = await supabase.rpc('open_dispute', {
+      p_kind: 'reparo',
+      p_order_id: order.id,
+      p_reason: disputeReason.trim(),
+    });
+    setDisputeBusy(false);
+    if (error) {
+      Alert.alert('Ops', error.message);
+      return;
+    }
+    setDisputeReason('');
+    setShowDispute(false);
+    load();
+  };
+
   if (loadError) {
     return (
       <Screen>
@@ -302,6 +345,43 @@ export default function PedidoDetail() {
             <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.white} />
             <Text style={styles.osChatText}>Conversar com a assistência</Text>
           </Pressable>
+
+          {dispute && dispute.status !== 'recusada' && dispute.status !== 'cancelada' ? (
+            <View style={styles.disputeBox}>
+              <Text style={styles.disputeStatus}>{DISPUTE_LABEL[dispute.status] ?? dispute.status}</Text>
+              <Text style={styles.disputeReason}>“{dispute.reason}”</Text>
+              {dispute.resolution ? (
+                <Text style={styles.disputeResolution}>Resolução: {dispute.resolution}</Text>
+              ) : null}
+            </View>
+          ) : order.status !== 'cancelada' ? (
+            showDispute ? (
+              <View style={styles.disputeBox}>
+                <Text style={styles.disputeStatus}>Abrir disputa</Text>
+                <TextInput
+                  value={disputeReason}
+                  onChangeText={setDisputeReason}
+                  placeholder="O que houve com o reparo?"
+                  placeholderTextColor={colors.gray400}
+                  multiline
+                  style={styles.disputeInput}
+                />
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                  <Pressable style={[styles.chooseBtn, { flex: 1 }]} onPress={openDispute} disabled={disputeBusy}>
+                    {disputeBusy ? <ActivityIndicator color={colors.white} /> : <Text style={styles.chooseText}>Enviar</Text>}
+                  </Pressable>
+                  <Pressable style={styles.disputeCancel} onPress={() => setShowDispute(false)}>
+                    <Text style={styles.disputeCancelText}>Cancelar</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable style={styles.disputeLink} onPress={() => setShowDispute(true)}>
+                <Ionicons name="alert-circle-outline" size={16} color={colors.gray600} />
+                <Text style={styles.disputeLinkText}>Tive um problema com este reparo</Text>
+              </Pressable>
+            )
+          ) : null}
 
           {order.status === 'concluida' ? (
             myReview ? (
@@ -447,6 +527,15 @@ const styles = StyleSheet.create({
   chooseText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
   osChatBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.ink, borderRadius: radius.lg, paddingVertical: 14, marginTop: 16 },
   osChatText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
+  disputeBox: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 16, marginTop: 14 },
+  disputeStatus: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  disputeReason: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 4, fontStyle: 'italic' },
+  disputeResolution: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.greenText, marginTop: 8 },
+  disputeInput: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 12, minHeight: 64, textAlignVertical: 'top', fontFamily: fonts.body, fontSize: 14, color: colors.ink, marginTop: 10 },
+  disputeCancel: { flex: 1, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  disputeCancelText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.gray600, textTransform: 'uppercase', letterSpacing: 0.4 },
+  disputeLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14, paddingVertical: 8 },
+  disputeLinkText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.gray600, textDecorationLine: 'underline' },
   paidBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: 14, marginTop: 14 },
   paidText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.greenText },
   payBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.lime, borderRadius: radius.lg, paddingVertical: 14, marginTop: 14 },
