@@ -14,6 +14,8 @@ import { statusLabel } from '@/lib/order-status';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
+const TEST_PAY = process.env.EXPO_PUBLIC_ALLOW_TEST_PAY === 'true';
+
 type Quote = {
   id: string;
   value: number;
@@ -257,6 +259,18 @@ export default function PedidoDetail() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const payTest = async () => {
+    if (!order) return;
+    setPayLoading(true);
+    const { error } = await supabase.rpc('confirm_payment_test', { p_kind: 'reparo', p_order_id: order.id });
+    setPayLoading(false);
+    if (error) {
+      Alert.alert('Ops', error.message);
+      return;
+    }
+    load();
+  };
+
   const openDispute = async () => {
     if (!order || disputeReason.trim().length < 5) {
       Alert.alert('Disputa', 'Descreva o motivo com mais detalhes.');
@@ -346,6 +360,11 @@ export default function PedidoDetail() {
                 )}
               </Pressable>
               {payError ? <Text style={styles.payErrorText}>{payError}</Text> : null}
+              {TEST_PAY ? (
+                <Pressable style={styles.payTestBtn} onPress={payTest} disabled={payLoading}>
+                  <Text style={styles.payTestText}>Pagar (teste)</Text>
+                </Pressable>
+              ) : null}
             </>
           )}
 
@@ -554,6 +573,8 @@ const styles = StyleSheet.create({
   payBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.lime, borderRadius: radius.lg, paddingVertical: 14, marginTop: 14 },
   payText: { fontFamily: fonts.headBold, fontSize: 13, color: colors.ink, textTransform: 'uppercase', letterSpacing: 0.4 },
   payErrorText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 10 },
+  payTestBtn: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, paddingVertical: 13, marginTop: 10 },
+  payTestText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.gray600, textTransform: 'uppercase', letterSpacing: 0.4 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 34, alignItems: 'center' },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.gray200, marginBottom: 14 },

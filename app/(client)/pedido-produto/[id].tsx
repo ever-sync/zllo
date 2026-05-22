@@ -13,6 +13,8 @@ import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
+const TEST_PAY = process.env.EXPO_PUBLIC_ALLOW_TEST_PAY === 'true';
+
 type OrderItem = { id: string; name: string; qty: number; unit_price: number; subtotal: number };
 type Order = {
   id: string;
@@ -236,6 +238,18 @@ export default function PedidoProduto() {
     ]);
   };
 
+  const payTest = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('confirm_payment_test', { p_kind: 'produto', p_order_id: id });
+    setBusy(false);
+    if (error) {
+      Alert.alert('Ops', error.message);
+      return;
+    }
+    setPayModal(false);
+    load();
+  };
+
   return (
     <Screen background={colors.canvas}>
       <AppHeader title="Pedido" subtitle={order.shop?.name ?? undefined} />
@@ -353,6 +367,9 @@ export default function PedidoProduto() {
               </>
             )}
           </Pressable>
+          {TEST_PAY ? (
+            <Button label="Pagar (teste)" loading={busy} onPress={payTest} style={{ marginTop: 10 }} />
+          ) : null}
           <Button label="Cancelar pedido" variant="secondary" loading={busy} onPress={onCancel} style={{ marginTop: 10 }} />
         </>
       ) : (

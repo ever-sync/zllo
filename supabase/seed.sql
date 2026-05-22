@@ -70,6 +70,10 @@ begin
   on conflict do nothing;
 end $$;
 
+-- ---------- Modo teste de pagamento (só local) ----------
+insert into public.app_config (id, allow_test_payments) values (1, true)
+on conflict (id) do update set allow_test_payments = true;
+
 -- ---------- Admin de teste (painel admin) ----------
 -- Login: admin@zllo.dev — senha: senha123
 do $$
