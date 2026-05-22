@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius } from '@/theme';
+import { colors, fonts } from '@/theme';
 
-/** Ícone base por rota (focado = preenchido; senão "-outline"). */
-const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  index: 'home',
-  loja: 'storefront',
-  aparelhos: 'phone-portrait',
-  pedidos: 'receipt',
-  perfil: 'person',
-};
+/** Abas visíveis na barra (aparelhos fica fora — acessível pela home). */
+const TABS: { name: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { name: 'index', label: 'Início', icon: 'home' },
+  { name: 'loja', label: 'Loja', icon: 'storefront' },
+  { name: 'pedidos', label: 'Pedidos', icon: 'receipt' },
+  { name: 'perfil', label: 'Perfil', icon: 'person' },
+];
 
 type TabBarProps = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -20,57 +20,76 @@ type TabBarProps = {
   };
 };
 
-/** Barra inferior flutuante (pílula escura), com a aba ativa em lima. */
+/** Barra inferior clara com FAB central (Pedir assistência). */
 export function FloatingTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
-  const onHome = state.routes[state.index]?.name === 'index';
+  const router = useRouter();
+  const activeName = state.routes[state.index]?.name;
+
+  const goTo = (name: string) => {
+    const route = state.routes.find((r) => r.name === name);
+    if (!route) return;
+    const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+    if (activeName !== name && !event.defaultPrevented) navigation.navigate(name);
+  };
+
+  const Tab = ({ name, label, icon }: (typeof TABS)[number]) => {
+    const focused = activeName === name;
+    return (
+      <Pressable style={styles.item} onPress={() => goTo(name)} hitSlop={8}>
+        <Ionicons
+          name={focused ? icon : (`${icon}-outline` as keyof typeof Ionicons.glyphMap)}
+          size={22}
+          color={focused ? colors.ink : colors.gray400}
+        />
+        <Text style={[styles.label, { color: focused ? colors.ink : colors.gray400 }]}>{label}</Text>
+      </Pressable>
+    );
+  };
 
   return (
-    <View style={[styles.outer, { backgroundColor: onHome ? colors.ink : colors.paper, paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.pill}>
-        {state.routes.map((route, i) => {
-          const focused = state.index === i;
-          const base = ICONS[route.name] ?? 'ellipse';
-          const onPress = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
-          };
-          return (
-            <Pressable key={route.key} style={styles.item} onPress={onPress} hitSlop={8}>
-              <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-                <Ionicons
-                  name={focused ? base : (`${base}-outline` as keyof typeof Ionicons.glyphMap)}
-                  size={22}
-                  color={focused ? colors.ink : 'rgba(255,255,255,0.55)'}
-                />
-              </View>
-            </Pressable>
-          );
-        })}
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+      <Tab {...TABS[0]} />
+      <Tab {...TABS[1]} />
+
+      {/* FAB central: ação principal */}
+      <View style={styles.fabSlot}>
+        <Pressable style={styles.fab} onPress={() => router.push('/(client)/solicitar')} hitSlop={8}>
+          <Ionicons name="construct" size={24} color={colors.lime} />
+        </Pressable>
       </View>
+
+      <Tab {...TABS[2]} />
+      <Tab {...TABS[3]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: { paddingHorizontal: 16, paddingTop: 10 },
-  pill: {
+  bar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#1A1A1A',
-    borderRadius: radius.full,
-    height: 64,
+    alignItems: 'flex-start',
+    backgroundColor: colors.white,
+    paddingTop: 12,
     paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray200,
   },
-  item: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  iconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  iconWrapActive: { backgroundColor: colors.lime },
+  item: { flex: 1, alignItems: 'center', gap: 3 },
+  label: { fontFamily: fonts.bodyMedium, fontSize: 10.5 },
+  fabSlot: { flex: 1, alignItems: 'center' },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -22,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+  },
 });
