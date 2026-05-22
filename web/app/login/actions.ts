@@ -20,7 +20,14 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     return { error: 'E-mail ou senha inválidos.' };
   }
 
-  // Console é exclusivo da assistência. Cliente não entra aqui.
+  // Admin tem prioridade → painel admin.
+  const { data: isAdmin } = await supabase.rpc('is_admin');
+  if (isAdmin) {
+    revalidatePath('/', 'layout');
+    redirect('/admin');
+  }
+
+  // Senão, console é exclusivo da assistência. Cliente não entra aqui.
   const { data: profile } = await supabase.rpc('get_my_profile');
   if (profile?.role !== 'assistencia') {
     await supabase.auth.signOut();

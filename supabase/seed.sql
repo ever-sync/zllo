@@ -70,6 +70,28 @@ begin
   on conflict do nothing;
 end $$;
 
+-- ---------- Admin de teste (painel admin) ----------
+-- Login: admin@zllo.dev — senha: senha123
+do $$
+declare aid uuid := '55555555-5555-5555-5555-555555555555'::uuid;
+begin
+  insert into auth.users (
+    id, instance_id, aud, role, email, encrypted_password,
+    email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+    confirmation_token, recovery_token, email_change, email_change_token_new
+  ) values (
+    aid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+    'admin@zllo.dev', extensions.crypt('senha123', extensions.gen_salt('bf')),
+    now(), now(), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    jsonb_build_object('full_name', 'Admin zllo'),
+    '', '', '', ''
+  ) on conflict (id) do nothing;
+
+  update public.profiles set full_name = 'Admin zllo' where id = aid;
+  insert into public.admins (user_id) values (aid) on conflict do nothing;
+end $$;
+
 -- ---------- Produtos de exemplo no marketplace (lojas do seed) ----------
 insert into public.products (shop_id, name, description, category, price, stock, is_active)
 select s.id, p.name, p.description, p.category, p.price, p.stock, true

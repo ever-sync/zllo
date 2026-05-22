@@ -34,6 +34,29 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           brand: string | null
@@ -925,6 +948,8 @@ export type Database = {
     }
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string }
+      admin_metrics: { Args: never; Returns: Json }
+      admin_shops: { Args: never; Returns: Json }
       advance_product_order: {
         Args: {
           p_order_id: string
@@ -1038,6 +1063,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_admin: { Args: never; Returns: boolean }
       register_push_token: {
         Args: { p_platform?: string; p_token: string }
         Returns: undefined

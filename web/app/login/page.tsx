@@ -5,9 +5,10 @@ import { LoginForm } from './login-form';
 export default async function LoginPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  // Sessão web só é criada para assistências (a action de login valida o papel),
-  // então estar autenticado aqui significa que pode ir direto pro console.
-  if (data?.claims) redirect('/operacao');
+  if (data?.claims) {
+    const { data: isAdmin } = await supabase.rpc('is_admin');
+    redirect(isAdmin ? '/admin' : '/operacao');
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-paper px-4">
