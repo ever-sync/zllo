@@ -3,6 +3,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
+import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
@@ -49,8 +50,7 @@ export default function Mensagens() {
 
   return (
     <Screen background={colors.canvas}>
-      <Text style={styles.title}>Mensagens</Text>
-      <Text style={styles.sub}>Converse com seus clientes</Text>
+      <ShopHeader title="Mensagens" subtitle="Converse com seus clientes" />
 
       {loadError ? (
         <ErrorState onRetry={load} />
@@ -85,8 +85,6 @@ export default function Mensagens() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
   emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', lineHeight: 19, paddingHorizontal: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 12 },

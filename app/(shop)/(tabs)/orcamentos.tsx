@@ -3,6 +3,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
+import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
@@ -70,8 +71,7 @@ export default function Orcamentos() {
 
   return (
     <Screen background={colors.canvas}>
-      <Text style={styles.title}>Orçamentos</Text>
-      <Text style={styles.sub}>Solicitações esperando sua resposta</Text>
+      <ShopHeader title="Orçamentos" subtitle="Solicitações esperando sua resposta" />
 
       {loadError ? (
         <ErrorState onRetry={load} />
@@ -139,8 +139,6 @@ function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
   emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', lineHeight: 19 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, gap: 12 },

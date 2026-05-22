@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
+import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel, stepIndex } from '@/lib/order-status';
@@ -58,8 +59,7 @@ export default function Ordens() {
 
   return (
     <Screen background={colors.canvas}>
-      <Text style={styles.title}>Ordens de serviço</Text>
-      <Text style={styles.sub}>Reparos em andamento e histórico</Text>
+      <ShopHeader title="Ordens de serviço" subtitle="Reparos em andamento e histórico" />
 
       <View style={styles.chips}>
         <Chip label={`Em andamento (${andamentoCount})`} active={tab === 'andamento'} onPress={() => setTab('andamento')} />
@@ -114,8 +114,6 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
-  sub: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 2 },
   chips: { flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 14 },
   chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.headBold, fontSize: 12 },

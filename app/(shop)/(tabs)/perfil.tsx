@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { ShopHeader } from '@/components/ui/shop-header';
 import { useAuth } from '@/lib/auth';
 import { useShop } from '@/lib/shop';
 import { colors, fonts, radius } from '@/theme';
@@ -16,6 +17,7 @@ export default function ShopProfile() {
 
   return (
     <Screen background={colors.canvas}>
+      <ShopHeader title="Perfil" />
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>

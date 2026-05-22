@@ -3,8 +3,8 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
+import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
-import { useAuth } from '@/lib/auth';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import { useShop } from '@/lib/shop';
@@ -43,8 +43,7 @@ function weeklyRevenue(orders: Order[]): { d: string; total: number; today: bool
 
 export default function Painel() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const { shop, loading, setOnline } = useShop();
+  const { shop, loading } = useShop();
   const [targets, setTargets] = useState<Target[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadError, setLoadError] = useState(false);
@@ -85,24 +84,13 @@ export default function Painel() {
   const inProgress = orders.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada');
   const revenue = orders.reduce((s, o) => s + Number(o.value), 0);
   const conv = orcou > 0 ? Math.round((orders.length / orcou) * 100) : 0;
-  const firstName = (shop.name || profile?.full_name || 'loja').split(' ')[0];
   const week = weeklyRevenue(orders);
   const weekRevenue = week.reduce((s, b) => s + b.total, 0);
   const weekMax = Math.max(...week.map((b) => b.total), 1);
 
   return (
     <Screen background={colors.canvas}>
-      {/* Saudação + online */}
-      <View style={styles.greetRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.hello}>Olá, {firstName} 👋</Text>
-          <Text style={styles.helloSub}>{pending.length} orçamentos · {inProgress.length} OS em andamento</Text>
-        </View>
-        <Pressable onPress={() => setOnline(!shop.is_online)} style={[styles.toggle, { backgroundColor: shop.is_online ? colors.lime : colors.gray200 }]}>
-          <View style={[styles.dot, { backgroundColor: shop.is_online ? colors.green : colors.gray400 }]} />
-          <Text style={[styles.toggleText, { color: shop.is_online ? colors.ink : colors.gray600 }]}>{shop.is_online ? 'Online' : 'Offline'}</Text>
-        </Pressable>
-      </View>
+      <ShopHeader greeting subtitle={`${pending.length} orçamentos · ${inProgress.length} OS em andamento`} />
 
       {/* HERO */}
       <View style={styles.hero}>
@@ -235,12 +223,6 @@ function RepNote({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  greetRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  hello: { fontFamily: fonts.headBlack, fontSize: 22, color: colors.ink, letterSpacing: -0.5 },
-  helloSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  toggleText: { fontFamily: fonts.headBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
   hero: { flexDirection: 'row', backgroundColor: colors.blue, borderRadius: radius['3xl'], padding: 20, overflow: 'hidden', marginBottom: 14 },
   heroTitle: { fontFamily: fonts.head, fontSize: 18, color: colors.white, letterSpacing: -0.3 },
   heroSub: { fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, marginBottom: 14 },
