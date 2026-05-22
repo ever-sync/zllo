@@ -62,7 +62,7 @@ export default function NovoAparelho() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Cadastrar aparelho" subtitle="Detalhes do seu celular" />
 
       <Pressable style={styles.photoPicker} onPress={onPickPhoto}>

@@ -280,7 +280,7 @@ export default function PedidoDetail() {
 
   if (loadError) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
         <ErrorState onRetry={load} />
       </Screen>
@@ -288,14 +288,14 @@ export default function PedidoDetail() {
   }
   if (req === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (req === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
         <Text style={styles.muted}>Pedido não encontrado.</Text>
       </Screen>
@@ -305,7 +305,7 @@ export default function PedidoDetail() {
   const deviceName = getDeviceName(req.device);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title={deviceName} subtitle={req.description} />
 
       {order ? (

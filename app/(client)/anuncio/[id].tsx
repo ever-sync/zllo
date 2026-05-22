@@ -76,7 +76,7 @@ export default function AnuncioDetail() {
 
   if (loadError) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Anúncio" />
         <ErrorState onRetry={load} />
       </Screen>
@@ -84,14 +84,14 @@ export default function AnuncioDetail() {
   }
   if (listing === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (listing === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Anúncio" />
         <Text style={styles.muted}>Anúncio não encontrado ou removido.</Text>
       </Screen>
@@ -102,7 +102,7 @@ export default function AnuncioDetail() {
   const specs = [listing.brand, listing.model].filter(Boolean).join(' · ');
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Anúncio" subtitle={specs || undefined} />
 
       {listing.photos?.length ? (

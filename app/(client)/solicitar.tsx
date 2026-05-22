@@ -140,7 +140,7 @@ export default function Solicitar() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Pedir assistência" subtitle="Conte o que houve com o aparelho" />
 
       {/* Aparelho */}

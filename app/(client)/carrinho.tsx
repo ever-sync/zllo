@@ -15,7 +15,7 @@ export default function Carrinho() {
 
   if (items.length === 0) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Carrinho" />
         <View style={styles.empty}>
           <Ionicons name="cart-outline" size={36} color={colors.gray400} />
@@ -27,7 +27,7 @@ export default function Carrinho() {
   }
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Carrinho" subtitle={shopName ?? undefined} />
 
       <View style={{ gap: 12 }}>

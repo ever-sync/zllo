@@ -59,7 +59,7 @@ export default function Vitrine() {
   }, [rows, tab, q, session]);
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Vitrine" subtitle="Celulares à venda" />
 
       <Button label="Anunciar meu celular" variant="accent" onPress={() => router.push('/(client)/anuncio-novo')} />

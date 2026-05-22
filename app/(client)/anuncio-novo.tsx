@@ -73,7 +73,7 @@ export default function AnuncioNovo() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Anunciar celular" subtitle="Coloque seu aparelho à venda" />
 
       <View style={{ gap: 14 }}>

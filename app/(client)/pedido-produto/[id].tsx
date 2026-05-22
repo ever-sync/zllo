@@ -114,7 +114,7 @@ export default function PedidoProduto() {
 
   if (loadError) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
         <ErrorState onRetry={load} />
       </Screen>
@@ -122,14 +122,14 @@ export default function PedidoProduto() {
   }
   if (order === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (order === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
         <Text style={styles.muted}>Pedido não encontrado.</Text>
       </Screen>
@@ -237,7 +237,7 @@ export default function PedidoProduto() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Pedido" subtitle={order.shop?.name ?? undefined} />
 
       <View style={[styles.statusBadge, { backgroundColor: st.bg }]}>

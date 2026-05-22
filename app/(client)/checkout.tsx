@@ -31,7 +31,7 @@ export default function Checkout() {
 
   if (items.length === 0 || !shopId) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Checkout" />
         <Text style={styles.muted}>Seu carrinho está vazio.</Text>
       </Screen>
@@ -71,7 +71,7 @@ export default function Checkout() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Checkout" subtitle={shopName ?? undefined} />
 
       <Text style={styles.label}>Itens</Text>

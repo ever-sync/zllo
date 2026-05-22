@@ -54,7 +54,7 @@ export default function ProdutoDetail() {
 
   if (loadError) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Produto" />
         <ErrorState onRetry={load} />
       </Screen>
@@ -62,14 +62,14 @@ export default function ProdutoDetail() {
   }
   if (p === undefined) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} background={colors.canvas}>
         <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
       </Screen>
     );
   }
   if (p === null) {
     return (
-      <Screen>
+      <Screen background={colors.canvas}>
         <AppHeader title="Produto" />
         <Text style={styles.muted}>Produto não encontrado ou indisponível.</Text>
       </Screen>
@@ -110,7 +110,7 @@ export default function ProdutoDetail() {
   };
 
   return (
-    <Screen>
+    <Screen background={colors.canvas}>
       <AppHeader title="Produto" subtitle={p.shop?.name ?? undefined} />
 
       {p.photos?.length ? (
