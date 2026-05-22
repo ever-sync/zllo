@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { TARGET_SELECT, type FeedItem } from '@/lib/feed';
-import { OnlineToggle } from './online-toggle';
 import { OperacaoBoard } from './operacao-board';
 
 type OrderRow = { id: string; status: string; value: number };
@@ -49,31 +48,6 @@ export default async function PainelPage() {
 
   return (
     <div>
-      {/* Header */}
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-white px-8 py-4">
-        <div className="min-w-0">
-          <h1 className="font-head text-[22px] font-extrabold leading-tight tracking-[-0.5px] text-ink">
-            Olá, {shop.name} 👋
-          </h1>
-          <p className="font-body text-[12.5px] text-g600">
-            {chegando.length} orçamentos · {andamento.length} OS em andamento
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <OnlineToggle shopId={shop.id} initialOnline={shop.is_online ?? false} />
-          <Link
-            href="/chat"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-g100 text-ink"
-            aria-label="Mensagens"
-          >
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </Link>
-        </div>
-      </header>
-
       <div className="px-8 py-6">
         {/* HERO */}
         <div className="relative mb-[18px] flex items-center justify-between gap-4 overflow-hidden rounded-2xl bg-blue px-6 py-5 text-white">

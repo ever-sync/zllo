@@ -23,10 +23,6 @@ export default async function PedidosPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Pedidos</h1>
-        <p className="font-body text-sm text-g600">Vendas do marketplace — separe e entregue.</p>
-      </header>
       <PedidosClient shopId={shop.id} initial={(orders as unknown as ShopOrder[]) ?? []} />
     </div>
   );

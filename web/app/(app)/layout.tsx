@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from './sidebar';
+import { TopBar } from './top-bar';
 import { AccessDenied } from './access-denied';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -42,7 +43,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         shopCity={profile.city ?? null}
         badges={{ orcamentos, ordens }}
       />
-      <main className="flex-1 bg-paper">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col bg-paper">
+        <TopBar
+          shopName={shop?.name ?? profile.full_name ?? 'Minha loja'}
+          shopId={shop?.id}
+          initialOnline={shop?.is_online ?? false}
+          pending={orcamentos}
+          os={ordens}
+        />
+        <div className="flex-1">{children}</div>
+      </main>
     </div>
   );
 }

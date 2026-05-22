@@ -38,10 +38,6 @@ export default async function OrcamentosPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Orçamentos</h1>
-        <p className="font-body text-sm text-g600">Histórico dos orçamentos que sua loja enviou.</p>
-      </header>
 
       {quotes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">

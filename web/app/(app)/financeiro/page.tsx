@@ -55,10 +55,6 @@ export default async function FinanceiroPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Financeiro</h1>
-        <p className="font-body text-sm text-g600">Recebíveis confirmados (reparos + marketplace) — 97% líquido.</p>
-      </header>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-line bg-blue p-5">

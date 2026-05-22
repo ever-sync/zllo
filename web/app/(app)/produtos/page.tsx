@@ -28,12 +28,6 @@ export default async function ProdutosPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Produtos</h1>
-        <p className="font-body text-sm text-g600">
-          Gerencie o que sua loja vende no marketplace do app.
-        </p>
-      </header>
       <ProdutosManager shopId={shop.id} userId={userId} initial={(products as Product[]) ?? []} />
     </div>
   );

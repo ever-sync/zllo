@@ -27,10 +27,6 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Configurações</h1>
-        <p className="font-body text-sm text-g600">Dados da loja, raio de atendimento e recebimento.</p>
-      </header>
       <ConfiguracoesClient initial={cfg} />
     </div>
   );

@@ -22,10 +22,6 @@ export default async function OrdensPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="font-head text-2xl font-black text-ink">Ordens de serviço</h1>
-        <p className="font-body text-sm text-g600">Reparos aceitos — avance cada etapa até a entrega.</p>
-      </header>
       <OrdensClient shopId={shop.id} initial={(orders as unknown as ServiceOrder[]) ?? []} />
     </div>
   );
