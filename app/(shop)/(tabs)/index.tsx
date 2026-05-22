@@ -171,18 +171,6 @@ export default function Painel() {
         </View>
       </Card>
 
-      {/* Moedas */}
-      <Card style={{ marginTop: 14, borderStyle: 'dashed', borderColor: colors.blue, borderWidth: 2 }}>
-        <View style={styles.coinsRow}>
-          <View style={styles.coinIcon}><Text style={{ fontFamily: fonts.headBlack, color: colors.lime, fontSize: 18 }}>M</Text></View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.coinsValue}>{shop.coins ?? 0} moedas</Text>
-            <Text style={styles.coinsSub}>~ {Math.floor((shop.coins ?? 0) / 100)} orçamentos disponíveis</Text>
-          </View>
-          <View style={styles.coinsBtn}><Text style={styles.coinsBtnText}>Recarregar</Text></View>
-        </View>
-      </Card>
-
       {/* OS em andamento */}
       <Card style={{ marginTop: 14 }}>
         <CardHeader title="OS em andamento" count={inProgress.length} actionLabel="Ver todas →" onAction={() => router.push('/(shop)/(tabs)/ordens')} />
@@ -284,12 +272,6 @@ const styles = StyleSheet.create({
   repNote: { flex: 1 },
   repNoteLabel: { fontFamily: fonts.bodyMedium, fontSize: 10, color: colors.gray400, textTransform: 'uppercase', letterSpacing: 0.5 },
   repNoteValue: { fontFamily: fonts.headBlack, fontSize: 20, color: colors.white, marginTop: 4 },
-  coinsRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  coinIcon: { width: 44, height: 44, borderRadius: radius.lg, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
-  coinsValue: { fontFamily: fonts.headBlack, fontSize: 20, color: colors.ink, letterSpacing: -0.5 },
-  coinsSub: { fontFamily: fonts.body, fontSize: 11.5, color: colors.gray600, marginTop: 2 },
-  coinsBtn: { backgroundColor: colors.blue, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 9 },
-  coinsBtnText: { fontFamily: fonts.headBold, fontSize: 11.5, color: colors.white, textTransform: 'uppercase' },
   osRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray100 },
   dotSm: { width: 10, height: 10, borderRadius: 5 },
   weekTitle: { fontFamily: fonts.head, fontSize: 15, color: colors.ink },

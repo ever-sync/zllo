@@ -7,7 +7,6 @@ export type Shop = {
   owner_id: string;
   name: string;
   is_online: boolean;
-  coins: number;
   rating: number;
   reviews_count: number;
   address: string | null;
@@ -35,7 +34,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from('shops')
-      .select('id, owner_id, name, is_online, coins, rating, reviews_count, address')
+      .select('id, owner_id, name, is_online, rating, reviews_count, address')
       .eq('owner_id', session.user.id)
       .maybeSingle();
     setShop((data as Shop) ?? null);

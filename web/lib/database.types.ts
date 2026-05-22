@@ -866,7 +866,6 @@ export type Database = {
           asaas_wallet_id: string | null
           brands: string[]
           cnpj: string | null
-          coins: number
           created_at: string
           id: string
           is_online: boolean
@@ -883,7 +882,6 @@ export type Database = {
           asaas_wallet_id?: string | null
           brands?: string[]
           cnpj?: string | null
-          coins?: number
           created_at?: string
           id?: string
           is_online?: boolean
@@ -900,7 +898,6 @@ export type Database = {
           asaas_wallet_id?: string | null
           brands?: string[]
           cnpj?: string | null
-          coins?: number
           created_at?: string
           id?: string
           is_online?: boolean
@@ -1023,7 +1020,6 @@ export type Database = {
           asaas_wallet_id: string | null
           brands: string[]
           cnpj: string | null
-          coins: number
           created_at: string
           id: string
           is_online: boolean

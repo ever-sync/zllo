@@ -35,11 +35,11 @@ begin
     -- garante role/nome (o trigger handle_new_user já cria o profile)
     update public.profiles set role = 'assistencia', full_name = names[i] where id = ids[i];
 
-    insert into public.shops (owner_id, name, address, location, is_online, brands, rating, reviews_count, coins)
+    insert into public.shops (owner_id, name, address, location, is_online, brands, rating, reviews_count)
     values (
       ids[i], names[i], 'São Paulo, SP',
       extensions.st_setsrid(extensions.st_makepoint(lngs[i], lats[i]), 4326)::extensions.geography,
-      true, array['Apple','Samsung','Xiaomi','Motorola'], 4.8, 120, 2000
+      true, array['Apple','Samsung','Xiaomi','Motorola'], 4.8, 120
     ) on conflict (owner_id) do nothing;
   end loop;
 end $$;

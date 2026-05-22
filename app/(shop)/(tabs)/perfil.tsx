@@ -29,7 +29,6 @@ export default function ShopProfile() {
           <View style={styles.statsRow}>
             <Stat label="Nota" value={`★ ${shop.rating?.toFixed(1) ?? '—'}`} />
             <Stat label="Reparos" value={String(shop.reviews_count ?? 0)} />
-            <Stat label="Moedas" value={String(shop.coins ?? 0)} />
           </View>
 
           <View style={styles.onlineRow}>
