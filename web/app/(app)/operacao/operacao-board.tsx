@@ -44,7 +44,6 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
     setItems((data as unknown as FeedItem[]) ?? []);
   }, [supabase, shopId]);
 
-  // Realtime: qualquer mudança nos meus targets recarrega o feed.
   useEffect(() => {
     const channel = supabase
       .channel(`shop-${shopId}-targets`)
@@ -59,7 +58,6 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
     };
   }, [supabase, shopId, fetchFeed]);
 
-  // Avisa quando chega um pedido que ainda não tínhamos visto.
   useEffect(() => {
     let isNew = false;
     for (const it of items) {
@@ -71,94 +69,65 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
     if (isNew) beep();
   }, [items]);
 
-  const open = items.filter((it) => it.request?.status === 'aberta');
-  const chegando = open.filter((it) => it.status !== 'orcou');
-  const aguardando = open.filter((it) => it.status === 'orcou');
+  const chegando = items.filter((it) => it.request?.status === 'aberta' && it.status !== 'orcou');
 
   return (
-    <div className="flex flex-col gap-8">
-      <section>
-        <h2 className="mb-3 font-head text-xs font-bold uppercase tracking-wide text-g600">
-          Chegando agora · {chegando.length}
-        </h2>
-        {chegando.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
-            <p className="font-body text-sm text-g600">
-              Nenhuma solicitação no momento. Elas aparecem aqui automaticamente.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-            {chegando.map((it) => {
-              const t = timeLeft(it.responds_by, now);
-              const name = getDeviceName(it.request!.device);
-              const client = it.request!.client?.full_name?.split(' ')[0] ?? 'Cliente';
-              return (
-                <Link
-                  key={it.id}
-                  href={`/solicitacao/${it.request!.id}`}
-                  className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-g100 text-xl">
-                      📱
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-head text-base font-bold text-ink">{name}</p>
-                      <p className="line-clamp-2 font-body text-xs text-g600">
-                        {it.request!.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 font-body text-xs text-g600">
-                      <span>📍 {distanceLabel(it.distance_m)}</span>
-                      <span>👤 {client}</span>
-                      <span>🖼 {it.request!.photos?.length ?? 0}</span>
-                    </div>
-                    <span
-                      className={
-                        'inline-flex items-center gap-1 rounded-md px-2 py-1 font-head text-xs font-bold ' +
-                        (t.urgent ? 'bg-[#FEE2E2] text-[#B91C1C]' : 'bg-[#FEF3C7] text-[#B45309]')
-                      }
-                    >
-                      ⏱ {t.label}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
+    <div className="rounded-[14px] border border-line bg-white p-[18px]">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 font-head text-[15px] font-extrabold text-ink">
+          Orçamentos Pendentes
+          <span className="rounded-[10px] bg-blue px-2 py-0.5 font-head text-[11px] font-bold text-white">
+            {chegando.length}
+          </span>
+        </div>
+        <Link href="/orcamentos" className="shrink-0 font-head text-[12.5px] font-bold text-blue">
+          Ver todos →
+        </Link>
+      </div>
 
-      {aguardando.length > 0 ? (
-        <section>
-          <h2 className="mb-3 font-head text-xs font-bold uppercase tracking-wide text-g600">
-            Orçados · aguardando cliente · {aguardando.length}
-          </h2>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-            {aguardando.map((it) => {
-              const name = getDeviceName(it.request!.device);
-              return (
-                <Link
-                  key={it.id}
-                  href={`/solicitacao/${it.request!.id}`}
-                  className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 opacity-90 transition-shadow hover:shadow-md"
+      {chegando.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-line p-8 text-center font-body text-sm text-g600">
+          Nenhuma solicitação no momento. Elas aparecem aqui automaticamente.
+        </p>
+      ) : (
+        chegando.map((it) => {
+          const t = timeLeft(it.responds_by, now);
+          const name = getDeviceName(it.request!.device);
+          const client = it.request!.client?.full_name?.split(' ')[0] ?? 'Cliente';
+          return (
+            <Link
+              key={it.id}
+              href={`/solicitacao/${it.request!.id}`}
+              className="mb-2.5 flex items-center gap-3 rounded-xl border border-line p-3.5 transition-shadow last:mb-0 hover:shadow-md"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-g100 text-xl">
+                📱
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-body text-sm font-bold text-ink">{name}</p>
+                <p className="line-clamp-2 font-body text-xs text-g600">{it.request!.description}</p>
+                <div className="mt-1 flex flex-wrap gap-3 font-body text-[11px] text-g600">
+                  <span>📍 {distanceLabel(it.distance_m)}</span>
+                  <span>👤 {client}</span>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <span
+                  className={
+                    'whitespace-nowrap rounded-md px-2 py-1 font-head text-[11px] font-bold ' +
+                    (t.urgent ? 'bg-[#FEE2E2] text-[#B91C1C]' : 'bg-[#FEF3C7] text-[#B45309]')
+                  }
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-g100 text-lg">
-                    📱
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-sm font-bold text-ink">{name}</p>
-                    <p className="font-body text-xs text-[#15803D]">Orçado ✓</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+                  ⏱ {t.label}
+                </span>
+                <span className="whitespace-nowrap rounded-lg bg-ink px-3.5 py-2 font-head text-[11.5px] font-bold uppercase tracking-[0.4px] text-white">
+                  Responder
+                </span>
+              </div>
+            </Link>
+          );
+        })
+      )}
     </div>
   );
 }
