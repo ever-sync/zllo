@@ -30,7 +30,7 @@ type Req = {
   device: { brand: string | null; model: string | null; nickname: string | null } | null;
 };
 
-type Order = { id: string; status: string; value: number; shop_id: string; shop: { name: string } | null };
+type Order = { id: string; status: string; value: number; shop_id: string; warranty_days: number; shop: { name: string } | null };
 
 type Review = { id: string; rating: number; comment: string | null };
 
@@ -59,6 +59,7 @@ export default function PedidoDetail() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [events, setEvents] = useState<Record<string, string>>({});
+  const [concludedAt, setConcludedAt] = useState<string | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [myReview, setMyReview] = useState<Review | null>(null);
@@ -99,7 +100,7 @@ export default function PedidoDetail() {
 
     const { data: o } = await supabase
       .from('service_orders')
-      .select('id, status, value, shop_id, shop:shops(name)')
+      .select('id, status, value, shop_id, warranty_days, shop:shops(name)')
       .eq('request_id', id)
       .maybeSingle();
     setOrder((o as unknown as Order) ?? null);
@@ -111,10 +112,13 @@ export default function PedidoDetail() {
         .eq('order_id', o.id)
         .order('created_at', { ascending: true });
       const map: Record<string, string> = {};
+      let conc: string | null = null;
       (ev ?? []).forEach((e: { status: string; created_at: string }) => {
         map[e.status] = fmt(e.created_at);
+        if (e.status === 'concluida') conc = e.created_at;
       });
       setEvents(map);
+      setConcludedAt(conc);
 
       const { data: rev } = await supabase
         .from('reviews')
@@ -314,6 +318,15 @@ export default function PedidoDetail() {
             </View>
             <Text style={styles.osValue}>R$ {order.value.toLocaleString('pt-BR')}</Text>
           </View>
+
+          {order.warranty_days > 0 ? (
+            <Text style={styles.warranty}>
+              🛡️ Garantia de {order.warranty_days} dias
+              {concludedAt
+                ? ` · até ${new Date(new Date(concludedAt).getTime() + order.warranty_days * 86400000).toLocaleDateString('pt-BR')}`
+                : ''}
+            </Text>
+          ) : null}
 
           {payment?.status === 'pago' ? (
             <View style={styles.paidBanner}>
@@ -564,5 +577,6 @@ const styles = StyleSheet.create({
   osShop: { fontFamily: fonts.head, fontSize: 17, color: colors.ink },
   osStatus: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.ink, opacity: 0.75, marginTop: 2 },
   osValue: { fontFamily: fonts.headBlack, fontSize: 18, color: colors.ink },
+  warranty: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.gray600, marginTop: 12 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 18 },
 });

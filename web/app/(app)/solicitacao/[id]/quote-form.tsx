@@ -29,6 +29,17 @@ export function QuoteForm({ requestId, deviceName }: { requestId: string; device
       </label>
 
       <label className="flex flex-col gap-1.5">
+        <span className="font-body text-sm text-g600">Garantia (dias)</span>
+        <input
+          name="warranty_days"
+          inputMode="numeric"
+          defaultValue="90"
+          placeholder="0"
+          className="rounded-xl border border-line px-3.5 py-2.5 font-body text-sm text-ink outline-none focus:border-blue"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1.5">
         <span className="font-body text-sm text-g600">Descrição</span>
         <textarea
           name="note"

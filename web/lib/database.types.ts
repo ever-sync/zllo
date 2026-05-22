@@ -652,6 +652,7 @@ export type Database = {
           status: Database["public"]["Enums"]["quote_status"]
           updated_at: string
           value: number
+          warranty_days: number
         }
         Insert: {
           created_at?: string
@@ -662,6 +663,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string
           value: number
+          warranty_days?: number
         }
         Update: {
           created_at?: string
@@ -672,6 +674,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string
           value?: number
+          warranty_days?: number
         }
         Relationships: [
           {
@@ -811,7 +814,8 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
-          order_id: string
+          order_id: string | null
+          product_order_id: string | null
           rating: number
           shop_id: string
         }
@@ -820,7 +824,8 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          order_id: string
+          order_id?: string | null
+          product_order_id?: string | null
           rating: number
           shop_id: string
         }
@@ -829,7 +834,8 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          order_id?: string
+          order_id?: string | null
+          product_order_id?: string | null
           rating?: number
           shop_id?: string
         }
@@ -844,8 +850,15 @@ export type Database = {
           {
             foreignKeyName: "reviews_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_order_id_fkey"
+            columns: ["product_order_id"]
+            isOneToOne: false
+            referencedRelation: "product_orders"
             referencedColumns: ["id"]
           },
           {
@@ -911,6 +924,7 @@ export type Database = {
           status: Database["public"]["Enums"]["service_order_status"]
           updated_at: string
           value: number
+          warranty_days: number
         }
         Insert: {
           client_id: string
@@ -923,6 +937,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["service_order_status"]
           updated_at?: string
           value: number
+          warranty_days?: number
         }
         Update: {
           client_id?: string
@@ -935,6 +950,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["service_order_status"]
           updated_at?: string
           value?: number
+          warranty_days?: number
         }
         Relationships: [
           {

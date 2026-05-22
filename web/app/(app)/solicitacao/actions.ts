@@ -10,6 +10,7 @@ export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<
   const requestId = String(formData.get('request_id') ?? '');
   const valueRaw = String(formData.get('value') ?? '');
   const note = String(formData.get('note') ?? '').trim();
+  const warranty = Math.max(0, parseInt(String(formData.get('warranty_days') ?? '0'), 10) || 0);
 
   const value = Number(valueRaw.replace(',', '.'));
   if (!requestId) return { error: 'Solicitação inválida.' };
@@ -21,7 +22,7 @@ export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<
 
   const { error: insErr } = await supabase
     .from('quotes')
-    .insert({ request_id: requestId, shop_id: shop.id, value, description: note || null });
+    .insert({ request_id: requestId, shop_id: shop.id, value, description: note || null, warranty_days: warranty });
 
   if (insErr) {
     return {

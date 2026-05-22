@@ -43,6 +43,7 @@ export default function SolicitacaoDetail() {
   const [target, setTarget] = useState<TargetInfo | null>(null);
   const [modal, setModal] = useState(false);
   const [value, setValue] = useState('');
+  const [warranty, setWarranty] = useState('90');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -80,7 +81,7 @@ export default function SolicitacaoDetail() {
     setSending(true);
     const { error: insErr } = await supabase
       .from('quotes')
-      .insert({ request_id: id, shop_id: shop.id, value: v, description: note.trim() || null });
+      .insert({ request_id: id, shop_id: shop.id, value: v, description: note.trim() || null, warranty_days: Math.max(0, parseInt(warranty, 10) || 0) });
     if (insErr) {
       setSending(false);
       setError(/duplicate|unique/i.test(insErr.message) ? 'Você já enviou um orçamento para esta solicitação.' : insErr.message);
@@ -191,11 +192,23 @@ export default function SolicitacaoDetail() {
               />
             </View>
 
+            <Text style={[styles.label, { marginTop: 14 }]}>Garantia (dias)</Text>
+            <View style={styles.valueField}>
+              <TextInput
+                value={warranty}
+                onChangeText={setWarranty}
+                placeholder="0"
+                placeholderTextColor={colors.gray400}
+                keyboardType="number-pad"
+                style={styles.valueInput}
+              />
+            </View>
+
             <Text style={[styles.label, { marginTop: 14 }]}>Descrição</Text>
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder="Ex: troca de tela original, garantia de 90 dias, pronto em 2 dias..."
+              placeholder="Ex: troca de tela original, pronto em 2 dias..."
               placeholderTextColor={colors.gray400}
               multiline
               style={styles.noteInput}
