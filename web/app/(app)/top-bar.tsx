@@ -12,6 +12,7 @@ const ROUTES: Record<string, { title: string; subtitle?: string }> = {
   '/produtos': { title: 'Produtos', subtitle: 'Gerencie o que sua loja vende no marketplace do app.' },
   '/chat': { title: 'Mensagens', subtitle: 'Converse com os clientes das suas solicitações.' },
   '/financeiro': { title: 'Financeiro', subtitle: 'Recebíveis confirmados (reparos + marketplace) — 97% líquido.' },
+  '/reputacao': { title: 'Reputação', subtitle: 'Notas, ranking e avaliações.' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Dados da loja, raio de atendimento e recebimento.' },
 };
 
