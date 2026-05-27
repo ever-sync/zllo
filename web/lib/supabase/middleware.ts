@@ -35,11 +35,14 @@ export async function updateSession(request: NextRequest) {
   const authed = Boolean(data?.claims);
 
   const { pathname } = request.nextUrl;
-  const isPublic = pathname.startsWith('/login') || pathname.startsWith('/auth');
+  const isPublic =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/cliente/login') ||
+    pathname.startsWith('/auth');
 
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = pathname.startsWith('/cliente') ? '/cliente/login' : '/login';
     return NextResponse.redirect(url);
   }
 
