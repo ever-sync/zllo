@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "eas:build:dev": "eas build --profile development --platform all",
     "eas:build:preview": "eas build --profile preview --platform all",
-    "eas:build:prod": "eas build --profile production --platform all"
+    "eas:build:prod": "eas build --profile production --platform all",
+    "eas:env:sync": "bash scripts/eas-env-sync.sh"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
@@ -26,6 +27,7 @@
     "expo": "~54.0.33",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.21",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",

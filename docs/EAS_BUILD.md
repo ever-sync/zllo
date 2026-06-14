@@ -1,36 +1,30 @@
-# Build nativo (EAS) — issue #12
+# Build nativo (EAS)
 
 Após mudanças de UX nativa (ex.: `expo-notifications`, splash, ícones), é necessário um **development build** ou build de preview — o Expo Go não cobre todos os plugins.
 
+## Projeto EAS
+
+- **Conta:** `@eversync/zllo`
+- **Project ID:** `a123dc4e-4e8c-43a8-a048-04ab8914fc83`
+- **Dashboard:** https://expo.dev/accounts/eversync/projects/zllo
+
+O `app.json` já contém `extra.eas.projectId` (gerado por `eas init`).
+
 ## Pré-requisitos
 
-1. Conta Expo: https://expo.dev
-2. CLI: `npm i -g eas-cli`
-3. Login: `eas login`
-4. Vincular projeto (gera `projectId` em `app.json`):
+1. CLI: `npm i -g eas-cli`
+2. Login: `eas login`
+3. `.env` local com Supabase (copie de `.env.example`)
+
+## Variáveis de ambiente no EAS
+
+Sincronize do `.env` local:
 
 ```bash
-eas init
+bash scripts/eas-env-sync.sh
 ```
 
-Confirme que `app.json` contém:
-
-```json
-"extra": {
-  "eas": {
-    "projectId": "<uuid>"
-  }
-}
-```
-
-Sem `projectId`, o registro de push em `lib/push.ts` não funciona.
-
-## Variáveis de ambiente
-
-Configure no EAS (secrets) ou `.env` local para builds:
-
-- `EXPO_PUBLIC_SUPABASE_URL`
-- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+Variáveis: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_ALLOW_TEST_PAY`.
 
 ## Comandos
 
