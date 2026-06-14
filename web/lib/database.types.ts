@@ -301,6 +301,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          data: Json
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1205,6 +1246,9 @@ export type Database = {
         Args: { p_kind: string; p_order_id: string; p_reason: string }
         Returns: string
       }
+      get_my_unread_notification_count: { Args: never; Returns: number }
+      mark_all_notifications_read: { Args: never; Returns: undefined }
+      mark_notification_read: { Args: { p_id: string }; Returns: undefined }
       register_push_token: {
         Args: { p_platform?: string; p_token: string }
         Returns: undefined

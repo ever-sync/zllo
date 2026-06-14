@@ -17,7 +17,7 @@ export function ClientSidebar({
 }: {
   name: string;
   email?: string | null;
-  badges: { requests?: number; productOrders?: number; devices?: number };
+  badges: { requests?: number; productOrders?: number; devices?: number; notifications?: number };
   cartLink?: ReactNode;
 }) {
   const pathname = usePathname();
@@ -27,6 +27,8 @@ export function ClientSidebar({
     { label: 'Pedidos', href: '/cliente/pedidos', icon: 'file', badge: badges.requests },
     { label: 'Aparelhos', href: '/cliente/aparelhos', icon: 'phone', badge: badges.devices },
     { label: 'Loja', href: '/cliente/loja', icon: 'store', badge: badges.productOrders },
+    { label: 'Vitrine', href: '/cliente/vitrine', icon: 'tag' },
+    { label: 'Notificações', href: '/cliente/notificacoes', icon: 'bell', badge: badges.notifications },
   ];
 
   return (
@@ -120,6 +122,18 @@ const ICONS = {
     <>
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <line x1="7" y1="7" x2="7.01" y2="7" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </>
   ),
 } as const;

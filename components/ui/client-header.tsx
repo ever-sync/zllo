@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/theme';
 
 /**
@@ -23,8 +25,17 @@ export function ClientHeader({
 }) {
   const router = useRouter();
   const { profile } = useAuth();
+  const [unread, setUnread] = useState(0);
   const firstName = profile?.full_name?.split(' ')[0] ?? '';
   const initial = (profile?.full_name?.trim()?.[0] ?? 'Z').toUpperCase();
+
+  useFocusEffect(
+    useCallback(() => {
+      supabase.rpc('get_my_unread_notification_count').then(({ data }) => {
+        setUnread(Number(data ?? 0));
+      });
+    }, []),
+  );
 
   return (
     <View style={styles.row}>
@@ -41,8 +52,13 @@ export function ClientHeader({
 
       <View style={styles.right}>
         {right}
-        <Pressable style={styles.bell} onPress={() => router.push('/(client)/(tabs)/pedidos')} hitSlop={8}>
+        <Pressable style={styles.bell} onPress={() => router.push('/(client)/notificacoes')} hitSlop={8}>
           <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+          {unread > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+            </View>
+          ) : null}
         </Pressable>
         {profile?.avatar_url ? (
           <Image source={{ uri: profile.avatar_url }} style={styles.avatar} contentFit="cover" />
@@ -63,7 +79,20 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
   sub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.white },
   avatar: { width: 40, height: 40, borderRadius: 20 },
   avatarFallback: { backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: fonts.headBlack, fontSize: 16, color: colors.ink },

@@ -143,6 +143,14 @@ export default async function ClienteHomePage() {
           </section>
 
           <section className="rounded-[14px] border border-line bg-white p-[18px]">
+            <h2 className="font-head text-lg font-extrabold text-ink">Vitrine P2P</h2>
+            <p className="mt-2 text-sm text-g600">Compre ou venda celulares usados entre usuários da zllo.</p>
+            <Link href="/cliente/vitrine" className="mt-4 inline-block text-sm font-bold text-blue">
+              Ver vitrine →
+            </Link>
+          </section>
+
+          <section className="rounded-[14px] border border-line bg-white p-[18px]">
             <h2 className="font-head text-lg font-extrabold text-ink">Últimos pedidos</h2>
             <div className="mt-4 flex flex-col gap-3">
               {orderRows.length === 0 ? (

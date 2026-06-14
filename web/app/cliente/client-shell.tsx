@@ -13,10 +13,11 @@ export async function ClientShell({ children }: { children: React.ReactNode }) {
   if (profile?.role === 'assistencia') redirect('/operacao');
   if (!profile) redirect('/cliente/login');
 
-  const [{ count: requests }, { count: productOrders }, { count: devices }] = await Promise.all([
+  const [{ count: requests }, { count: productOrders }, { count: devices }, { data: unreadNotif }] = await Promise.all([
     supabase.from('repair_requests').select('id', { count: 'exact', head: true }),
     supabase.from('product_orders').select('id', { count: 'exact', head: true }),
     supabase.from('devices').select('id', { count: 'exact', head: true }),
+    supabase.rpc('get_my_unread_notification_count'),
   ]);
 
   const name = profile.full_name ?? 'Cliente';
@@ -26,7 +27,12 @@ export async function ClientShell({ children }: { children: React.ReactNode }) {
       <ClientSidebar
         name={name}
         email={profile.email}
-        badges={{ requests: requests ?? 0, productOrders: productOrders ?? 0, devices: devices ?? 0 }}
+        badges={{
+          requests: requests ?? 0,
+          productOrders: productOrders ?? 0,
+          devices: devices ?? 0,
+          notifications: Number(unreadNotif ?? 0) || undefined,
+        }}
         cartLink={<CartNavLink />}
       />
       <main className="flex min-w-0 flex-1 flex-col">
