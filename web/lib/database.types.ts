@@ -1072,6 +1072,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_webhook_events: {
+        Args: { p_problems_only?: boolean }
+        Returns: Json
+      }
       admin_set_product_active: {
         Args: { p_active: boolean; p_id: string }
         Returns: undefined

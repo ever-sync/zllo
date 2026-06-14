@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { MessageBanner } from '@/components/ui/states';
 import { useAuth, type Profile } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { notify } from '@/lib/confirm';
@@ -107,7 +108,7 @@ export default function Checkout() {
         <Text style={styles.totalValue}>{priceBRL(total)}</Text>
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <MessageBanner variant="error">{error}</MessageBanner> : null}
 
       <Button label="Confirmar e pagar com Pix" onPress={onConfirm} loading={loading} style={{ marginTop: 16 }} />
       <Text style={styles.note}>Você gera o Pix na próxima tela. O pedido fica reservado até o pagamento.</Text>

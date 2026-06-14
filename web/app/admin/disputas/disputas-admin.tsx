@@ -32,6 +32,10 @@ function fmt(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
+function hoursOpen(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 3_600_000);
+}
+
 export function DisputasAdmin({ initial }: { initial: Dispute[] }) {
   const [items, setItems] = useState<Dispute[]>(initial);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -66,8 +70,10 @@ export function DisputasAdmin({ initial }: { initial: Dispute[] }) {
       {items.map((d) => {
         const meta = STATUS_META[d.status] ?? { label: d.status, cls: 'bg-g100 text-g600' };
         const open = d.status === 'aberta' || d.status === 'em_analise';
+        const ageH = hoursOpen(d.created_at);
+        const slaBreached = open && ageH >= 48;
         return (
-          <div key={d.id} className="rounded-2xl border border-line bg-white p-4">
+          <div key={d.id} className={'rounded-2xl border bg-white p-4 ' + (slaBreached ? 'border-[#FECACA]' : 'border-line')}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-head text-sm font-bold text-ink">
@@ -75,10 +81,18 @@ export function DisputasAdmin({ initial }: { initial: Dispute[] }) {
                 </p>
                 <p className="font-body text-xs text-g600">
                   {d.client?.split(' ')[0] ?? 'Cliente'} · aberta por <b>{d.opened_by}</b> · {fmt(d.created_at)}
+                  {open ? ` · ${ageH}h aberta` : ''}
                   {d.value != null ? ` · ${formatPrice(Number(d.value))}` : ''}
                 </p>
               </div>
-              <span className={'shrink-0 rounded-md px-2 py-1 font-head text-xs font-bold ' + meta.cls}>{meta.label}</span>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className={'rounded-md px-2 py-1 font-head text-xs font-bold ' + meta.cls}>{meta.label}</span>
+                {slaBreached ? (
+                  <span className="rounded-md bg-[#FEE2E2] px-2 py-0.5 font-head text-[10px] font-bold text-[#B91C1C]">
+                    SLA 48h
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <p className="mt-3 rounded-lg bg-g100 px-3 py-2 font-body text-sm text-ink">“{d.reason}”</p>

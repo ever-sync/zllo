@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { MessageBanner } from '@/components/ui/states';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/lib/auth';
 import { notify } from '@/lib/confirm';
@@ -123,7 +124,7 @@ export default function AnuncioNovo() {
         ) : null}
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <MessageBanner variant="error">{error}</MessageBanner> : null}
 
       <Button label="Publicar anúncio" onPress={onSubmit} loading={loading} style={{ marginTop: 22 }} />
     </Screen>

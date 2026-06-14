@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 import { fetchAdminMetrics } from '@/lib/cached-data';
 import { formatPrice } from '@/lib/product-orders';
 
@@ -13,16 +15,30 @@ type Metrics = {
   commission_repair: number;
   commission_products: number;
   reviews: number;
+  webhook_issues_24h?: number;
+  disputes_open?: number;
 };
 
-function Kpi({ label, value, accent }: { label: string; value: string; accent?: 'blue' | 'lime' }) {
+type WebhookEvent = {
+  id: string;
+  event: string;
+  provider_payment_id: string | null;
+  outcome: string;
+  created_at: string;
+  details: Record<string, unknown> | null;
+};
+
+function Kpi({ label, value, accent }: { label: string; value: string; accent?: 'blue' | 'lime' | 'warn' }) {
   const cls =
     accent === 'blue'
       ? 'bg-blue text-white'
       : accent === 'lime'
         ? 'bg-lime text-ink'
-        : 'bg-white text-ink border border-line';
-  const sub = accent === 'blue' ? 'text-white/70' : accent === 'lime' ? 'text-ink/60' : 'text-g600';
+        : accent === 'warn'
+          ? 'border border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C]'
+          : 'bg-white text-ink border border-line';
+  const sub =
+    accent === 'blue' ? 'text-white/70' : accent === 'lime' ? 'text-ink/60' : accent === 'warn' ? 'text-[#991B1B]' : 'text-g600';
   return (
     <div className={'rounded-2xl p-5 ' + cls}>
       <p className={'font-body text-xs ' + sub}>{label}</p>
@@ -31,9 +47,18 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
   );
 }
 
+function fmt(iso: string): string {
+  return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 export default async function AdminOverview() {
-  const data = await fetchAdminMetrics();
+  const supabase = await createClient();
+  const [data, { data: webhookData }] = await Promise.all([
+    fetchAdminMetrics(),
+    supabase.rpc('admin_webhook_events', { p_problems_only: true }),
+  ]);
   const m = (data as unknown as Metrics) ?? null;
+  const webhooks = (webhookData as unknown as WebhookEvent[]) ?? [];
 
   if (!m) {
     return (
@@ -46,6 +71,8 @@ export default async function AdminOverview() {
 
   const gmv = Number(m.gmv_repair) + Number(m.gmv_products);
   const commission = Number(m.commission_repair) + Number(m.commission_products);
+  const webhookIssues = Number(m.webhook_issues_24h ?? 0);
+  const disputesOpen = Number(m.disputes_open ?? 0);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
@@ -53,6 +80,43 @@ export default async function AdminOverview() {
         <h1 className="font-head text-2xl font-black text-ink">Visão geral</h1>
         <p className="font-body text-sm text-g600">Indicadores da plataforma zllo.</p>
       </header>
+
+      {(webhookIssues > 0 || disputesOpen > 0) ? (
+        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {webhookIssues > 0 ? (
+            <Kpi label="Alertas webhook (24h)" value={String(webhookIssues)} accent="warn" />
+          ) : null}
+          {disputesOpen > 0 ? (
+            <Link href="/admin/disputas" className="block">
+              <Kpi label="Disputas abertas" value={String(disputesOpen)} accent="warn" />
+            </Link>
+          ) : null}
+        </section>
+      ) : null}
+
+      {webhooks.length > 0 ? (
+        <section className="mb-6 overflow-hidden rounded-2xl border border-[#FECACA] bg-white">
+          <div className="border-b border-line bg-[#FEF2F2] px-4 py-3">
+            <h2 className="font-head text-sm font-bold text-[#B91C1C]">Webhook Pix — problemas recentes</h2>
+          </div>
+          {webhooks.slice(0, 8).map((w) => (
+            <div key={w.id} className="border-b border-line px-4 py-2.5 last:border-0">
+              <p className="font-body text-xs text-ink">
+                <span className="font-bold">{w.outcome}</span> · {w.event} · {fmt(w.created_at)}
+              </p>
+              <p className="font-body text-[11px] text-g600">
+                {w.provider_payment_id ?? '—'}
+                {w.details?.error ? ` · ${String(w.details.error)}` : ''}
+              </p>
+            </div>
+          ))}
+          <div className="px-4 py-2">
+            <Link href="/admin/transacoes" className="font-body text-xs font-semibold text-blue">
+              Ver conciliação de pagamentos →
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="mb-4">
         <h2 className="mb-3 font-head text-xs font-bold uppercase tracking-wide text-g600">Receita</h2>
