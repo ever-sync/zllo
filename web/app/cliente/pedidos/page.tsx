@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getDeviceName, formatBRL } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
@@ -84,7 +85,11 @@ export default async function ClientePedidosPage() {
             <p className="text-sm text-g600">Nenhuma solicitação enviada ainda.</p>
           ) : (
             requestRows.map((request) => (
-              <div key={request.id} className="rounded-xl border border-line p-4">
+              <Link
+                key={request.id}
+                href={`/cliente/pedido/${request.id}`}
+                className="block rounded-xl border border-line p-4 transition-shadow hover:shadow-md"
+              >
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <strong className="font-head text-base text-ink">{getDeviceName(request.device)}</strong>
                   <RequestPill status={request.status} />
@@ -105,7 +110,7 @@ export default async function ClientePedidosPage() {
                     ))
                   )}
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
