@@ -23,9 +23,11 @@ export function ListingOwnerThreads({ listingId }: { listingId: string }) {
     setLoading(false);
   }, [supabase, listingId]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- initial fetch on mount */
   useEffect(() => {
     void load();
   }, [load]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (loading) {
     return <div className="mt-8 h-24 animate-pulse rounded-xl bg-g100" />;

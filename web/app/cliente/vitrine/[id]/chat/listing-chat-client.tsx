@@ -71,6 +71,7 @@ export function ListingChatClient({
     void load();
   }, 300);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- initial fetch + realtime subscription on mount */
   useEffect(() => {
     void load();
   }, [load]);
@@ -94,6 +95,7 @@ export function ListingChatClient({
       supabase.removeChannel(ch);
     };
   }, [supabase, listingId, threadBuyerId, scheduleLoad]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
