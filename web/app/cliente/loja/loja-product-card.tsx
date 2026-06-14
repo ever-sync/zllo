@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { AddToCartButton, type ProductCartInput } from '@/components/add-to-cart-button';
 import { formatBRL } from '@/lib/format';
 
-type Product = ProductCartInput & {
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  shop_id: string;
   description: string | null;
   category: string | null;
   photos: string[];

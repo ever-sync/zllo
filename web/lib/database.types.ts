@@ -1158,6 +1158,7 @@ export type Database = {
         }[]
       }
       cancel_product_order: { Args: { p_order_id: string }; Returns: undefined }
+      confirm_payment_test: { Args: { p_kind: string; p_order_id: string }; Returns: undefined }
       create_product_order: {
         Args: {
           p_address?: string

@@ -88,7 +88,7 @@ export function ConfiguracoesClient({ initial }: { initial: ShopConfig | null })
 
     const { error: shopErr } = await supabase.rpc('upsert_my_shop', {
       p_name: form.name.trim(),
-      p_address: form.address.trim() || null,
+      p_address: form.address.trim() || 'Endereço não informado',
       p_brands: form.brands,
       p_radius: Number(form.service_radius_km) || 10,
       p_lat: loc.lat,

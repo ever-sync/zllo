@@ -126,7 +126,7 @@ function ShipOption({ label, active, onPress }: { label: string; active: boolean
   return (
     <button
       type="button"
-      onPress={onPress}
+      onClick={onPress}
       className={
         'rounded-xl border px-4 py-4 text-center text-sm font-bold transition-colors ' +
         (active ? 'border-blue bg-[#EEEEFF] text-blue' : 'border-line bg-white text-ink')
