@@ -19,13 +19,13 @@ export default async function PainelPage() {
           </div>
           <h1 className="font-head text-xl font-extrabold text-ink">Configure sua loja</h1>
           <p className="mx-auto mt-2 max-w-sm font-body text-sm leading-relaxed text-g600">
-            Complete o cadastro da assistência no app mobile para receber orçamentos e gerenciar ordens por aqui.
+            Complete o cadastro da assistência aqui no painel web para receber orçamentos e gerenciar ordens.
           </p>
           <Link
             href="/configuracoes"
-            className="mt-6 inline-block rounded-xl border border-line px-5 py-3 font-head text-sm font-bold text-ink transition-colors hover:bg-g100"
+            className="mt-6 inline-block rounded-xl bg-blue px-5 py-3 font-head text-sm font-bold text-white transition-opacity hover:opacity-90"
           >
-            Ver configurações
+            Configurar loja
           </Link>
         </div>
       </div>
