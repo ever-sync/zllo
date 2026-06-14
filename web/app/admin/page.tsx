@@ -17,6 +17,10 @@ type Metrics = {
   reviews: number;
   webhook_issues_24h?: number;
   disputes_open?: number;
+  requests_with_quotes?: number;
+  conversion_quote_to_os_pct?: number;
+  avg_first_quote_minutes?: number;
+  sla_first_quote_on_time_pct?: number;
 };
 
 type WebhookEvent = {
@@ -117,6 +121,35 @@ export default async function AdminOverview() {
           </div>
         </section>
       ) : null}
+
+      <section className="mb-4">
+        <h2 className="mb-3 font-head text-xs font-bold uppercase tracking-wide text-g600">Operação (90 dias)</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Kpi
+            label="Conversão orçamento → OS"
+            value={`${Number(m.conversion_quote_to_os_pct ?? 0).toFixed(1)}%`}
+            accent="blue"
+          />
+          <Kpi
+            label="Tempo médio 1º orçamento"
+            value={`${Number(m.avg_first_quote_minutes ?? 0)} min`}
+          />
+          <Kpi
+            label="SLA 1ª resposta no prazo"
+            value={`${Number(m.sla_first_quote_on_time_pct ?? 0).toFixed(1)}%`}
+            accent={
+              Number(m.sla_first_quote_on_time_pct ?? 0) >= 80
+                ? 'lime'
+                : Number(m.sla_first_quote_on_time_pct ?? 0) >= 50
+                  ? undefined
+                  : 'warn'
+            }
+          />
+        </div>
+        <p className="mt-2 font-body text-xs text-g600">
+          {m.requests_with_quotes ?? 0} solicitações com orçamento · {m.service_orders} ordens de serviço criadas.
+        </p>
+      </section>
 
       <section className="mb-4">
         <h2 className="mb-3 font-head text-xs font-bold uppercase tracking-wide text-g600">Receita</h2>

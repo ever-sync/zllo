@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
-import { EmptyState, ErrorState, Skeleton, SkeletonCard } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';

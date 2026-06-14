@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
-import { colors, fonts, radius } from '@/theme';
+import { colors, fonts } from '@/theme';
 
 const WEB_PAINEL = 'https://zllo-admin-production.up.railway.app';
 

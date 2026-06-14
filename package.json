@@ -12,7 +12,8 @@
     "eas:build:dev": "eas build --profile development --platform all",
     "eas:build:preview": "eas build --profile preview --platform all",
     "eas:build:prod": "eas build --profile production --platform all",
-    "eas:env:sync": "bash scripts/eas-env-sync.sh"
+    "eas:env:sync": "bash scripts/eas-env-sync.sh",
+    "smoke:ci": "bash scripts/smoke-ci.sh"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
