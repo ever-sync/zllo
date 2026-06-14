@@ -85,6 +85,8 @@ export default function Ordens() {
               ? 'Quando um cliente aceitar seu orçamento, a ordem de serviço aparece aqui.'
               : 'Ordens concluídas ficam registradas nesta aba.'
           }
+          actionLabel={tab === 'andamento' ? 'Ver orçamentos' : undefined}
+          onAction={tab === 'andamento' ? () => router.push('/(shop)/(tabs)/orcamentos') : undefined}
         />
       ) : (
         <View style={{ gap: 10 }}>

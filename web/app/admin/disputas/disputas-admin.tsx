@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { adminResolveDispute } from '../actions';
 import type { Database } from '@/lib/database.types';
@@ -61,6 +62,9 @@ export function DisputasAdmin({ initial }: { initial: Dispute[] }) {
     return (
       <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
         <p className="font-body text-sm text-g600">Nenhuma disputa. 🎉</p>
+        <Link href="/admin" className="mt-4 inline-block text-sm font-semibold text-blue">
+          Voltar ao painel
+        </Link>
       </div>
     );
   }

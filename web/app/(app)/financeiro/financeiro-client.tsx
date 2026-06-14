@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { formatPrice } from '@/lib/product-orders';
 import {
@@ -81,6 +82,9 @@ export function FinanceiroClient({ txs }: { txs: FinanceTx[] }) {
       {filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
           <p className="font-body text-sm text-g600">Nenhum recebível confirmado neste período.</p>
+          <Link href="/operacao" className="mt-4 inline-block font-head text-sm font-bold text-blue">
+            Ver solicitações ativas →
+          </Link>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-line bg-white">

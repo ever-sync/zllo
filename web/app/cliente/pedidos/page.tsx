@@ -22,6 +22,7 @@ type RepairRequest = {
 
 type ServiceOrder = {
   id: string;
+  request_id: string;
   status: string;
   value: number;
   created_at: string;
@@ -29,38 +30,102 @@ type ServiceOrder = {
   device: { nickname: string | null; brand: string | null; model: string | null } | null;
 };
 
+type ProductOrder = {
+  id: string;
+  total: number;
+  status: string;
+  created_at: string;
+  shop: { name: string } | null;
+};
+
+function productStatus(status: string) {
+  const labels: Record<string, string> = {
+    aguardando_pagamento: 'Aguardando pagamento',
+    pago: 'Pago',
+    separando: 'Separando',
+    pronto: 'Pronto para retirada',
+    concluido: 'Concluído',
+    cancelado: 'Cancelado',
+  };
+  return labels[status] ?? status;
+}
+
 export default async function ClientePedidosPage() {
   const supabase = await createClient();
-  const [{ data: requests }, { data: orders }] = await Promise.all([
+  const [{ data: requests }, { data: orders }, { data: productOrders }] = await Promise.all([
     supabase
       .from('repair_requests')
       .select('id, description, shipping_type, status, created_at, device:devices(nickname, brand, model), quotes(id, value, description, status, shop:shops(name, rating))')
       .order('created_at', { ascending: false }),
     supabase
       .from('service_orders')
-      .select('id, status, value, created_at, shop:shops(name), device:devices(nickname, brand, model)')
+      .select('id, request_id, status, value, created_at, shop:shops(name), device:devices(nickname, brand, model)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('product_orders')
+      .select('id, total, status, created_at, shop:shops(name)')
       .order('created_at', { ascending: false }),
   ]);
 
   const requestRows = (requests as unknown as RepairRequest[] | null) ?? [];
   const orderRows = (orders as unknown as ServiceOrder[] | null) ?? [];
+  const productRows = (productOrders as unknown as ProductOrder[] | null) ?? [];
 
   return (
     <ClientShell>
     <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
-      <div className="mb-6">
-        <h1 className="font-head text-2xl font-extrabold text-ink">Pedidos</h1>
-        <p className="mt-1 text-sm text-g600">Acompanhe solicitações, orçamentos e ordens de serviço.</p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-head text-2xl font-extrabold text-ink">Pedidos</h1>
+          <p className="mt-1 text-sm text-g600">Reparos, ordens de serviço e compras na loja.</p>
+        </div>
+        <Link href="/cliente/solicitar" className="rounded-full bg-blue px-4 py-2 text-sm font-bold text-white">
+          Pedir assistência
+        </Link>
       </div>
 
       <section className="rounded-[14px] border border-line bg-white p-4 md:p-[18px]">
+        <h2 className="font-head text-lg font-extrabold text-ink">Compras na loja</h2>
+        <div className="mt-4 flex flex-col gap-3">
+          {productRows.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-line p-6 text-center">
+              <p className="text-sm text-g600">Nenhuma compra ainda.</p>
+              <Link href="/cliente/loja" className="mt-3 inline-block text-sm font-semibold text-blue">
+                Abrir loja →
+              </Link>
+            </div>
+          ) : (
+            productRows.map((order) => (
+              <Link
+                key={order.id}
+                href={`/cliente/pedido-produto/${order.id}`}
+                className="block rounded-xl border border-line p-4 transition-shadow hover:shadow-md"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong className="font-head text-base text-ink">{order.shop?.name ?? 'Loja'}</strong>
+                  <span className="rounded-full bg-g100 px-2.5 py-1 text-xs font-bold text-g600">
+                    {productStatus(order.status)}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-ink">{formatBRL(Number(order.total))}</p>
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-[14px] border border-line bg-white p-4 md:p-[18px]">
         <h2 className="font-head text-lg font-extrabold text-ink">Ordens de serviço</h2>
         <div className="mt-4 flex flex-col gap-3">
           {orderRows.length === 0 ? (
             <p className="text-sm text-g600">Nenhuma ordem aberta ainda.</p>
           ) : (
             orderRows.map((order) => (
-              <div key={order.id} className="rounded-xl border border-line p-4">
+              <Link
+                key={order.id}
+                href={`/cliente/pedido/${order.request_id}`}
+                className="block rounded-xl border border-line p-4 transition-shadow hover:shadow-md"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <strong className="font-head text-base text-ink">{getDeviceName(order.device)}</strong>
                   <span className="rounded-full bg-[#EEEEFF] px-2.5 py-1 text-xs font-bold text-blue">
@@ -72,7 +137,7 @@ export default async function ClientePedidosPage() {
                   <span>•</span>
                   <strong className="text-ink">{formatBRL(Number(order.value))}</strong>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
@@ -82,7 +147,12 @@ export default async function ClientePedidosPage() {
         <h2 className="font-head text-lg font-extrabold text-ink">Solicitações e orçamentos</h2>
         <div className="mt-4 flex flex-col gap-3">
           {requestRows.length === 0 ? (
-            <p className="text-sm text-g600">Nenhuma solicitação enviada ainda.</p>
+            <div className="rounded-xl border border-dashed border-line p-6 text-center">
+              <p className="text-sm text-g600">Nenhuma solicitação enviada ainda.</p>
+              <Link href="/cliente/solicitar" className="mt-3 inline-block text-sm font-semibold text-blue">
+                Pedir assistência →
+              </Link>
+            </div>
           ) : (
             requestRows.map((request) => (
               <Link

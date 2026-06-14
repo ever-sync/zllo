@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+echo "→ Notification href tests"
+npm run test:notifications
+
 echo "→ Mobile lint"
 npm run lint
 

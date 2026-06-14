@@ -101,6 +101,9 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
           <p className="mx-auto mt-1 max-w-xs font-body text-xs leading-relaxed text-g600">
             Novos pedidos de reparo aparecem aqui automaticamente quando clientes da região solicitam assistência.
           </p>
+          <Link href="/configuracoes" className="mt-4 inline-block font-head text-xs font-bold text-blue">
+            Verificar configurações da loja →
+          </Link>
         </div>
       ) : (
         chegando.map((it) => {

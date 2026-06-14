@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/database.types';
@@ -99,6 +100,11 @@ export function OrdensClient({ shopId, initial }: { shopId: string; initial: Ser
       {list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
           <p className="font-body text-sm text-g600">Nenhuma ordem neste filtro.</p>
+          {filter === 'ativas' ? (
+            <Link href="/orcamentos" className="mt-4 inline-block font-head text-sm font-bold text-blue">
+              Ver orçamentos enviados →
+            </Link>
+          ) : null}
         </div>
       ) : (
         <div className="flex flex-col gap-4">

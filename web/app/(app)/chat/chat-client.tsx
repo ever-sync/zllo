@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { buildConversations, type ChatConversation, type RawChatMsg } from '@/lib/chat';
@@ -110,7 +111,12 @@ export function ChatClient({
     <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-white">
       <aside className="w-64 shrink-0 overflow-y-auto border-r border-line">
         {convs.length === 0 ? (
-          <p className="p-5 font-body text-sm text-g600">Nenhuma conversa ainda.</p>
+          <div className="p-5">
+            <p className="font-body text-sm text-g600">Nenhuma conversa ainda.</p>
+            <Link href="/operacao" className="mt-3 inline-block text-sm font-bold text-blue">
+              Ver solicitações →
+            </Link>
+          </div>
         ) : (
           convs.map((c) => (
             <button

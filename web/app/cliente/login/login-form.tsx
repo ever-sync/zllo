@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
 import { Field } from '@/components/ui/field';
 import { loginCliente, type ClienteLoginState } from './actions';
@@ -42,6 +43,14 @@ export function ClienteLoginForm() {
       >
         {pending ? 'Entrando…' : 'Entrar como cliente'}
       </button>
+
+      <Link href="/cliente/esqueci-senha" className="text-center text-sm font-semibold text-blue">
+        Esqueci minha senha
+      </Link>
+
+      <Link href="/cliente/register" className="text-center text-sm text-g600">
+        Não tem conta? <span className="font-semibold text-blue">Criar agora</span>
+      </Link>
     </form>
   );
 }

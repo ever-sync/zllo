@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { formatBRL } from '@/lib/format';
 import { ClientShell } from '../../client-shell';
 import { deleteListing } from './actions';
+import { ListingInterestPanel } from './listing-interest';
 
 export default async function ClienteVitrineDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -58,17 +59,21 @@ export default async function ClienteVitrineDetailPage({ params }: { params: Pro
         {isOwner ? (
           <form action={deleteListing} className="mt-8">
             <input type="hidden" name="id" value={listing.id} />
+            <Link
+              href={`/cliente/vitrine/${listing.id}/editar`}
+              className="mb-3 inline-flex rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-blue"
+            >
+              Editar anúncio
+            </Link>
             <button
               type="submit"
-              className="rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-[#B91C1C]"
+              className="block rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-[#B91C1C]"
             >
               Excluir anúncio
             </button>
           </form>
         ) : (
-          <p className="mt-8 rounded-xl border border-line bg-white p-4 text-sm text-g600">
-            Anúncio publicado por outro usuário da zllo.
-          </p>
+          <ListingInterestPanel listingId={listing.id} />
         )}
       </div>
     </ClientShell>

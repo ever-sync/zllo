@@ -14,6 +14,7 @@ const ROUTES: Record<string, { title: string; subtitle?: string }> = {
   '/financeiro': { title: 'Financeiro', subtitle: 'Recebíveis confirmados (reparos + marketplace) — 97% líquido.' },
   '/reputacao': { title: 'Reputação', subtitle: 'Notas, ranking e avaliações.' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Dados da loja, raio de atendimento e recebimento.' },
+  '/notificacoes': { title: 'Notificações', subtitle: 'Solicitações, vendas e mensagens da sua loja.' },
 };
 
 export function TopBar({
@@ -22,12 +23,14 @@ export function TopBar({
   initialOnline,
   pending,
   os,
+  notifications = 0,
 }: {
   shopName: string;
   shopId?: string;
   initialOnline: boolean;
   pending: number;
   os: number;
+  notifications?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -76,13 +79,27 @@ export function TopBar({
       <div className="flex shrink-0 items-center gap-3">
         {shopId && <OnlineToggle shopId={shopId} initialOnline={initialOnline} />}
         <Link
+          href="/notificacoes"
+          className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-g100 text-ink"
+          aria-label="Notificações"
+        >
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          {notifications > 0 ? (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue px-1 font-head text-[10px] font-bold text-white">
+              {notifications > 99 ? '99+' : notifications}
+            </span>
+          ) : null}
+        </Link>
+        <Link
           href="/chat"
           className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-g100 text-ink"
           aria-label="Mensagens"
         >
           <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </Link>
       </div>

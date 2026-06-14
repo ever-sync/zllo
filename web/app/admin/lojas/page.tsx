@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { fetchAdminShops } from '@/lib/cached-data';
 
 type AdminShop = {
@@ -25,6 +26,9 @@ export default async function AdminLojas() {
       {shops.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
           <p className="font-body text-sm text-g600">Nenhuma loja ainda.</p>
+          <Link href="/admin" className="mt-4 inline-block text-sm font-semibold text-blue">
+            Voltar ao painel
+          </Link>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-line bg-white">

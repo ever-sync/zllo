@@ -19,8 +19,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   let orcamentos = 0;
   let ordens = 0;
+  let notifications = 0;
   if (shop?.id) {
-    const [{ count: oc }, { count: os }] = await Promise.all([
+    const [{ count: oc }, { count: os }, { data: unreadNotif }] = await Promise.all([
       supabase
         .from('request_targets')
         .select('id', { count: 'exact', head: true })
@@ -31,9 +32,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         .select('id', { count: 'exact', head: true })
         .eq('shop_id', shop.id)
         .not('status', 'in', '(concluida,cancelada)'),
+      supabase.rpc('get_my_unread_notification_count'),
     ]);
     orcamentos = oc ?? 0;
     ordens = os ?? 0;
+    notifications = Number(unreadNotif ?? 0);
   }
 
   return (
@@ -41,7 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar
         shopName={shop?.name ?? profile.full_name ?? 'Minha loja'}
         shopCity={profile.city ?? null}
-        badges={{ orcamentos, ordens }}
+        badges={{ orcamentos, ordens, notifications: notifications || undefined }}
       />
       <main className="flex min-w-0 flex-1 flex-col bg-paper">
         <TopBar
@@ -50,6 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           initialOnline={shop?.is_online ?? false}
           pending={orcamentos}
           os={ordens}
+          notifications={notifications}
         />
         <div className="flex-1">{children}</div>
       </main>

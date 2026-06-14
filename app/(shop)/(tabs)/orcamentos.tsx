@@ -95,6 +95,8 @@ export default function Orcamentos() {
           icon="flash-outline"
           title="Nenhuma solicitação agora"
           description="Novos pedidos de reparo aparecem aqui automaticamente quando clientes da região solicitam assistência."
+          actionLabel="Ver perfil da loja"
+          onAction={() => router.push('/(shop)/(tabs)/perfil')}
           style={{ marginTop: 14 }}
         />
       ) : (

@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import { PushNavigationHandler } from '@/components/push-navigation-handler';
 import { AuthProvider } from '@/lib/auth';
 
 export const unstable_settings = {
@@ -37,6 +38,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+        <PushNavigationHandler />
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false }} />
       </AuthProvider>

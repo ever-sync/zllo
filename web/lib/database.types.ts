@@ -242,6 +242,45 @@ export type Database = {
           },
         ]
       }
+      listing_interests: {
+        Row: {
+          id: string
+          listing_id: string
+          buyer_id: string
+          message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          buyer_id: string
+          message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          buyer_id?: string
+          message?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_interests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_interests_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -1246,6 +1285,14 @@ export type Database = {
       open_dispute: {
         Args: { p_kind: string; p_order_id: string; p_reason: string }
         Returns: string
+      }
+      express_listing_interest: {
+        Args: { p_listing_id: string; p_message?: string | null }
+        Returns: undefined
+      }
+      get_listing_seller_contact: {
+        Args: { p_listing_id: string }
+        Returns: Json
       }
       get_my_unread_notification_count: { Args: never; Returns: number }
       get_regional_shop_ranking: {

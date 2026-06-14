@@ -109,10 +109,10 @@ export default async function ClienteHomePage() {
           </div>
           <div className="flex flex-col gap-3">
             {repairRows.length === 0 ? (
-              <Empty title="Nenhuma solicitação ainda" text="Comece pedindo assistência para um aparelho cadastrado." />
+              <Empty title="Nenhuma solicitação ainda" text="Comece pedindo assistência para um aparelho cadastrado." href="/cliente/solicitar" />
             ) : (
               repairRows.map((request) => (
-                <div key={request.id} className="rounded-xl border border-line p-4">
+                <Link key={request.id} href={`/cliente/pedido/${request.id}`} className="block rounded-xl border border-line p-4 transition-shadow hover:shadow-md">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <strong className="font-head text-[15px] text-ink">{getDeviceName(request.device)}</strong>
                     <StatusPill status={request.status} />
@@ -123,7 +123,7 @@ export default async function ClienteHomePage() {
                     <span>•</span>
                     <span>{request.quotes.length} orçamento(s)</span>
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -137,13 +137,13 @@ export default async function ClienteHomePage() {
                 <p className="text-sm text-g400">Nenhum produto ativo encontrado.</p>
               ) : (
                 productRows.map((product) => (
-                  <div key={product.id} className="rounded-xl bg-white/5 p-3">
+                  <Link key={product.id} href={`/cliente/produto/${product.id}`} className="block rounded-xl bg-white/5 p-3 transition-opacity hover:opacity-90">
                     <div className="text-[13px] font-bold">{product.name}</div>
                     <div className="mt-1 flex items-center justify-between gap-2 text-xs">
                       <span className="truncate text-g400">{product.shop?.name ?? 'Loja zllo'}</span>
                       <strong className="text-lime">{formatBRL(Number(product.price))}</strong>
                     </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -167,13 +167,13 @@ export default async function ClienteHomePage() {
                 <p className="text-sm text-g600">Você ainda não comprou produtos pela loja.</p>
               ) : (
                 orderRows.map((order) => (
-                  <div key={order.id} className="border-b border-line pb-3 last:border-0 last:pb-0">
+                  <Link key={order.id} href={`/cliente/pedido-produto/${order.id}`} className="block border-b border-line pb-3 last:border-0 last:pb-0 hover:opacity-80">
                     <div className="flex items-center justify-between gap-3">
                       <span className="truncate text-sm font-semibold text-ink">{order.shop?.name ?? 'Loja'}</span>
                       <strong className="font-head text-sm text-ink">{formatBRL(Number(order.total))}</strong>
                     </div>
                     <p className="mt-1 text-xs text-g600">{productStatus(order.status)}</p>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -208,11 +208,16 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.cls}`}>{item.label}</span>;
 }
 
-function Empty({ title, text }: { title: string; text: string }) {
+function Empty({ title, text, href }: { title: string; text: string; href?: string }) {
   return (
     <div className="rounded-xl border border-dashed border-line p-8 text-center">
       <strong className="font-head text-base text-ink">{title}</strong>
       <p className="mx-auto mt-1 max-w-md text-sm text-g600">{text}</p>
+      {href ? (
+        <Link href={href} className="mt-4 inline-block text-sm font-semibold text-blue">
+          Começar agora →
+        </Link>
+      ) : null}
     </div>
   );
 }

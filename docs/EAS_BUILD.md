@@ -58,10 +58,19 @@ npm run eas:post-build -- <build-id>
 1. Login cliente e assistência
 2. Tour cliente (3 passos) na home
 3. Solicitar reparo + receber orçamento (push + centro de notificações)
-4. Chat entre cliente e loja
-5. Vitrine: listar, criar anúncio com foto, abrir detalhe
-6. Loja: carrinho, checkout Pix
-7. Push token registrado (`push_tokens` no Supabase)
+4. **Notificações:** toque em push e card in-app → abre pedido/chat correto
+5. Chat entre cliente e loja
+6. Vitrine: listar, criar anúncio com foto, **tenho interesse** + contato
+7. Loja: carrinho, checkout Pix
+8. Assistência: produtos com foto, notificações (sino no header)
+9. Push token registrado (`push_tokens` no Supabase)
+
+Teste automatizado local/CI:
+
+```bash
+npm run test:notifications
+npm run smoke:ci
+```
 
 ## Notas
 

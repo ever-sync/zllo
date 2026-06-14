@@ -1,11 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useShop } from '@/lib/shop';
+import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
 /**
- * Header padrão das telas da loja: saudação OU título à esquerda; pílula de
- * status online (alterna ao tocar) + avatar à direita. Ação extra opcional.
+ * Header padrão das telas da loja: saudação OU título à esquerda; sino de
+ * notificações + pílula online + avatar à direita.
  */
 export function ShopHeader({
   title,
@@ -18,11 +22,21 @@ export function ShopHeader({
   greeting?: boolean;
   right?: ReactNode;
 }) {
+  const router = useRouter();
   const { shop, setOnline } = useShop();
+  const [unread, setUnread] = useState(0);
   const name = shop?.name ?? 'Loja';
   const firstName = name.split(' ')[0];
   const initial = name.trim()[0]?.toUpperCase() ?? 'L';
   const online = shop?.is_online ?? false;
+
+  useFocusEffect(
+    useCallback(() => {
+      void supabase.rpc('get_my_unread_notification_count').then(({ data }) => {
+        setUnread(Number(data ?? 0));
+      });
+    }, []),
+  );
 
   return (
     <View style={styles.row}>
@@ -39,6 +53,14 @@ export function ShopHeader({
 
       <View style={styles.right}>
         {right}
+        <Pressable style={styles.bell} onPress={() => router.push('/(shop)/notificacoes')} hitSlop={8}>
+          <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+          {unread > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+            </View>
+          ) : null}
+        </Pressable>
         <Pressable
           style={[styles.toggle, { backgroundColor: online ? colors.lime : colors.gray200 }]}
           onPress={() => setOnline(!online)}
@@ -64,6 +86,30 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.ink, letterSpacing: -0.5 },
   sub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  bell: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.white },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11, paddingVertical: 7, borderRadius: radius.full },
   dot: { width: 8, height: 8, borderRadius: 4 },
   toggleText: { fontFamily: fonts.headBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 },

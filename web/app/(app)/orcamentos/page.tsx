@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getDeviceName } from '@/lib/format';
 import { formatPrice } from '@/lib/product-orders';
@@ -44,6 +45,9 @@ export default async function OrcamentosPage() {
           <p className="font-body text-sm text-g600">
             Nenhum orçamento ainda. Eles aparecem aqui quando você responde uma solicitação na Operação.
           </p>
+          <Link href="/operacao" className="mt-4 inline-block font-head text-sm font-bold text-blue">
+            Ir para Operação →
+          </Link>
         </div>
       ) : (
         <div className="flex flex-col gap-4">

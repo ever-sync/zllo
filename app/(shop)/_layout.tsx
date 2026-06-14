@@ -23,6 +23,7 @@ export default function ShopLayout() {
         <Stack.Screen name="reputacao" />
         <Stack.Screen name="produtos" />
         <Stack.Screen name="configuracoes" />
+        <Stack.Screen name="notificacoes" />
       </Stack>
     </ShopProvider>
   );

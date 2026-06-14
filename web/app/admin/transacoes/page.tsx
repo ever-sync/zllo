@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { fetchAdminOrders } from '@/lib/cached-data';
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice } from '@/lib/product-orders';
@@ -38,6 +39,9 @@ export default async function AdminTransacoes() {
       {txs.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
           <p className="font-body text-sm text-g600">Nenhuma transação ainda.</p>
+          <Link href="/admin" className="mt-4 inline-block text-sm font-semibold text-blue">
+            Voltar ao painel
+          </Link>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-line bg-white">

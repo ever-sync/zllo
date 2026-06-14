@@ -5,12 +5,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
+import { useAuth } from '@/lib/auth';
 import { fmtNotificationTime, notificationHref, type NotificationRow } from '@/lib/notification-routes';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
 export default function Notificacoes() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const role = profile?.role ?? 'cliente';
   const [rows, setRows] = useState<NotificationRow[] | null>(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -40,7 +43,7 @@ export default function Notificacoes() {
       await supabase.rpc('mark_notification_read', { p_id: n.id });
       setRows((prev) => (prev ?? []).map((row) => (row.id === n.id ? { ...row, read_at: new Date().toISOString() } : row)));
     }
-    const href = notificationHref(n);
+    const href = notificationHref(n, role);
     if (href) router.push(href as never);
   };
 
@@ -73,7 +76,7 @@ export default function Notificacoes() {
         <View style={{ gap: 10, marginTop: 8 }}>
           {rows.map((n) => {
             const unread = !n.read_at;
-            const href = notificationHref(n);
+            const href = notificationHref(n, role);
             return (
               <Pressable
                 key={n.id}

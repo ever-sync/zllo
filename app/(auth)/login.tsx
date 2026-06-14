@@ -70,6 +70,10 @@ export default function Login() {
 
         <Button label="Entrar" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
 
+        <Pressable onPress={() => router.push('/(auth)/esqueci-senha')} style={styles.forgot}>
+          <Text style={styles.footerLink}>Esqueci minha senha</Text>
+        </Pressable>
+
         <Pressable onPress={() => router.replace('/(auth)/register')} style={styles.footer}>
           <Text style={styles.footerText}>
             Não tem conta? <Text style={styles.footerLink}>Criar agora</Text>
@@ -95,6 +99,7 @@ const styles = StyleSheet.create({
   },
   error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.redText, lineHeight: 18 },
   footer: { marginTop: 16, alignItems: 'center' },
+  forgot: { marginTop: 12, alignItems: 'center' },
   footerText: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   footerLink: { fontFamily: fonts.bodyBold, color: colors.blue },
 });

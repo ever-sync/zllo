@@ -148,8 +148,9 @@ export default function ClientHome() {
             {ranking.map((row) => {
               const badge = rankBadge(row.badge);
               return (
-                <View
+                <Pressable
                   key={row.id}
+                  onPress={() => router.push('/(client)/solicitar')}
                   style={[styles.rankCard, row.rank_position === 1 && { borderColor: colors.lime, backgroundColor: '#F7FEE7' }]}
                 >
                   <Text style={styles.rankPos}>{row.rank_position}</Text>
@@ -164,7 +165,7 @@ export default function ClientHome() {
                       <Text style={[styles.rankBadgeText, { color: badge.fg }]}>{badge.label}</Text>
                     </View>
                   ) : null}
-                </View>
+                </Pressable>
               );
             })}
           </View>
