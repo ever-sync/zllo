@@ -1,3 +1,5 @@
-export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
-  return children;
+import { ClienteProviders } from './providers';
+
+export default function ClienteLayout({ children }: { children: React.ReactNode }) {
+  return <ClienteProviders>{children}</ClienteProviders>;
 }

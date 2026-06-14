@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ClientSidebar } from './client-sidebar';
+import { CartNavLink } from './cart-nav-link';
 
 export async function ClientShell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,6 +27,7 @@ export async function ClientShell({ children }: { children: React.ReactNode }) {
         name={name}
         email={profile.email}
         badges={{ requests: requests ?? 0, productOrders: productOrders ?? 0, devices: devices ?? 0 }}
+        cartLink={<CartNavLink />}
       />
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-line bg-white/95 px-4 py-3 backdrop-blur md:hidden">

@@ -1,7 +1,10 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveProducts } from '@/lib/cached-data';
 import { formatBRL } from '@/lib/format';
+import { STATUS_META } from '@/lib/product-orders';
 import { ClientShell } from '../client-shell';
+import { LojaProductCard } from './loja-product-card';
 
 type Product = {
   id: string;
@@ -10,6 +13,8 @@ type Product = {
   category: string | null;
   price: number;
   stock: number;
+  shop_id: string;
+  photos: string[];
   shop: { name: string; rating: number } | null;
 };
 
@@ -39,33 +44,26 @@ export default async function ClienteLojaPage() {
   return (
     <ClientShell>
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8">
-      <div className="mb-6">
-        <h1 className="font-head text-2xl font-extrabold text-ink">Loja</h1>
-        <p className="mt-1 text-sm text-g600">Veja produtos disponíveis nas assistências e acompanhe compras.</p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-head text-2xl font-extrabold text-ink">Loja</h1>
+          <p className="mt-1 text-sm text-g600">Produtos das assistências perto de você.</p>
+        </div>
+        <Link
+          href="/cliente/carrinho"
+          className="rounded-xl border border-line bg-white px-4 py-2.5 font-head text-sm font-bold text-ink hover:bg-g100"
+        >
+          Ver carrinho →
+        </Link>
       </div>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {productRows.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-line bg-white p-8 text-center text-sm text-g600">
+          <div className="rounded-[14px] border border-dashed border-line bg-white p-8 text-center text-sm text-g600 md:col-span-2 xl:col-span-3">
             Nenhum produto ativo encontrado.
           </div>
         ) : (
-          productRows.map((product) => (
-            <article key={product.id} className="rounded-[14px] border border-line bg-white p-4">
-              <div className="mb-4 flex h-28 items-center justify-center rounded-xl bg-g100 font-head text-4xl font-black text-blue">
-                {product.name.slice(0, 1).toUpperCase()}
-              </div>
-              <div className="mb-2 flex items-start justify-between gap-3">
-                <h2 className="font-head text-base font-extrabold text-ink">{product.name}</h2>
-                <strong className="whitespace-nowrap font-head text-sm text-blue">{formatBRL(Number(product.price))}</strong>
-              </div>
-              <p className="line-clamp-2 min-h-10 text-sm text-g600">{product.description || product.category || 'Produto disponível.'}</p>
-              <div className="mt-4 flex items-center justify-between gap-2 text-xs text-g600">
-                <span className="truncate">{product.shop?.name ?? 'Loja zllo'}</span>
-                <span>{product.stock} em estoque</span>
-              </div>
-            </article>
-          ))
+          productRows.map((product) => <LojaProductCard key={product.id} product={product} />)
         )}
       </section>
 
@@ -73,36 +71,31 @@ export default async function ClienteLojaPage() {
         <h2 className="font-head text-lg font-extrabold text-ink">Minhas compras</h2>
         <div className="mt-4 flex flex-col gap-3">
           {orderRows.length === 0 ? (
-            <p className="text-sm text-g600">Nenhuma compra feita pela web/app ainda.</p>
+            <p className="text-sm text-g600">Nenhuma compra ainda.</p>
           ) : (
-            orderRows.map((order) => (
-              <div key={order.id} className="rounded-xl border border-line p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <strong className="font-head text-base text-ink">{order.shop?.name ?? 'Loja'}</strong>
-                  <span className="rounded-full bg-g100 px-2.5 py-1 text-xs font-bold text-g600">{productStatus(order.status)}</span>
-                </div>
-                <p className="mt-2 text-sm text-g600">
-                  {order.items.map((item) => `${item.qty}x ${item.name}`).join(', ') || 'Itens do pedido'}
-                </p>
-                <strong className="mt-2 block font-head text-sm text-blue">{formatBRL(Number(order.total))}</strong>
-              </div>
-            ))
+            orderRows.map((order) => {
+              const st = STATUS_META[order.status] ?? { label: order.status, cls: 'bg-g100 text-g600' };
+              return (
+                <Link
+                  key={order.id}
+                  href={`/cliente/pedido-produto/${order.id}`}
+                  className="block rounded-xl border border-line p-4 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong className="font-head text-base text-ink">{order.shop?.name ?? 'Loja'}</strong>
+                    <span className={'rounded-full px-2.5 py-1 text-xs font-bold ' + st.cls}>{st.label}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-g600">
+                    {order.items.map((item) => `${item.qty}x ${item.name}`).join(', ') || 'Itens do pedido'}
+                  </p>
+                  <strong className="mt-2 block font-head text-sm text-blue">{formatBRL(Number(order.total))}</strong>
+                </Link>
+              );
+            })
           )}
         </div>
       </section>
     </div>
     </ClientShell>
   );
-}
-
-function productStatus(status: string) {
-  const labels: Record<string, string> = {
-    aguardando_pagamento: 'Aguardando pagamento',
-    pago: 'Pago',
-    separando: 'Separando',
-    pronto: 'Pronto',
-    concluido: 'Concluído',
-    cancelado: 'Cancelado',
-  };
-  return labels[status] ?? status;
 }

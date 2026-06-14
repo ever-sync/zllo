@@ -1,7 +1,6 @@
-'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { signOutCliente } from './actions';
 
 type Item = { label: string; href: string; icon: keyof typeof ICONS; badge?: number };
@@ -14,10 +13,12 @@ export function ClientSidebar({
   name,
   email,
   badges,
+  cartLink,
 }: {
   name: string;
   email?: string | null;
   badges: { requests?: number; productOrders?: number; devices?: number };
+  cartLink?: ReactNode;
 }) {
   const pathname = usePathname();
   const items: Item[] = [
@@ -25,7 +26,7 @@ export function ClientSidebar({
     { label: 'Pedir assistência', href: '/cliente/solicitar', icon: 'plus' },
     { label: 'Pedidos', href: '/cliente/pedidos', icon: 'file', badge: badges.requests },
     { label: 'Aparelhos', href: '/cliente/aparelhos', icon: 'phone', badge: badges.devices },
-    { label: 'Loja', href: '/cliente/loja', icon: 'cart', badge: badges.productOrders },
+    { label: 'Loja', href: '/cliente/loja', icon: 'store', badge: badges.productOrders },
   ];
 
   return (
@@ -62,6 +63,7 @@ export function ClientSidebar({
             </Link>
           );
         })}
+        {cartLink}
       </nav>
 
       <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-[10px] bg-white/5 px-4 py-3.5">
@@ -112,6 +114,12 @@ const ICONS = {
       <circle cx="9" cy="21" r="1" />
       <circle cx="20" cy="21" r="1" />
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </>
+  ),
+  store: (
+    <>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </>
   ),
 } as const;

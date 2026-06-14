@@ -77,7 +77,7 @@ export async function fetchActiveProducts() {
       const supabase = await createClient();
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, description, category, price, stock, shop:shops(name, rating)')
+        .select('id, name, description, category, price, stock, shop_id, photos, shop:shops(name, rating)')
         .eq('is_active', true)
         .gt('stock', 0)
         .order('created_at', { ascending: false })
