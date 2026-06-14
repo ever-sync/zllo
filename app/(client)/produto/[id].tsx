@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, EmptyState, Skeleton } from '@/components/ui/states';
 import { useCart } from '@/lib/cart';
 import { confirmAsync } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
@@ -63,8 +63,14 @@ export default function ProdutoDetail() {
   }
   if (p === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Produto" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <Skeleton height={PHOTO_W * 0.75} style={{ borderRadius: radius['2xl'] }} />
+          <Skeleton height={24} width="70%" />
+          <Skeleton height={16} width="40%" />
+          <Skeleton height={48} style={{ borderRadius: radius.lg, marginTop: 8 }} />
+        </View>
       </Screen>
     );
   }
@@ -72,7 +78,13 @@ export default function ProdutoDetail() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Produto" />
-        <Text style={styles.muted}>Produto não encontrado ou indisponível.</Text>
+        <EmptyState
+          icon="cube-outline"
+          title="Produto indisponível"
+          description="Este produto não existe ou foi removido do catálogo."
+          actionLabel="Voltar à loja"
+          onAction={() => router.replace('/(client)/(tabs)/loja')}
+        />
       </Screen>
     );
   }

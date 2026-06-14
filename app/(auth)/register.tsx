@@ -5,6 +5,7 @@ import { Brand } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Screen } from '@/components/ui/screen';
+import { MessageBanner } from '@/components/ui/states';
 import { TextField } from '@/components/ui/text-field';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { fetchAddressByCEP, formatCEP, isValidCEP } from '@/lib/cep';
@@ -254,8 +255,8 @@ export default function Register() {
           </Text>
         </Checkbox>
 
-        {formError ? <Text style={styles.error}>{formError}</Text> : null}
-        {info ? <Text style={styles.info}>{info}</Text> : null}
+        {formError ? <MessageBanner variant="error">{formError}</MessageBanner> : null}
+        {info ? <MessageBanner variant="success">{info}</MessageBanner> : null}
 
         <Button label="Criar conta" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
 
@@ -273,9 +274,13 @@ function RoleChip({ label, active, onPress }: { label: string; active: boolean; 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, { backgroundColor: active ? colors.ink : colors.white, borderColor: active ? colors.ink : colors.gray200 }]}
+      style={({ pressed }) => [
+        styles.chip,
+        active ? styles.chipActive : styles.chipIdle,
+        pressed ? { opacity: 0.9 } : null,
+      ]}
     >
-      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }]}>{label}</Text>
+      <Text style={[styles.chipText, { color: active ? colors.ink : colors.gray600 }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -284,8 +289,10 @@ const styles = StyleSheet.create({
   header: { paddingTop: 8, paddingBottom: 16 },
   title: { fontFamily: fonts.headBlack, fontSize: 28, color: colors.ink, letterSpacing: -0.5 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 4 },
-  roleRow: { flexDirection: 'row', gap: 8, marginTop: 18 },
-  chip: { flex: 1, borderWidth: 1, borderRadius: radius.full, paddingVertical: 10, alignItems: 'center' },
+  roleRow: { flexDirection: 'row', gap: 8, marginTop: 18, backgroundColor: colors.gray100, borderRadius: radius.full, padding: 4 },
+  chip: { flex: 1, borderRadius: radius.full, paddingVertical: 10, alignItems: 'center' },
+  chipActive: { backgroundColor: colors.lime },
+  chipIdle: { backgroundColor: 'transparent' },
   chipText: { fontFamily: fonts.headBold, fontSize: 12.5 },
   form: { gap: 13, marginTop: 18 },
   sectionTitle: { fontFamily: fonts.head, fontSize: 16, color: colors.ink, marginTop: 8 },
@@ -293,8 +300,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10 },
   lgpdText: { fontFamily: fonts.body, fontSize: 12.5, color: colors.gray600, lineHeight: 18 },
   lgpdLink: { fontFamily: fonts.bodyBold, color: colors.blue },
-  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red },
-  info: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.green },
   footer: { marginTop: 14, alignItems: 'center', paddingBottom: 8 },
   footerText: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   footerLink: { fontFamily: fonts.bodyBold, color: colors.blue },

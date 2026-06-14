@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { getDeviceName } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
@@ -55,12 +55,19 @@ export default function Aparelhos() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : devices === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : devices.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="phone-portrait-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>Você ainda não cadastrou nenhum aparelho.</Text>
+        <View style={{ gap: 10, marginTop: 16 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : devices.length === 0 ? (
+        <EmptyState
+          icon="phone-portrait-outline"
+          title="Nenhum aparelho cadastrado"
+          description="Cadastre seu celular para pedir reparo mais rápido, com fotos e dados já salvos."
+          actionLabel="Cadastrar aparelho"
+          onAction={() => router.push('/(client)/aparelho-novo')}
+          style={{ marginTop: 16 }}
+        />
       ) : (
         <View style={{ gap: 10, marginTop: 16 }}>
           {devices.map((d) => (
@@ -86,15 +93,13 @@ export default function Aparelhos() {
       <Button
         label="Cadastrar aparelho"
         onPress={() => router.push('/(client)/aparelho-novo')}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: devices?.length ? 20 : 0 }}
       />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center' },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

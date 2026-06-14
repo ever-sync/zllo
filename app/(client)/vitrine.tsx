@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -89,18 +89,34 @@ export default function Vitrine() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : rows === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="pricetags-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>
-            {tab === 'meus'
-              ? 'Você ainda não anunciou nenhum celular.'
-              : q
-                ? 'Nenhum anúncio encontrado para essa busca.'
-                : 'Ainda não há celulares à venda por aqui.'}
-          </Text>
+        <View style={{ gap: 10, marginTop: 4 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon="pricetags-outline"
+          title={
+            tab === 'meus'
+              ? 'Nenhum anúncio seu'
+              : q
+                ? 'Nenhum resultado'
+                : 'Vitrine vazia'
+          }
+          description={
+            tab === 'meus'
+              ? 'Anuncie um celular que você quer vender para aparecer aqui.'
+              : q
+                ? 'Tente outro termo de busca.'
+                : 'Seja o primeiro a anunciar um aparelho na sua região.'
+          }
+          actionLabel={tab === 'meus' || !q ? 'Anunciar celular' : 'Limpar busca'}
+          onAction={
+            tab === 'meus' || !q
+              ? () => router.push('/(client)/anuncio-novo')
+              : () => setQ('')
+          }
+        />
       ) : (
         <View style={{ gap: 12, marginTop: 4 }}>
           {filtered.map((l) => (
@@ -157,8 +173,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 14 },
   chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.headBold, fontSize: 12 },
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', paddingHorizontal: 24, lineHeight: 19 },
   card: {
     flexDirection: 'row',
     gap: 12,

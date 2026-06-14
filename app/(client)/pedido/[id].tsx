@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, EmptyState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { Timeline } from '@/components/ui/timeline';
 import { useAuth } from '@/lib/auth';
 import { confirmAsync, notify } from '@/lib/confirm';
@@ -268,8 +268,13 @@ export default function PedidoDetail() {
   }
   if (req === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Pedido" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <Skeleton height={120} style={{ borderRadius: radius['2xl'] }} />
+          <Skeleton height={80} style={{ borderRadius: radius['2xl'] }} />
+        </View>
       </Screen>
     );
   }
@@ -277,7 +282,13 @@ export default function PedidoDetail() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
-        <Text style={styles.muted}>Pedido não encontrado.</Text>
+        <EmptyState
+          icon="search-outline"
+          title="Pedido não encontrado"
+          description="Este pedido pode ter sido removido ou você não tem acesso."
+          actionLabel="Voltar aos pedidos"
+          onAction={() => router.replace('/(client)/(tabs)/pedidos')}
+        />
       </Screen>
     );
   }

@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { confirmAsync, notify } from '@/lib/confirm';
 import { supabase } from '@/lib/supabase';
@@ -78,8 +78,13 @@ export default function AnuncioDetail() {
   }
   if (listing === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Anúncio" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <Skeleton height={PHOTO_W * 0.75} style={{ borderRadius: radius['2xl'] }} />
+          <Skeleton height={24} width="65%" />
+          <Skeleton height={16} width="35%" />
+        </View>
       </Screen>
     );
   }
@@ -87,7 +92,13 @@ export default function AnuncioDetail() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Anúncio" />
-        <Text style={styles.muted}>Anúncio não encontrado ou removido.</Text>
+        <EmptyState
+          icon="pricetags-outline"
+          title="Anúncio não encontrado"
+          description="Este anúncio pode ter sido removido ou expirado."
+          actionLabel="Voltar à vitrine"
+          onAction={() => router.replace('/(client)/vitrine')}
+        />
       </Screen>
     );
   }
@@ -150,7 +161,6 @@ function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 }
 
 const styles = StyleSheet.create({
-  muted: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   gallery: { marginBottom: 16 },
   photo: { height: 240, borderRadius: radius['2xl'], marginRight: 0 },
   photoPlaceholder: { backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

@@ -37,12 +37,17 @@ export function FloatingTabBar({ state, navigation }: TabBarProps) {
     const focused = activeName === name;
     return (
       <Pressable style={styles.item} onPress={() => goTo(name)} hitSlop={8}>
-        <Ionicons
-          name={focused ? icon : (`${icon}-outline` as keyof typeof Ionicons.glyphMap)}
-          size={22}
-          color={focused ? colors.ink : colors.gray400}
-        />
-        <Text style={[styles.label, { color: focused ? colors.ink : colors.gray400 }]}>{label}</Text>
+        <View style={styles.iconWrap}>
+          <Ionicons
+            name={focused ? icon : (`${icon}-outline` as keyof typeof Ionicons.glyphMap)}
+            size={22}
+            color={focused ? colors.ink : colors.gray400}
+          />
+          {focused ? <View style={styles.activeDot} /> : null}
+        </View>
+        <Text style={[styles.label, { color: focused ? colors.ink : colors.gray400, fontFamily: focused ? fonts.bodyBold : fonts.bodyMedium }]}>
+          {label}
+        </Text>
       </Pressable>
     );
   };
@@ -75,7 +80,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.gray200,
   },
-  item: { flex: 1, alignItems: 'center', gap: 3 },
+  item: { flex: 1, alignItems: 'center', gap: 4 },
+  iconWrap: { height: 26, alignItems: 'center', justifyContent: 'center' },
+  activeDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.lime, marginTop: 4 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 10.5 },
   fabSlot: { flex: 1, alignItems: 'center' },
   fab: {

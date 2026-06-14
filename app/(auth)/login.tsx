@@ -62,7 +62,11 @@ export default function Login() {
           onChangeText={setPassword}
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.error}>{error}</Text>
+          </View>
+        ) : null}
 
         <Button label="Entrar" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
 
@@ -81,7 +85,15 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.headBlack, fontSize: 28, color: colors.ink, letterSpacing: -0.5 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 4 },
   form: { gap: 14, marginTop: 24 },
-  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red },
+  errorBox: {
+    backgroundColor: colors.redBg,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(220,38,38,0.15)',
+  },
+  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.redText, lineHeight: 18 },
   footer: { marginTop: 16, alignItems: 'center' },
   footerText: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   footerLink: { fontFamily: fonts.bodyBold, color: colors.blue },

@@ -21,7 +21,14 @@ export function TextField({
   return (
     <View style={styles.wrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.field, { borderColor }]}>
+      <View
+        style={[
+          styles.field,
+          { borderColor },
+          focused && !error ? styles.fieldFocused : null,
+          error ? styles.fieldError : null,
+        ]}
+      >
         {prefix ? <Text style={styles.prefix}>{prefix}</Text> : null}
         <TextInput
           placeholderTextColor={colors.gray400}
@@ -53,9 +60,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: radius.lg,
     paddingHorizontal: 14,
+  },
+  fieldFocused: {
+    shadowColor: colors.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fieldError: {
+    shadowColor: colors.red,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
   },
   prefix: { fontFamily: fonts.bodyBold, color: colors.gray400, marginRight: 6 },
   input: {

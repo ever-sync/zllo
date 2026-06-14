@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
+import { EmptyState, SkeletonCard } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -98,11 +99,19 @@ export default function ClientHome() {
         </Pressable>
       </View>
 
-      {recent === null ? null : recent.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="receipt-outline" size={28} color={colors.gray400} />
-          <Text style={styles.emptyText}>Nenhum pedido ainda.</Text>
+      {recent === null ? (
+        <View style={{ gap: 10 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : recent.length === 0 ? (
+        <EmptyState
+          icon="receipt-outline"
+          title="Nenhum pedido ainda"
+          description="Peça assistência para receber orçamentos de lojas perto de você."
+          actionLabel="Pedir assistência"
+          onAction={() => router.push('/(client)/solicitar')}
+        />
       ) : (
         <View style={{ gap: 10 }}>
           {recent.map((r) => {
@@ -148,8 +157,6 @@ const styles = StyleSheet.create({
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, marginBottom: 12 },
   section: { fontFamily: fonts.head, fontSize: 17, color: colors.ink },
   seeAll: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.blue },
-  empty: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 28, alignItems: 'center', gap: 8 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
   newsCard: { flexDirection: 'row', gap: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14 },
   newsIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
   newsTitle: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },

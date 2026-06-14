@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, LoadingState, SkeletonCard } from '@/components/ui/states';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
@@ -66,7 +66,11 @@ export default function Orcamentos() {
   }, [shop, scheduleLoad]);
 
   if (loading) {
-    return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+    return (
+      <Screen scroll={false} background={colors.canvas}>
+        <LoadingState />
+      </Screen>
+    );
   }
   if (!shop) return <Redirect href="/(shop)/setup" />;
 
@@ -79,12 +83,18 @@ export default function Orcamentos() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : items === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : active.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="flash-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>Nenhuma solicitação no momento.{'\n'}Elas aparecem aqui automaticamente.</Text>
+        <View style={{ gap: 10, marginTop: 14 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : active.length === 0 ? (
+        <EmptyState
+          icon="flash-outline"
+          title="Nenhuma solicitação agora"
+          description="Novos pedidos de reparo aparecem aqui automaticamente quando clientes da região solicitam assistência."
+          style={{ marginTop: 14 }}
+        />
       ) : (
         <View style={{ gap: 12, marginTop: 14 }}>
           {active.map((it) => {
@@ -142,8 +152,6 @@ function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', lineHeight: 19 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, gap: 12 },
   cardTop: { flexDirection: 'row', gap: 12 },
   thumb: { width: 48, height: 48, borderRadius: radius.lg, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },

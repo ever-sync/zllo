@@ -7,6 +7,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, fonts, radius } from '@/theme';
 
 type Variant = 'primary' | 'accent' | 'dark' | 'secondary' | 'ghost';
@@ -46,9 +47,14 @@ export function Button({
   style?: StyleProp<ViewStyle>;
 }) {
   const isDisabled = disabled || loading;
+  const onPressWithFeedback = () => {
+    if (isDisabled || !onPress) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onPressWithFeedback}
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,

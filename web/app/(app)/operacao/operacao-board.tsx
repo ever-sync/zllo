@@ -91,9 +91,15 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
       </div>
 
       {chegando.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line p-8 text-center font-body text-sm text-g600">
-          Nenhuma solicitação no momento. Elas aparecem aqui automaticamente.
-        </p>
+        <div className="rounded-xl border border-dashed border-line bg-g100/40 px-6 py-10 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-sm">
+            ⚡
+          </div>
+          <p className="font-head text-sm font-bold text-ink">Nenhuma solicitação agora</p>
+          <p className="mx-auto mt-1 max-w-xs font-body text-xs leading-relaxed text-g600">
+            Novos pedidos de reparo aparecem aqui automaticamente quando clientes da região solicitam assistência.
+          </p>
+        </div>
       ) : (
         chegando.map((it) => {
           const t = timeLeft(it.responds_by, now);

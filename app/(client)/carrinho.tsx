@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { EmptyState } from '@/components/ui/states';
 import { useCart } from '@/lib/cart';
 import { priceBRL } from '@/lib/products';
 import { colors, fonts, radius } from '@/theme';
@@ -17,11 +18,13 @@ export default function Carrinho() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Carrinho" />
-        <View style={styles.empty}>
-          <Ionicons name="cart-outline" size={36} color={colors.gray400} />
-          <Text style={styles.emptyText}>Seu carrinho está vazio.</Text>
-          <Button label="Ver produtos" variant="secondary" onPress={() => router.replace('/(client)/(tabs)/loja')} />
-        </View>
+        <EmptyState
+          icon="cart-outline"
+          title="Carrinho vazio"
+          description="Explore produtos das assistências da sua região e adicione ao carrinho."
+          actionLabel="Ver produtos"
+          onAction={() => router.replace('/(client)/(tabs)/loja')}
+        />
       </Screen>
     );
   }
@@ -69,8 +72,6 @@ export default function Carrinho() {
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', gap: 14, paddingVertical: 56 },
-  emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   card: {
     flexDirection: 'row',
     gap: 12,

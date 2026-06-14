@@ -1,10 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel, stepIndex } from '@/lib/order-status';
@@ -72,12 +71,20 @@ export default function Ordens() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : rows === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="document-text-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>Nada por aqui ainda.</Text>
+        <View style={{ gap: 10 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon="document-text-outline"
+          title={tab === 'andamento' ? 'Nenhuma OS em andamento' : 'Nenhuma OS finalizada'}
+          description={
+            tab === 'andamento'
+              ? 'Quando um cliente aceitar seu orçamento, a ordem de serviço aparece aqui.'
+              : 'Ordens concluídas ficam registradas nesta aba.'
+          }
+        />
       ) : (
         <View style={{ gap: 10 }}>
           {filtered.map((o) => {
@@ -120,8 +127,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 14 },
   chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.headBold, fontSize: 12 },
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, gap: 12 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dot: { width: 10, height: 10, borderRadius: 5 },

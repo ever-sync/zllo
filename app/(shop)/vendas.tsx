@@ -1,9 +1,9 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { confirmAsync, notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
@@ -127,11 +127,22 @@ export default function Vendas() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : rows === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : list.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>Nenhum pedido neste filtro.</Text>
+        <View style={{ gap: 10, marginTop: 8 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon="bag-outline"
+          title="Nenhum pedido neste filtro"
+          description={
+            filter === 'ativos'
+              ? 'Pedidos pagos aparecem aqui para você separar e entregar.'
+              : 'Tente outro filtro ou aguarde novas vendas na loja.'
+          }
+          actionLabel={filter !== 'todos' ? 'Ver todos' : undefined}
+          onAction={filter !== 'todos' ? () => setFilter('todos') : undefined}
+        />
       ) : (
         <View style={{ gap: 12 }}>
           {list.map((o) => {
@@ -195,8 +206,6 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingBottom: 14, paddingRight: 8 },
   chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.headBold, fontSize: 12 },
-  empty: { alignItems: 'center', paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   client: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },

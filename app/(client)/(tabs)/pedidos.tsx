@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { getDeviceName } from '@/lib/format';
 import { priceBRL } from '@/lib/products';
@@ -88,14 +88,26 @@ export default function Pedidos() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : list === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : list.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name={tab === 'reparos' ? 'receipt-outline' : 'bag-outline'} size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>
-            {tab === 'reparos' ? 'Você ainda não pediu nenhum reparo.' : 'Você ainda não comprou nada na Loja.'}
-          </Text>
+        <View style={{ gap: 10, marginTop: 16 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={tab === 'reparos' ? 'receipt-outline' : 'bag-outline'}
+          title={tab === 'reparos' ? 'Nenhum reparo ainda' : 'Nenhuma compra ainda'}
+          description={
+            tab === 'reparos'
+              ? 'Solicite assistência e compare orçamentos de lojas perto de você.'
+              : 'Explore produtos das assistências na aba Loja.'
+          }
+          actionLabel={tab === 'reparos' ? 'Pedir assistência' : 'Ir para a loja'}
+          onAction={() =>
+            router.push(tab === 'reparos' ? '/(client)/solicitar' : '/(client)/(tabs)/loja')
+          }
+          style={{ marginTop: 16 }}
+        />
       ) : tab === 'reparos' ? (
         <View style={{ gap: 10, marginTop: 16 }}>
           {(rows ?? []).map((r) => {
@@ -162,8 +174,6 @@ const styles = StyleSheet.create({
   segBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: radius.full },
   segBtnActive: { backgroundColor: colors.ink },
   segText: { fontFamily: fonts.headBold, fontSize: 13 },
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', paddingHorizontal: 24 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, gap: 8 },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   cardTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, flex: 1 },

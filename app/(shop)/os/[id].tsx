@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { Timeline } from '@/components/ui/timeline';
+import { EmptyState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { notify } from '@/lib/confirm';
 import { nextStep, statusLabel } from '@/lib/order-status';
 import { supabase } from '@/lib/supabase';
@@ -70,8 +71,12 @@ export default function ShopOrderDetail() {
 
   if (order === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Ordem de serviço" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <Skeleton height={180} style={{ borderRadius: radius['2xl'] }} />
+        </View>
       </Screen>
     );
   }
@@ -79,7 +84,11 @@ export default function ShopOrderDetail() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Ordem de serviço" />
-        <Text style={styles.muted}>OS não encontrada.</Text>
+        <EmptyState
+          icon="document-text-outline"
+          title="OS não encontrada"
+          description="Esta ordem pode ter sido removida ou você não tem acesso."
+        />
       </Screen>
     );
   }
@@ -118,7 +127,6 @@ export default function ShopOrderDetail() {
 }
 
 const styles = StyleSheet.create({
-  muted: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 16 },
   status: { fontFamily: fonts.head, fontSize: 17, color: colors.ink },
   devSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },

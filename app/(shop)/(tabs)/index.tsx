@@ -1,10 +1,10 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import { useShop } from '@/lib/shop';
@@ -75,7 +75,17 @@ export default function Painel() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading) return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+  if (loading) {
+    return (
+      <Screen background={colors.canvas}>
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <Skeleton height={120} style={{ borderRadius: radius['2xl'] }} />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      </Screen>
+    );
+  }
   if (!shop) return <Redirect href="/(shop)/setup" />;
   if (loadError) return <Screen scroll={false} background={colors.canvas}><ErrorState onRetry={load} /></Screen>;
 

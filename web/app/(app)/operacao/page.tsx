@@ -12,13 +12,21 @@ export default async function PainelPage() {
 
   if (!shop) {
     return (
-      <div className="px-8 py-7">
-        <h1 className="font-head text-2xl font-extrabold text-ink">Painel</h1>
-        <div className="mt-6 rounded-2xl border border-dashed border-line bg-white p-10 text-center">
-          <p className="font-head text-base font-bold text-ink">Configure sua loja</p>
-          <p className="mx-auto mt-1 max-w-md font-body text-sm text-g600">
-            Você ainda não tem uma loja cadastrada.
+      <div className="flex min-h-[60vh] items-center justify-center px-8 py-12">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-white p-10 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEEEFF] text-2xl">
+            🏪
+          </div>
+          <h1 className="font-head text-xl font-extrabold text-ink">Configure sua loja</h1>
+          <p className="mx-auto mt-2 max-w-sm font-body text-sm leading-relaxed text-g600">
+            Complete o cadastro da assistência no app mobile para receber orçamentos e gerenciar ordens por aqui.
           </p>
+          <Link
+            href="/configuracoes"
+            className="mt-6 inline-block rounded-xl border border-line px-5 py-3 font-head text-sm font-bold text-ink transition-colors hover:bg-g100"
+          >
+            Ver configurações
+          </Link>
         </div>
       </div>
     );

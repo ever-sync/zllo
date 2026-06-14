@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { geocodeCEP } from '@/lib/geocode';
@@ -103,14 +103,24 @@ export default function Loja() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : rows === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="cube-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>
-            {q || cat ? 'Nenhum produto encontrado.' : 'Ainda não há produtos por aqui.'}
-          </Text>
+        <View style={{ gap: 10, marginTop: 16 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon="cube-outline"
+          title={q || cat ? 'Nenhum produto encontrado' : 'Catálogo em breve'}
+          description={
+            q || cat
+              ? 'Tente outro termo ou remova os filtros.'
+              : 'As assistências da sua região ainda não publicaram produtos.'
+          }
+          actionLabel={q || cat ? 'Limpar busca' : undefined}
+          onAction={q || cat ? () => { setQ(''); setCat(null); } : undefined}
+          style={{ marginTop: 16 }}
+        />
       ) : (
         <View style={{ gap: 12, marginTop: 4 }}>
           {filtered.map((p) => {
@@ -183,8 +193,6 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingVertical: 14, paddingRight: 8 },
   chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.headBold, fontSize: 12 },
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', paddingHorizontal: 24, lineHeight: 19 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -7,7 +7,7 @@ import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View 
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, EmptyState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { confirmAsync, notify } from '@/lib/confirm';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
@@ -127,8 +127,12 @@ export default function PedidoProduto() {
   }
   if (order === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Pedido" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <Skeleton height={100} style={{ borderRadius: radius['2xl'] }} />
+        </View>
       </Screen>
     );
   }
@@ -136,7 +140,13 @@ export default function PedidoProduto() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Pedido" />
-        <Text style={styles.muted}>Pedido não encontrado.</Text>
+        <EmptyState
+          icon="search-outline"
+          title="Pedido não encontrado"
+          description="Este pedido pode ter sido removido ou você não tem acesso."
+          actionLabel="Voltar aos pedidos"
+          onAction={() => router.replace('/(client)/(tabs)/pedidos')}
+        />
       </Screen>
     );
   }

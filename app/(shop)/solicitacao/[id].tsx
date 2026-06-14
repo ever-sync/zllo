@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   ScrollView,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { EmptyState, MessageBanner, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { notify } from '@/lib/confirm';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
@@ -96,8 +96,13 @@ export default function SolicitacaoDetail() {
 
   if (request === undefined) {
     return (
-      <Screen scroll={false} background={colors.canvas}>
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} />
+      <Screen background={colors.canvas}>
+        <AppHeader title="Solicitação" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <Skeleton height={88} style={{ borderRadius: radius.lg }} />
+          <Skeleton height={120} style={{ borderRadius: radius.lg }} />
+        </View>
       </Screen>
     );
   }
@@ -105,7 +110,13 @@ export default function SolicitacaoDetail() {
     return (
       <Screen background={colors.canvas}>
         <AppHeader title="Solicitação" />
-        <Text style={styles.muted}>Solicitação não encontrada ou indisponível.</Text>
+        <EmptyState
+          icon="search-outline"
+          title="Solicitação indisponível"
+          description="Este pedido não existe, expirou ou não foi direcionado à sua loja."
+          actionLabel="Voltar"
+          onAction={() => router.back()}
+        />
       </Screen>
     );
   }
@@ -214,7 +225,7 @@ export default function SolicitacaoDetail() {
               style={styles.noteInput}
             />
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? <MessageBanner variant="error">{error}</MessageBanner> : null}
 
             <View style={styles.sheetActions}>
               <Button label="Cancelar" variant="secondary" onPress={() => setModal(false)} style={{ flex: 1 }} />
@@ -237,7 +248,6 @@ function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 }
 
 const styles = StyleSheet.create({
-  muted: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   deviceHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   deviceIcon: { width: 56, height: 56, borderRadius: radius.lg, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
   deviceName: { fontFamily: fonts.head, fontSize: 19, color: colors.ink, letterSpacing: -0.3 },
@@ -264,6 +274,5 @@ const styles = StyleSheet.create({
   valuePrefix: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.gray400, marginRight: 8 },
   valueInput: { flex: 1, paddingVertical: 14, fontFamily: fonts.head, fontSize: 20, color: colors.ink },
   noteInput: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 14, minHeight: 84, textAlignVertical: 'top', fontFamily: fonts.body, fontSize: 14, color: colors.ink },
-  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 10 },
   sheetActions: { flexDirection: 'row', gap: 10, marginTop: 18 },
 });

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, LoadingState, SkeletonCard } from '@/components/ui/states';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -43,7 +43,13 @@ export default function Mensagens() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading) return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;
+  if (loading) {
+    return (
+      <Screen scroll={false} background={colors.canvas}>
+        <LoadingState />
+      </Screen>
+    );
+  }
   if (!shop) return <Redirect href="/(shop)/setup" />;
 
   const convos = (items ?? []).filter((c) => c.request);
@@ -55,12 +61,19 @@ export default function Mensagens() {
       {loadError ? (
         <ErrorState onRetry={load} />
       ) : items === null ? (
-        <ActivityIndicator color={colors.blue} style={{ marginTop: 40 }} />
-      ) : convos.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="chatbubbles-outline" size={32} color={colors.gray400} />
-          <Text style={styles.emptyText}>As conversas aparecem aqui depois que você envia um orçamento.</Text>
+        <View style={{ gap: 8, marginTop: 14 }}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : convos.length === 0 ? (
+        <EmptyState
+          icon="chatbubbles-outline"
+          title="Nenhuma conversa ainda"
+          description="Depois de enviar um orçamento, você pode conversar com o cliente por aqui."
+          actionLabel="Ver orçamentos"
+          onAction={() => router.push('/(shop)/(tabs)/orcamentos')}
+          style={{ marginTop: 14 }}
+        />
       ) : (
         <View style={{ gap: 8, marginTop: 14 }}>
           {convos.map((c) => {
@@ -85,8 +98,6 @@ export default function Mensagens() {
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
-  emptyText: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, textAlign: 'center', lineHeight: 19, paddingHorizontal: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: fonts.headBold, fontSize: 14, color: colors.white },
