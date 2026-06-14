@@ -20,6 +20,7 @@ Status em jun/2026 após execução do plano de melhorias.
 - RPC `express_listing_interest` + `get_listing_seller_contact`
 - Botão "Tenho interesse" + contato (mobile + web)
 - Editar anúncio (mobile + web)
+- Chat in-app comprador ↔ vendedor (`listing_messages`, migration `20260524140000_listing_chat.sql`)
 
 ## 8D — Paridade web cliente ✅
 
@@ -37,7 +38,6 @@ Status em jun/2026 após execução do plano de melhorias.
 
 ## Pendências (backlog)
 
-- Chat P2P vitrine (hoje: interesse + telefone)
 - Maestro Cloud no CI (runner macOS)
 
 ## Fase 8C — Maestro E2E ✅

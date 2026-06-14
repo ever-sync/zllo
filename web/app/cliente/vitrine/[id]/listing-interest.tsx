@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -39,6 +40,12 @@ export function ListingInterestPanel({ listingId }: { listingId: string }) {
             {contact.phone}
           </a>
         ) : null}
+        <Link
+          href={`/cliente/vitrine/${listingId}/chat`}
+          className="mt-4 inline-flex rounded-xl bg-blue px-4 py-3 font-head text-sm font-bold text-white"
+        >
+          Conversar
+        </Link>
       </div>
     );
   }

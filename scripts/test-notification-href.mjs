@@ -38,6 +38,20 @@ function notificationHref(n, role = 'cliente') {
       const orderId = str(d, 'product_order_id') ?? str(d, 'order_id');
       return orderId ? `/(client)/pedido-produto/${orderId}` : '/(client)/(tabs)/pedidos';
     }
+    case 'listing_interest':
+      return str(d, 'listing_id')
+        ? str(d, 'buyer_id')
+          ? `/(client)/anuncio-chat/${d.listing_id}?buyerId=${encodeURIComponent(d.buyer_id)}`
+          : `/(client)/anuncio/${d.listing_id}`
+        : '/(client)/vitrine';
+    case 'listing_message': {
+      const listingId = str(d, 'listing_id');
+      const buyerId = str(d, 'buyer_id');
+      if (listingId && buyerId) {
+        return `/(client)/anuncio-chat/${listingId}?buyerId=${encodeURIComponent(buyerId)}`;
+      }
+      return listingId ? `/(client)/anuncio-chat/${listingId}` : '/(client)/vitrine';
+    }
     default:
       return null;
   }
@@ -63,6 +77,16 @@ assert.equal(
 assert.equal(
   notificationHref(row('payment', { order_id: 'os-9' }), 'assistencia'),
   '/(shop)/os/os-9',
+);
+
+assert.equal(
+  notificationHref(row('listing_message', { listing_id: 'lst-1', buyer_id: 'buy-1' })),
+  '/(client)/anuncio-chat/lst-1?buyerId=buy-1',
+);
+
+assert.equal(
+  notificationHref(row('listing_interest', { listing_id: 'lst-2', buyer_id: 'buy-2' })),
+  '/(client)/anuncio-chat/lst-2?buyerId=buy-2',
 );
 
 console.log('notification href tests OK');

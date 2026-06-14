@@ -5,6 +5,7 @@ import { formatBRL } from '@/lib/format';
 import { ClientShell } from '../../client-shell';
 import { deleteListing } from './actions';
 import { ListingInterestPanel } from './listing-interest';
+import { ListingOwnerThreads } from './listing-owner-threads';
 
 export default async function ClienteVitrineDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -57,21 +58,24 @@ export default async function ClienteVitrineDetailPage({ params }: { params: Pro
         ) : null}
 
         {isOwner ? (
-          <form action={deleteListing} className="mt-8">
-            <input type="hidden" name="id" value={listing.id} />
-            <Link
-              href={`/cliente/vitrine/${listing.id}/editar`}
-              className="mb-3 inline-flex rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-blue"
-            >
-              Editar anúncio
-            </Link>
-            <button
-              type="submit"
-              className="block rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-[#B91C1C]"
-            >
-              Excluir anúncio
-            </button>
-          </form>
+          <>
+            <form action={deleteListing} className="mt-8">
+              <input type="hidden" name="id" value={listing.id} />
+              <Link
+                href={`/cliente/vitrine/${listing.id}/editar`}
+                className="mb-3 inline-flex rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-blue"
+              >
+                Editar anúncio
+              </Link>
+              <button
+                type="submit"
+                className="block rounded-xl border border-line bg-white px-4 py-3 font-head text-sm font-bold text-[#B91C1C]"
+              >
+                Excluir anúncio
+              </button>
+            </form>
+            <ListingOwnerThreads listingId={listing.id} />
+          </>
         ) : (
           <ListingInterestPanel listingId={listing.id} />
         )}

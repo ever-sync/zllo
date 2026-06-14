@@ -281,6 +281,55 @@ export type Database = {
           },
         ]
       }
+      listing_messages: {
+        Row: {
+          id: string
+          listing_id: string
+          buyer_id: string
+          sender_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          buyer_id: string
+          sender_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          buyer_id?: string
+          sender_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_messages_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -1293,6 +1342,14 @@ export type Database = {
       get_listing_seller_contact: {
         Args: { p_listing_id: string }
         Returns: Json
+      }
+      list_listing_interest_threads: {
+        Args: { p_listing_id: string }
+        Returns: Json
+      }
+      send_listing_message: {
+        Args: { p_listing_id: string; p_body: string; p_buyer_id?: string | null }
+        Returns: string
       }
       get_my_unread_notification_count: { Args: never; Returns: number }
       get_regional_shop_ranking: {

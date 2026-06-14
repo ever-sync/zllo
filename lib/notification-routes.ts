@@ -39,7 +39,19 @@ export function notificationHref(n: NotificationRow, role: UserRole = 'cliente')
         if (str(d, 'order_id')) return `/(shop)/os/${d.order_id}`;
         return '/(shop)/(tabs)/ordens';
       case 'listing_interest':
-        return str(d, 'listing_id') ? `/(client)/anuncio/${d.listing_id}` : '/(client)/vitrine';
+        return str(d, 'listing_id')
+          ? str(d, 'buyer_id')
+            ? `/(client)/anuncio-chat/${d.listing_id}?buyerId=${encodeURIComponent(d.buyer_id as string)}`
+            : `/(client)/anuncio/${d.listing_id}`
+          : '/(client)/vitrine';
+      case 'listing_message': {
+        const listingId = str(d, 'listing_id');
+        const buyerId = str(d, 'buyer_id');
+        if (listingId && buyerId) {
+          return `/(client)/anuncio-chat/${listingId}?buyerId=${encodeURIComponent(buyerId)}`;
+        }
+        return listingId ? `/(client)/anuncio-chat/${listingId}` : '/(client)/vitrine';
+      }
       default:
         return null;
     }

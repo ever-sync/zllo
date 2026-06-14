@@ -22,6 +22,7 @@ export default function ClientLayout() {
         <Stack.Screen name="anuncio-novo" />
         <Stack.Screen name="anuncio/[id]" />
         <Stack.Screen name="anuncio-editar/[id]" />
+        <Stack.Screen name="anuncio-chat/[id]" />
         <Stack.Screen name="notificacoes" />
         <Stack.Screen name="produto/[id]" />
         <Stack.Screen name="carrinho" />

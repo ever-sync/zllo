@@ -39,6 +39,9 @@ export default function AnuncioDetail() {
   const [interestBusy, setInterestBusy] = useState(false);
   const [contact, setContact] = useState<{ full_name: string | null; phone: string | null } | null>(null);
   const [hasInterest, setHasInterest] = useState(false);
+  const [ownerThreads, setOwnerThreads] = useState<
+    { buyer_id: string; buyer_name: string | null; last_body: string | null }[]
+  >([]);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -53,7 +56,10 @@ export default function AnuncioDetail() {
     }
     setLoadError(false);
     setListing((data as ListingDetail) ?? null);
-    if (session?.user.id && data && (data as ListingDetail).seller_id !== session.user.id) {
+    if (session?.user.id && data && (data as ListingDetail).seller_id === session.user.id) {
+      const { data: threads } = await supabase.rpc('list_listing_interest_threads', { p_listing_id: id });
+      setOwnerThreads((threads as typeof ownerThreads) ?? []);
+    } else if (session?.user.id && data && (data as ListingDetail).seller_id !== session.user.id) {
       const { data: interest } = await supabase
         .from('listing_interests')
         .select('id')
@@ -183,6 +189,29 @@ export default function AnuncioDetail() {
       {isOwner ? (
         <>
           <Button label="Editar anúncio" onPress={() => router.push(`/(client)/anuncio-editar/${listing.id}`)} style={{ marginTop: 24 }} />
+          {ownerThreads.length > 0 ? (
+            <View style={styles.threadsBox}>
+              <Text style={styles.contactTitle}>Interessados</Text>
+              {ownerThreads.map((t) => (
+                <View key={t.buyer_id} style={styles.threadRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.contactText}>{t.buyer_name ?? 'Comprador'}</Text>
+                    {t.last_body ? (
+                      <Text style={styles.threadPreview} numberOfLines={1}>{t.last_body}</Text>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    style={styles.chatBtn}
+                    onPress={() => router.push(`/(client)/anuncio-chat/${listing.id}?buyerId=${t.buyer_id}`)}
+                  >
+                    <Text style={styles.chatBtnText}>Conversar</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptyThreads}>Ninguém demonstrou interesse ainda.</Text>
+          )}
           <Button label="Excluir anúncio" variant="secondary" loading={deleting} onPress={onDelete} style={{ marginTop: 10 }} />
         </>
       ) : hasInterest && contact ? (
@@ -194,6 +223,11 @@ export default function AnuncioDetail() {
               <Text style={styles.contactPhone}>{contact.phone}</Text>
             </Pressable>
           ) : null}
+          <Button
+            label="Conversar"
+            onPress={() => router.push(`/(client)/anuncio-chat/${listing.id}`)}
+            style={{ marginTop: 12 }}
+          />
         </View>
       ) : (
         <View style={{ marginTop: 24, gap: 10 }}>
@@ -235,4 +269,10 @@ const styles = StyleSheet.create({
   contactTitle: { fontFamily: fonts.headBold, fontSize: 12, color: colors.gray600, textTransform: 'uppercase', letterSpacing: 0.5 },
   contactText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, marginTop: 6 },
   contactPhone: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.blue, marginTop: 4 },
+  threadsBox: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, padding: 16, marginTop: 16, gap: 12 },
+  threadRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  threadPreview: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, marginTop: 2 },
+  chatBtn: { backgroundColor: colors.blue, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8 },
+  chatBtnText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.white },
+  emptyThreads: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 16, textAlign: 'center' },
 });
