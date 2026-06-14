@@ -72,6 +72,14 @@ npm run test:notifications
 npm run smoke:ci
 ```
 
+Pós-build no simulador (Maestro):
+
+```bash
+npm run maestro:smoke
+```
+
+Ver `docs/MAESTRO.md`.
+
 ## Notas
 
 - Push remoto **não funciona** no Expo Go web nem sem dev client.

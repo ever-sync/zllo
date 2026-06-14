@@ -1,0 +1,15 @@
+appId: com.eversync.zllo
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Já tenho conta'
+- tapOn: 'E-mail'
+- inputText: ${CLIENT_EMAIL}
+- tapOn: 'Senha'
+- inputText: ${CLIENT_PASSWORD}
+- hideKeyboard
+- tapOn: 'Entrar'
+- extendedWaitUntil:
+    visible: 'Início'
+    timeout: 15000
+- assertVisible: 'Pedidos'

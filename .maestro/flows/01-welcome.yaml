@@ -1,0 +1,9 @@
+appId: com.eversync.zllo
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'Conserto de celular'
+- assertVisible: 'Criar conta grátis'
+- assertVisible: 'Já tenho conta'
+- tapOn: 'Já tenho conta'
+- assertVisible: 'Entrar'

@@ -37,8 +37,14 @@ Status em jun/2026 após execução do plano de melhorias.
 
 ## Pendências (backlog)
 
-- E2E automatizado pós-build EAS (Maestro/Detox)
 - Chat P2P vitrine (hoje: interesse + telefone)
+- Maestro Cloud no CI (runner macOS)
+
+## Fase 8C — Maestro E2E ✅
+
+- Flows `.maestro/flows/` (welcome, login cliente/loja, auth links)
+- `npm run maestro:smoke` + `docs/MAESTRO.md`
+- Integrado em `platform-smoke.sh` e `eas-post-build.sh`
 
 ## Fase 8B — concluído ✅
 

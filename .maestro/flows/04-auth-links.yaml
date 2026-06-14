@@ -1,0 +1,10 @@
+appId: com.eversync.zllo
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Já tenho conta'
+- tapOn: 'Esqueci minha senha'
+- assertVisible: 'Recuperar senha'
+- back
+- tapOn: 'Criar agora'
+- assertVisible: 'Criar conta'

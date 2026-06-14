@@ -1,0 +1,15 @@
+# Maestro — smoke pós-build (dev client)
+# https://maestro.mobile.dev
+#
+# iOS sim / device:
+#   maestro test .maestro/flows
+# Android:
+#   export MAESTRO_APP_ID=com.eversync.zllo  (default abaixo é iOS bundle)
+
+appId: com.eversync.zllo
+
+env:
+  CLIENT_EMAIL: cliente@zllo.dev
+  CLIENT_PASSWORD: senha123
+  SHOP_EMAIL: assistencia@zllo.dev
+  SHOP_PASSWORD: senha123
