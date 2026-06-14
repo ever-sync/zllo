@@ -9,6 +9,7 @@ import { Screen } from '@/components/ui/screen';
 import { EmptyState, SkeletonCard } from '@/components/ui/states';
 import { hasSeenClientTour, markClientTourSeen } from '@/lib/client-tour';
 import { getDeviceName } from '@/lib/format';
+import { rankBadge, type RegionalRankRow } from '@/lib/ranking-badges';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
@@ -35,6 +36,7 @@ export default function ClientHome() {
   const router = useRouter();
   const [recent, setRecent] = useState<RecentRequest[] | null>(null);
   const [stats, setStats] = useState<{ ativos: number; aparelhos: number }>({ ativos: 0, aparelhos: 0 });
+  const [ranking, setRanking] = useState<RegionalRankRow[]>([]);
   const [tourVisible, setTourVisible] = useState(false);
   const [tourStep, setTourStep] = useState(0);
 
@@ -54,6 +56,9 @@ export default function ClientHome() {
       .from('devices')
       .select('id', { count: 'exact', head: true });
     setStats({ ativos: ativos ?? 0, aparelhos: aparelhos ?? 0 });
+
+    const { data: rankData } = await supabase.rpc('get_regional_shop_ranking', { p_limit: 5 });
+    setRanking((rankData as RegionalRankRow[]) ?? []);
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -120,6 +125,52 @@ export default function ClientHome() {
         </Pressable>
       </View>
 
+      <Pressable style={styles.vitrineCard} onPress={() => router.push('/(client)/vitrine')}>
+        <View style={styles.vitrineIcon}>
+          <Ionicons name="pricetags-outline" size={18} color={colors.ink} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.vitrineTitle}>Vitrine P2P</Text>
+          <Text style={styles.vitrineSub}>Compre ou venda celulares usados</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.gray400} />
+      </Pressable>
+
+      {ranking.length > 0 ? (
+        <>
+          <View style={[styles.sectionRow, { marginTop: 20 }]}>
+            <Text style={styles.section}>Melhores assistências</Text>
+            <Pressable onPress={() => router.push('/(client)/solicitar')} hitSlop={6}>
+              <Text style={styles.seeAll}>Pedir assistência</Text>
+            </Pressable>
+          </View>
+          <View style={{ gap: 8 }}>
+            {ranking.map((row) => {
+              const badge = rankBadge(row.badge);
+              return (
+                <View
+                  key={row.id}
+                  style={[styles.rankCard, row.rank_position === 1 && { borderColor: colors.lime, backgroundColor: '#F7FEE7' }]}
+                >
+                  <Text style={styles.rankPos}>{row.rank_position}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rankName} numberOfLines={1}>{row.name}</Text>
+                    <Text style={styles.rankMeta}>
+                      ★ {Number(row.rating).toFixed(1)} · {row.reviews_count} aval. · {row.distance_km} km
+                    </Text>
+                  </View>
+                  {badge ? (
+                    <View style={[styles.rankBadge, { backgroundColor: badge.bg }]}>
+                      <Text style={[styles.rankBadgeText, { color: badge.fg }]}>{badge.label}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        </>
+      ) : null}
+
       {/* Lista */}
       <View style={styles.sectionRow}>
         <Text style={styles.section}>Meus pedidos</Text>
@@ -182,6 +233,54 @@ const styles = StyleSheet.create({
   metricLabel: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.gray600 },
   metricValue: { fontFamily: fonts.headBlack, fontSize: 30, color: colors.ink, letterSpacing: -1, marginTop: 6 },
   metricDelta: { fontFamily: fonts.bodyBold, fontSize: 11.5, marginTop: 4 },
+
+  vitrineCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderRadius: radius['2xl'],
+    padding: 14,
+  },
+  vitrineIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.lime,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vitrineTitle: { fontFamily: fonts.bodyBold, fontSize: 14.5, color: colors.ink },
+  vitrineSub: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, marginTop: 1 },
+
+  rankCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderRadius: radius['2xl'],
+    padding: 12,
+  },
+  rankPos: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.ink,
+    color: colors.white,
+    textAlign: 'center',
+    lineHeight: 28,
+    fontFamily: fonts.headBlack,
+    fontSize: 13,
+  },
+  rankName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  rankMeta: { fontFamily: fonts.body, fontSize: 11.5, color: colors.gray600, marginTop: 2 },
+  rankBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  rankBadgeText: { fontFamily: fonts.bodyBold, fontSize: 9 },
 
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, marginBottom: 12 },
   section: { fontFamily: fonts.head, fontSize: 17, color: colors.ink },

@@ -1247,6 +1247,18 @@ export type Database = {
         Returns: string
       }
       get_my_unread_notification_count: { Args: never; Returns: number }
+      get_regional_shop_ranking: {
+        Args: { p_lat?: number; p_lng?: number; p_limit?: number }
+        Returns: {
+          id: string
+          name: string
+          rating: number
+          reviews_count: number
+          distance_km: number
+          rank_position: number
+          badge: string | null
+        }[]
+      }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notification_read: { Args: { p_id: string }; Returns: undefined }
       register_push_token: {

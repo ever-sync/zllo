@@ -81,9 +81,7 @@ export function RequestForm({
       return;
     }
 
-    if (source === 'cadastrado') {
-      await supabase.rpc('set_my_location', { p_lat: loc.lat, p_lng: loc.lng });
-    }
+    await supabase.rpc('set_my_location', { p_lat: loc.lat, p_lng: loc.lng });
 
     const { error: rpcErr } = await supabase.rpc('create_repair_request', {
       p_device_id: deviceId,

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getDeviceName, formatBRL } from '@/lib/format';
+import type { RegionalRankRow } from '@/lib/ranking';
+import { RegionalRanking } from '@/components/regional-ranking';
 import { ClientShell } from './client-shell';
 
 type RepairRequest = {
@@ -35,7 +37,7 @@ export default async function ClienteHomePage() {
   const supabase = await createClient();
   const { data: profile } = await supabase.rpc('get_my_profile');
 
-  const [{ data: requests }, { data: productOrders }, { data: devices }, { data: products }] =
+  const [{ data: requests }, { data: productOrders }, { data: devices }, { data: products }, { data: ranking }] =
     await Promise.all([
       supabase
         .from('repair_requests')
@@ -55,11 +57,13 @@ export default async function ClienteHomePage() {
         .gt('stock', 0)
         .order('created_at', { ascending: false })
         .limit(4),
+      supabase.rpc('get_regional_shop_ranking', { p_limit: 5 }),
     ]);
 
   const repairRows = ((requests as unknown as RepairRequest[]) ?? []);
   const orderRows = ((productOrders as unknown as ProductOrder[]) ?? []);
   const productRows = ((products as unknown as Product[]) ?? []);
+  const rankRows = ((ranking as RegionalRankRow[] | null) ?? []);
   const openRequests = repairRows.filter((r) => r.status === 'aberta').length;
 
   return (
@@ -88,6 +92,12 @@ export default async function ClienteHomePage() {
         <Kpi label="Aparelhos" value={String(devices?.length ?? 0)} delta="cadastrados" />
         <Kpi label="Pedidos loja" value={String(orderRows.length)} delta="marketplace" dark />
       </div>
+
+      {rankRows.length > 0 ? (
+        <div className="mb-[18px]">
+          <RegionalRanking rows={rankRows} />
+        </div>
+      ) : null}
 
       <div className="grid gap-[18px] lg:grid-cols-[2fr_1fr]">
         <section className="rounded-[14px] border border-line bg-white p-4 md:p-[18px]">
