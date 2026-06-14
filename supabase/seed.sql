@@ -70,7 +70,7 @@ begin
   on conflict do nothing;
 end $$;
 
--- ---------- Modo teste de pagamento (só local) ----------
+-- ---------- Modo teste de pagamento (APENAS ambiente local — nunca rode em prod) ----------
 insert into public.app_config (id, allow_test_payments) values (1, true)
 on conflict (id) do update set allow_test_payments = true;
 

@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { AppHeader } from '@/components/ui/app-header';
 import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { confirmAsync, notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { useShop } from '@/lib/shop';
@@ -67,18 +68,20 @@ export default function Vendas() {
     setRows((data as unknown as Order[]) ?? []);
   }, [shop]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   useEffect(() => {
     if (!shop) return;
     const ch = supabase
       .channel(`shop-${shop.id}-porders`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_orders', filter: `shop_id=eq.${shop.id}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_orders', filter: `shop_id=eq.${shop.id}` }, scheduleLoad)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [shop, load]);
+  }, [shop, scheduleLoad]);
 
   const advance = async (id: string, status: string) => {
     setBusy(id);

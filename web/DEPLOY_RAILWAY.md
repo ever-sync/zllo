@@ -20,6 +20,7 @@ Supabase Dashboard → Project Settings → API):
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://nkmpxyumayvnbpwxdkke.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable key do hosted |
+| `REVALIDATE_SECRET` | token aleatório (mesmo valor nas Edge Functions Supabase) |
 
 > São `NEXT_PUBLIC_*`: o Railway injeta no **build** (ficam embutidas no
 > bundle do navegador). Nunca coloque aqui a `service_role`/secret.

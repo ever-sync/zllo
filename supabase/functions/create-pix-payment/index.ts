@@ -2,6 +2,7 @@
 // marketplace automaticamente) e grava em `payments`. Retorna o QR Code Pix.
 // O provedor está isolado aqui: trocar p/ Pagar.me/Stripe = mudar só este arquivo.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { log } from '../_shared/log.ts';
 
 const ASAAS_BASE = Deno.env.get('ASAAS_BASE_URL') ?? 'https://api-sandbox.asaas.com/v3';
 const ASAAS_KEY = Deno.env.get('ASAAS_API_KEY') ?? '';
@@ -126,6 +127,9 @@ Deno.serve(async (req) => {
 
     return json({ payload: qr.payload, encodedImage: qr.encodedImage, value });
   } catch (e) {
+    log('error', 'create-pix-payment failed', {
+      error: e instanceof Error ? e.message : String(e),
+    });
     return json({ error: e instanceof Error ? e.message : 'Erro inesperado' }, 500);
   }
 });

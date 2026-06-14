@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -53,6 +54,8 @@ export default function Conversa() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 50);
   }, [id, shop]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useEffect(() => {
     load();
   }, [load]);
@@ -61,10 +64,10 @@ export default function Conversa() {
     if (!id) return;
     const ch = supabase
       .channel(`conv-${id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `request_id=eq.${id}` }, () => load())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `request_id=eq.${id}` }, scheduleLoad)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [id, load]);
+  }, [id, scheduleLoad]);
 
   const send = async () => {
     const body = text.trim();

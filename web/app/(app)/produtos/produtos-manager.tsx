@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { CATEGORIES, PRODUCT_SELECT, formatPrice, type Product } from '@/lib/products';
+import { invalidateProductCatalog } from './actions';
 
 type FormState = {
   name: string;
@@ -130,18 +131,21 @@ export function ProdutosManager({
       setError(res.error.message);
       return;
     }
+    await invalidateProductCatalog();
     close();
     await refetch();
   };
 
   const toggleActive = async (p: Product) => {
     await supabase.from('products').update({ is_active: !p.is_active }).eq('id', p.id);
+    await invalidateProductCatalog();
     await refetch();
   };
 
   const remove = async (p: Product) => {
     if (!confirm(`Excluir "${p.name}"? Esta ação não pode ser desfeita.`)) return;
     await supabase.from('products').delete().eq('id', p.id);
+    await invalidateProductCatalog();
     await refetch();
   };
 

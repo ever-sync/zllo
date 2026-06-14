@@ -1185,6 +1185,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_repair_request_detail: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       is_admin: { Args: never; Returns: boolean }
       open_dispute: {
         Args: { p_kind: string; p_order_id: string; p_reason: string }

@@ -10,6 +10,7 @@ import { Screen } from '@/components/ui/screen';
 import { ErrorState } from '@/components/ui/states';
 import { useAuth } from '@/lib/auth';
 import { confirmAsync, notify } from '@/lib/confirm';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -102,18 +103,19 @@ export default function PedidoProduto() {
     setMyReview((rev as Review) ?? null);
   }, [id]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useEffect(() => {
     load();
     if (!id) return;
-    // Atualiza ao vivo (ex.: pagamento confirmado pelo webhook → status 'pago').
     const ch = supabase
       .channel(`porder-${id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'product_orders', filter: `id=eq.${id}` }, () => load())
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'product_orders', filter: `id=eq.${id}` }, scheduleLoad)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [id, load]);
+  }, [id, load, scheduleLoad]);
 
   if (loadError) {
     return (

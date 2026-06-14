@@ -2,52 +2,44 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getDeviceName } from '@/lib/format';
+import { buildConversations, type ChatConversation, type RawChatMsg } from '@/lib/chat';
+import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 
 type Msg = { id: string; body: string; created_at: string; sender_id: string };
-type RawMsg = Msg & {
-  request_id: string | null;
-  request: { client: { full_name: string | null } | null; device: { brand: string | null; model: string | null; nickname: string | null } | null } | null;
-};
-type Conversation = { requestId: string; title: string; client: string; last: string; at: string };
-
-const CONV_SELECT =
-  'id, body, created_at, sender_id, request_id, request:repair_requests(client:profiles(full_name), device:devices(brand, model, nickname))';
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ChatClient({ shopId, userId }: { shopId: string; userId: string }) {
+export function ChatClient({
+  shopId,
+  userId,
+  initialConvs,
+}: {
+  shopId: string;
+  userId: string;
+  initialConvs: ChatConversation[];
+}) {
   const supabase = useMemo(() => createClient(), []);
-  const [convs, setConvs] = useState<Conversation[]>([]);
+  const [convs, setConvs] = useState<ChatConversation[]>(initialConvs);
   const [selected, setSelected] = useState<string | null>(null);
   const [thread, setThread] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const selectedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
 
   const loadConvs = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
-      .select(CONV_SELECT)
+      .select('id, body, created_at, sender_id, request_id, request:repair_requests(client:profiles(full_name), device:devices(brand, model, nickname))')
       .eq('shop_id', shopId)
       .order('created_at', { ascending: false });
-    const rows = (data as unknown as RawMsg[]) ?? [];
-    const seen = new Set<string>();
-    const list: Conversation[] = [];
-    for (const m of rows) {
-      if (!m.request_id || seen.has(m.request_id)) continue;
-      seen.add(m.request_id);
-      list.push({
-        requestId: m.request_id,
-        title: getDeviceName(m.request?.device),
-        client: m.request?.client?.full_name?.split(' ')[0] ?? 'Cliente',
-        last: m.body,
-        at: m.created_at,
-      });
-    }
-    setConvs(list);
+    setConvs(buildConversations((data as unknown as RawChatMsg[]) ?? []));
   }, [supabase, shopId]);
 
   const loadThread = useCallback(
@@ -63,28 +55,37 @@ export function ChatClient({ shopId, userId }: { shopId: string; userId: string 
     [supabase, shopId],
   );
 
-  useEffect(() => {
-    loadConvs();
-  }, [loadConvs]);
+  const selectConversation = useCallback(
+    (reqId: string) => {
+      setSelected(reqId);
+      void loadThread(reqId);
+    },
+    [loadThread],
+  );
 
-  useEffect(() => {
-    if (selected) loadThread(selected);
-  }, [selected, loadThread]);
+  const scheduleLoadConvs = useDebouncedCallback(() => {
+    void loadConvs();
+  }, 400);
 
-  // Realtime: novas mensagens nas conversas da loja.
   useEffect(() => {
     const ch = supabase
       .channel(`shop-${shopId}-messages`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `shop_id=eq.${shopId}` }, (payload) => {
-        loadConvs();
-        const m = payload.new as RawMsg;
-        if (selected && m.request_id === selected) loadThread(selected);
+        const m = payload.new as RawChatMsg;
+        const active = selectedRef.current;
+        if (active && m.request_id === active) {
+          setThread((prev) => [
+            ...prev,
+            { id: m.id, body: m.body, created_at: m.created_at, sender_id: m.sender_id },
+          ]);
+        }
+        scheduleLoadConvs();
       })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [supabase, shopId, selected, loadConvs, loadThread]);
+  }, [supabase, shopId, scheduleLoadConvs]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -101,13 +102,12 @@ export function ChatClient({ shopId, userId }: { shopId: string; userId: string 
       return;
     }
     setInput('');
-    loadThread(selected);
-    loadConvs();
+    await loadThread(selected);
+    await loadConvs();
   };
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-white">
-      {/* Conversas */}
       <aside className="w-64 shrink-0 overflow-y-auto border-r border-line">
         {convs.length === 0 ? (
           <p className="p-5 font-body text-sm text-g600">Nenhuma conversa ainda.</p>
@@ -115,20 +115,21 @@ export function ChatClient({ shopId, userId }: { shopId: string; userId: string 
           convs.map((c) => (
             <button
               key={c.requestId}
-              onClick={() => setSelected(c.requestId)}
+              onClick={() => selectConversation(c.requestId)}
               className={
                 'flex w-full flex-col gap-0.5 border-b border-line px-4 py-3 text-left transition-colors ' +
                 (selected === c.requestId ? 'bg-g100' : 'hover:bg-paper')
               }
             >
               <span className="font-head text-sm font-bold text-ink">{c.client}</span>
-              <span className="truncate font-body text-xs text-g600">{c.title} · {c.last}</span>
+              <span className="truncate font-body text-xs text-g600">
+                {c.title} · {c.last}
+              </span>
             </button>
           ))
         )}
       </aside>
 
-      {/* Thread */}
       <section className="flex min-w-0 flex-1 flex-col">
         {!selected ? (
           <div className="flex flex-1 items-center justify-center">
@@ -149,7 +150,9 @@ export function ChatClient({ shopId, userId }: { shopId: string; userId: string 
                       }
                     >
                       <p className="font-body text-sm">{m.body}</p>
-                      <p className={'mt-0.5 font-body text-[10px] ' + (mine ? 'text-white/70' : 'text-g400')}>{fmtTime(m.created_at)}</p>
+                      <p className={'mt-0.5 font-body text-[10px] ' + (mine ? 'text-white/70' : 'text-g400')}>
+                        {fmtTime(m.created_at)}
+                      </p>
                     </div>
                   );
                 })}
@@ -163,14 +166,14 @@ export function ChatClient({ shopId, userId }: { shopId: string; userId: string 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    send();
+                    void send();
                   }
                 }}
                 placeholder="Escreva uma mensagem…"
                 className="flex-1 rounded-xl border border-line px-3.5 py-2.5 font-body text-sm text-ink outline-none focus:border-blue"
               />
               <button
-                onClick={send}
+                onClick={() => void send()}
                 disabled={sending || !input.trim()}
                 className="rounded-xl bg-blue px-4 py-2.5 font-head text-sm font-bold text-white transition-opacity disabled:opacity-60"
               >

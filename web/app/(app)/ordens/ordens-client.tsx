@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/database.types';
 import { getDeviceName } from '@/lib/format';
+import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 import { formatPrice } from '@/lib/product-orders';
 import { nextStep, statusLabel } from '@/lib/order-status';
 
@@ -47,15 +48,19 @@ export function OrdensClient({ shopId, initial }: { shopId: string; initial: Ser
     setOrders((data as unknown as ServiceOrder[]) ?? []);
   }, [supabase, shopId]);
 
+  const scheduleRefetch = useDebouncedCallback(() => {
+    void refetch();
+  }, 400);
+
   useEffect(() => {
     const ch = supabase
       .channel(`shop-${shopId}-orders`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `shop_id=eq.${shopId}` }, () => refetch())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `shop_id=eq.${shopId}` }, scheduleRefetch)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [supabase, shopId, refetch]);
+  }, [supabase, shopId, scheduleRefetch]);
 
   const advance = async (id: string, status: SOStatus, note?: string) => {
     setBusy(id);

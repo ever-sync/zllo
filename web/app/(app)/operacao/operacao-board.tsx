@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { TARGET_SELECT, type FeedItem } from '@/lib/feed';
 import { getDeviceName } from '@/lib/format';
 import { distanceLabel, timeLeft } from '@/lib/time';
+import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 import { useNow } from '@/lib/use-now';
 
 /** Beep curto para avisar de pedido novo (pode ser bloqueado até o 1º clique). */
@@ -44,19 +45,23 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
     setItems((data as unknown as FeedItem[]) ?? []);
   }, [supabase, shopId]);
 
+  const scheduleFetch = useDebouncedCallback(() => {
+    void fetchFeed();
+  }, 400);
+
   useEffect(() => {
     const channel = supabase
       .channel(`shop-${shopId}-targets`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'request_targets', filter: `shop_id=eq.${shopId}` },
-        () => fetchFeed(),
+        scheduleFetch,
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, shopId, fetchFeed]);
+  }, [supabase, shopId, scheduleFetch]);
 
   useEffect(() => {
     let isNew = false;

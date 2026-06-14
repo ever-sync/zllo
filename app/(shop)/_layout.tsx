@@ -4,10 +4,11 @@ import { ShopProvider } from '@/lib/shop';
 import { colors } from '@/theme';
 
 export default function ShopLayout() {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   if (loading) return null;
   if (!session) return <Redirect href="/(auth)/welcome" />;
+  if (profile?.role !== 'assistencia') return <Redirect href="/(client)/(tabs)" />;
 
   return (
     <ShopProvider>

@@ -2,7 +2,7 @@
 
 Pagamento via **Asaas** (Pix com split: 97% para a loja, 3% ficam com a conta
 marketplace da zllo automaticamente). O provedor está isolado em
-`create-pix-payment/index.ts` — trocar por Pagar.me/Stripe é mexer só ali.
+`create-pix-payment/index.ts` e `create-product-payment/index.ts`.
 
 ## Pré-requisitos (uma vez)
 
@@ -14,13 +14,20 @@ marketplace da zllo automaticamente). O provedor está isolado em
    supabase secrets set ASAAS_API_KEY=xxxxx
    supabase secrets set ASAAS_BASE_URL=https://api-sandbox.asaas.com/v3   # produção: https://api.asaas.com/v3
    supabase secrets set ASAAS_WEBHOOK_TOKEN=um-token-secreto-qualquer
+   supabase secrets set WEB_APP_URL=https://seu-console-web.up.railway.app
+   supabase secrets set REVALIDATE_SECRET=mesmo-valor-do-next-js
    ```
    (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` já são injetadas.)
+
+   `WEB_APP_URL` + `REVALIDATE_SECRET` invalidam o cache do catálogo web quando
+   um pedido de produto é pago (estoque atualizado). Defina `REVALIDATE_SECRET`
+   também no `.env.local` do Next.js.
 
 ## Deploy
 
 ```sh
 supabase functions deploy create-pix-payment
+supabase functions deploy create-product-payment
 supabase functions deploy asaas-webhook
 ```
 
@@ -33,12 +40,14 @@ supabase functions deploy asaas-webhook
 
 ## Fluxo
 
-1. App (cliente) chama `create-pix-payment` com `{ order_id }` → cria a cobrança
-   com split, grava `payments` (pendente) e retorna o QR Code Pix.
-2. Cliente paga → Asaas chama `asaas-webhook` → `payments.status = 'pago'`.
-3. O app acompanha via Realtime na tabela `payments`.
+1. App (cliente) chama `create-pix-payment` com `{ order_id }` (reparo) ou
+   `create-product-payment` com `{ product_order_id }` (marketplace).
+2. Cliente paga → Asaas chama `asaas-webhook` → status `pago` + invalidação
+   do cache do catálogo (produtos).
+3. O app acompanha via Realtime (`payments` ou `product_orders`).
 
 ## Observações
 
-- A migration `20260521080000_payments.sql` precisa estar aplicada.
-- A comissão (3%) e o repasse (97%) são gravados em `payments` para o financeiro.
+- Migrations de pagamentos e marketplace precisam estar aplicadas.
+- Logs estruturados (JSON) em `_shared/log.ts` — visíveis no dashboard Supabase.
+- Pagamento de teste: só com `app_config.allow_test_payments = true` (seed local).

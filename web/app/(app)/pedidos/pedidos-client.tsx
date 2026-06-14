@@ -10,6 +10,7 @@ import {
   formatPrice,
   type ShopOrder,
 } from '@/lib/product-orders';
+import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 
 type POStatus = Database['public']['Enums']['product_order_status'];
 
@@ -41,15 +42,19 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
     setOrders((data as unknown as ShopOrder[]) ?? []);
   }, [supabase, shopId]);
 
+  const scheduleRefetch = useDebouncedCallback(() => {
+    void refetch();
+  }, 400);
+
   useEffect(() => {
     const ch = supabase
       .channel(`shop-${shopId}-porders`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_orders', filter: `shop_id=eq.${shopId}` }, () => refetch())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_orders', filter: `shop_id=eq.${shopId}` }, scheduleRefetch)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [supabase, shopId, refetch]);
+  }, [supabase, shopId, scheduleRefetch]);
 
   const advance = async (id: string, status: POStatus) => {
     setBusy(id);

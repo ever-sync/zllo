@@ -1,9 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { fetchAdminProducts } from '@/lib/cached-data';
 import { ProdutosAdmin, type AdminProduct } from './produtos-admin';
 
 export default async function AdminProdutos() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('admin_products');
+  const data = await fetchAdminProducts();
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">

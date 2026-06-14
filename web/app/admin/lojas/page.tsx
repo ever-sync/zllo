@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { fetchAdminShops } from '@/lib/cached-data';
 
 type AdminShop = {
   id: string;
@@ -12,8 +12,7 @@ type AdminShop = {
 };
 
 export default async function AdminLojas() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('admin_shops');
+  const data = await fetchAdminShops();
   const shops = (data as unknown as AdminShop[]) ?? [];
 
   return (

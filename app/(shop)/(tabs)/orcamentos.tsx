@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -51,16 +52,18 @@ export default function Orcamentos() {
     setItems((data as unknown as FeedItem[]) ?? []);
   }, [shop]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   useEffect(() => {
     if (!shop) return;
     const channel = supabase
       .channel(`shop-${shop.id}-targets`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'request_targets', filter: `shop_id=eq.${shop.id}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'request_targets', filter: `shop_id=eq.${shop.id}` }, scheduleLoad)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [shop, load]);
+  }, [shop, scheduleLoad]);
 
   if (loading) {
     return <Screen scroll={false} background={colors.canvas}><ActivityIndicator color={colors.blue} style={{ marginTop: 60 }} /></Screen>;

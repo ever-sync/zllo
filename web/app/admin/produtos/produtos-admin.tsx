@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react';
+import { adminSetProductActive } from '../actions';
 import { formatPrice } from '@/lib/product-orders';
 
 export type AdminProduct = {
@@ -15,24 +15,19 @@ export type AdminProduct = {
 };
 
 export function ProdutosAdmin({ initial }: { initial: AdminProduct[] }) {
-  const supabase = useMemo(() => createClient(), []);
   const [items, setItems] = useState<AdminProduct[]>(initial);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const refetch = useCallback(async () => {
-    const { data } = await supabase.rpc('admin_products');
-    setItems((data as unknown as AdminProduct[]) ?? []);
-  }, [supabase]);
-
   const toggle = async (p: AdminProduct) => {
     setBusy(p.id);
-    const { error } = await supabase.rpc('admin_set_product_active', { p_id: p.id, p_active: !p.is_active });
+    const nextActive = !p.is_active;
+    const { error } = await adminSetProductActive(p.id, nextActive);
     setBusy(null);
     if (error) {
-      alert(error.message);
+      alert(error);
       return;
     }
-    await refetch();
+    setItems((prev) => prev.map((row) => (row.id === p.id ? { ...row, is_active: nextActive } : row)));
   };
 
   if (items.length === 0) {

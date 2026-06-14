@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { fetchAdminOrders } from '@/lib/cached-data';
 import { formatPrice } from '@/lib/product-orders';
 
 type Tx = {
@@ -16,8 +16,7 @@ function fmt(iso: string): string {
 }
 
 export default async function AdminTransacoes() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('admin_orders');
+  const data = await fetchAdminOrders();
   const txs = (data as unknown as Tx[]) ?? [];
 
   return (

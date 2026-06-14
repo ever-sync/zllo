@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { fetchAdminMetrics } from '@/lib/cached-data';
 import { formatPrice } from '@/lib/product-orders';
 
 type Metrics = {
@@ -32,8 +32,7 @@ function Kpi({ label, value, accent }: { label: string; value: string; accent?: 
 }
 
 export default async function AdminOverview() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('admin_metrics');
+  const data = await fetchAdminMetrics();
   const m = (data as unknown as Metrics) ?? null;
 
   if (!m) {

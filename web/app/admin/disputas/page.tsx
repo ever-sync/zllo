@@ -1,9 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { fetchAdminDisputes } from '@/lib/cached-data';
 import { DisputasAdmin, type Dispute } from './disputas-admin';
 
 export default async function AdminDisputas() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc('admin_disputes');
+  const data = await fetchAdminDisputes();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">

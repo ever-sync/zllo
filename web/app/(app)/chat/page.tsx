@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { buildConversations, CHAT_CONV_SELECT, type RawChatMsg } from '@/lib/chat';
 import { ChatClient } from './chat-client';
 
 export default async function ChatPage() {
@@ -16,9 +17,17 @@ export default async function ChatPage() {
     );
   }
 
+  const { data: messages } = await supabase
+    .from('messages')
+    .select(CHAT_CONV_SELECT)
+    .eq('shop_id', shop.id)
+    .order('created_at', { ascending: false });
+
+  const initialConvs = buildConversations((messages as unknown as RawChatMsg[]) ?? []);
+
   return (
     <div className="mx-auto flex h-screen max-w-5xl flex-col px-6 py-8">
-      <ChatClient shopId={shop.id} userId={userId} />
+      <ChatClient shopId={shop.id} userId={userId} initialConvs={initialConvs} />
     </div>
   );
 }

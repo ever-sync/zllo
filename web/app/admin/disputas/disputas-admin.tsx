@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react';
+import { adminResolveDispute } from '../actions';
 import type { Database } from '@/lib/database.types';
 import { formatPrice } from '@/lib/product-orders';
 
@@ -33,29 +33,24 @@ function fmt(iso: string): string {
 }
 
 export function DisputasAdmin({ initial }: { initial: Dispute[] }) {
-  const supabase = useMemo(() => createClient(), []);
   const [items, setItems] = useState<Dispute[]>(initial);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
-  const refetch = useCallback(async () => {
-    const { data } = await supabase.rpc('admin_disputes');
-    setItems((data as unknown as Dispute[]) ?? []);
-  }, [supabase]);
-
   const resolve = async (id: string, status: DStatus) => {
     setBusy(id);
-    const { error } = await supabase.rpc('admin_resolve_dispute', {
-      p_id: id,
-      p_status: status,
-      p_resolution: notes[id] ?? '',
-    });
+    const resolution = notes[id] ?? '';
+    const { error } = await adminResolveDispute(id, status, resolution);
     setBusy(null);
     if (error) {
-      alert(error.message);
+      alert(error);
       return;
     }
-    await refetch();
+    setItems((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, status, resolution: resolution || d.resolution } : d,
+      ),
+    );
   };
 
   if (items.length === 0) {

@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/ui/states';
 import { Timeline } from '@/components/ui/timeline';
 import { useAuth } from '@/lib/auth';
 import { confirmAsync, notify } from '@/lib/confirm';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import { supabase } from '@/lib/supabase';
@@ -82,70 +83,41 @@ export default function PedidoDetail() {
 
   const load = useCallback(async () => {
     if (!id || !session) return;
-    const { data: r, error: rErr } = await supabase
-      .from('repair_requests')
-      .select('id, description, status, device:devices(brand, model, nickname)')
-      .eq('id', id)
-      .maybeSingle();
-    if (rErr) {
+    const { data, error } = await supabase.rpc('get_repair_request_detail', { p_request_id: id });
+    if (error) {
       setLoadError(true);
       return;
     }
     setLoadError(false);
-    setReq((r as unknown as Req) ?? null);
 
-    const { data: q } = await supabase
-      .from('quotes')
-      .select('id, value, description, status, shop_id, shop:shops(name, rating, reviews_count)')
-      .eq('request_id', id)
-      .order('value', { ascending: true });
-    setQuotes((q as unknown as Quote[]) ?? []);
+    type Detail = {
+      request: Req | null;
+      quotes: Quote[];
+      order: Order | null;
+      events: { status: string; created_at: string }[];
+      review: Review | null;
+      payment: Payment | null;
+      dispute: Dispute | null;
+    };
+    const detail = (data ?? null) as Detail | null;
+    setReq(detail?.request ?? null);
+    setQuotes(detail?.quotes ?? []);
+    setOrder(detail?.order ?? null);
 
-    const { data: o } = await supabase
-      .from('service_orders')
-      .select('id, status, value, shop_id, warranty_days, shop:shops(name)')
-      .eq('request_id', id)
-      .maybeSingle();
-    setOrder((o as unknown as Order) ?? null);
-
-    if (o?.id) {
-      const { data: ev } = await supabase
-        .from('service_order_events')
-        .select('status, created_at')
-        .eq('order_id', o.id)
-        .order('created_at', { ascending: true });
-      const map: Record<string, string> = {};
-      let conc: string | null = null;
-      (ev ?? []).forEach((e: { status: string; created_at: string }) => {
-        map[e.status] = fmt(e.created_at);
-        if (e.status === 'concluida') conc = e.created_at;
-      });
-      setEvents(map);
-      setConcludedAt(conc);
-
-      const { data: rev } = await supabase
-        .from('reviews')
-        .select('id, rating, comment')
-        .eq('order_id', o.id)
-        .maybeSingle();
-      setMyReview((rev as Review) ?? null);
-
-      const { data: pay } = await supabase
-        .from('payments')
-        .select('id, status, amount')
-        .eq('order_id', o.id)
-        .maybeSingle();
-      setPayment((pay as Payment) ?? null);
-
-      const { data: disp } = await supabase
-        .from('disputes')
-        .select('id, status, reason, resolution')
-        .eq('service_order_id', o.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      setDispute((disp?.[0] as Dispute) ?? null);
-    }
+    const map: Record<string, string> = {};
+    let conc: string | null = null;
+    (detail?.events ?? []).forEach((e) => {
+      map[e.status] = fmt(e.created_at);
+      if (e.status === 'concluida') conc = e.created_at;
+    });
+    setEvents(map);
+    setConcludedAt(conc);
+    setMyReview(detail?.review ?? null);
+    setPayment(detail?.payment ?? null);
+    setDispute(detail?.dispute ?? null);
   }, [id, session]);
+
+  const scheduleLoad = useDebouncedReload(load);
 
   useEffect(() => {
     load();
@@ -156,12 +128,12 @@ export default function PedidoDetail() {
     if (!id) return;
     const channel = supabase
       .channel(`req-${id}-quotes`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes', filter: `request_id=eq.${id}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes', filter: `request_id=eq.${id}` }, scheduleLoad)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, load]);
+  }, [id, scheduleLoad]);
 
   // Realtime: confirmação do pagamento da OS.
   useEffect(() => {
@@ -169,12 +141,12 @@ export default function PedidoDetail() {
     if (!orderId) return;
     const channel = supabase
       .channel(`pay-${orderId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: `order_id=eq.${orderId}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: `order_id=eq.${orderId}` }, scheduleLoad)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [order?.id, load]);
+  }, [order?.id, scheduleLoad]);
 
   const onChoose = async (q: Quote) => {
     const ok = await confirmAsync(

@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState } from '@/components/ui/states';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel, stepIndex } from '@/lib/order-status';
 import { useShop } from '@/lib/shop';
@@ -41,16 +42,18 @@ export default function Ordens() {
     setRows((data as unknown as OrderRow[]) ?? []);
   }, [shop]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   useEffect(() => {
     if (!shop) return;
     const ch = supabase
       .channel(`shop-${shop.id}-orders`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `shop_id=eq.${shop.id}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `shop_id=eq.${shop.id}` }, scheduleLoad)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [shop, load]);
+  }, [shop, scheduleLoad]);
 
   const all = rows ?? [];
   const filtered = all.filter((o) => (tab === 'finalizadas' ? o.status === 'concluida' : o.status !== 'concluida' && o.status !== 'cancelada'));
