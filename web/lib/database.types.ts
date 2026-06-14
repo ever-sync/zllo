@@ -1129,6 +1129,7 @@ export type Database = {
         }
         Returns: string
       }
+      decline_target: { Args: { p_request_id: string }; Returns: undefined }
       get_my_profile: {
         Args: never
         Returns: {
@@ -1190,6 +1191,7 @@ export type Database = {
         Returns: Json
       }
       is_admin: { Args: never; Returns: boolean }
+      mark_target_viewed: { Args: { p_request_id: string }; Returns: undefined }
       open_dispute: {
         Args: { p_kind: string; p_order_id: string; p_reason: string }
         Returns: string

@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DisputePanel, type DisputeInfo } from '@/components/dispute-panel';
+import { PixModal } from '@/components/pix-modal';
+import { ReviewDisplay, ReviewForm } from '@/components/review-form';
 import { Timeline } from '@/components/timeline';
 import { formatBRL, getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
@@ -18,6 +21,8 @@ import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 
 const TEST_PAY = process.env.NEXT_PUBLIC_ALLOW_TEST_PAY === 'true';
 
+type Review = { id: string; rating: number; comment: string | null };
+
 function applyDetail(
   detail: RepairRequestDetail | null,
   setters: {
@@ -26,6 +31,8 @@ function applyDetail(
     setOrder: (v: RepairDetailOrder | null) => void;
     setEvents: (v: Record<string, string>) => void;
     setPayment: (v: RepairDetailPayment | null) => void;
+    setReview: (v: Review | null) => void;
+    setDispute: (v: DisputeInfo | null) => void;
   },
 ) {
   setters.setReq(detail?.request ?? null);
@@ -33,14 +40,18 @@ function applyDetail(
   setters.setOrder(detail?.order ?? null);
   setters.setEvents(eventsMap(detail?.events ?? []));
   setters.setPayment(detail?.payment ?? null);
+  setters.setReview(detail?.review ?? null);
+  setters.setDispute(detail?.dispute ?? null);
 }
 
 export function PedidoClient({
   requestId,
+  userId,
   initial,
   initialError = false,
 }: {
   requestId: string;
+  userId: string;
   initial: RepairRequestDetail | null;
   initialError?: boolean;
 }) {
@@ -50,6 +61,8 @@ export function PedidoClient({
   const [order, setOrder] = useState<RepairDetailOrder | null>(initial?.order ?? null);
   const [events, setEvents] = useState<Record<string, string>>(() => eventsMap(initial?.events ?? []));
   const [payment, setPayment] = useState<RepairDetailPayment | null>(initial?.payment ?? null);
+  const [review, setReview] = useState<Review | null>(initial?.review ?? null);
+  const [dispute, setDispute] = useState<DisputeInfo | null>(initial?.dispute ?? null);
   const [loadError, setLoadError] = useState(initialError);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -69,7 +82,7 @@ export function PedidoClient({
     }
     setLoadError(false);
     const detail = (data ?? null) as RepairRequestDetail | null;
-    applyDetail(detail, { setReq, setQuotes, setOrder, setEvents, setPayment });
+    applyDetail(detail, { setReq, setQuotes, setOrder, setEvents, setPayment, setReview, setDispute });
   }, [supabase, requestId]);
 
   const scheduleLoad = useDebouncedCallback(() => {
@@ -131,10 +144,12 @@ export function PedidoClient({
     setPayLoading(false);
     if (error) {
       setPayError('Não foi possível gerar o Pix.');
+      setPayModal(true);
       return;
     }
     if (data?.error) {
       setPayError(String(data.error));
+      setPayModal(true);
       return;
     }
     setPix({ payload: data.payload, encodedImage: data.encodedImage });
@@ -163,6 +178,39 @@ export function PedidoClient({
     await load();
   };
 
+  const submitReview = async (rating: number, comment: string) => {
+    if (!order) return;
+    const { error } = await supabase.from('reviews').insert({
+      order_id: order.id,
+      shop_id: order.shop_id,
+      client_id: userId,
+      rating,
+      comment: comment || null,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await load();
+  };
+
+  const openDispute = async (reason: string) => {
+    if (!order) return;
+    const { error } = await supabase.rpc('open_dispute', {
+      p_kind: 'reparo',
+      p_order_id: order.id,
+      p_reason: reason,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await load();
+  };
+
+  const chatHref = (shopId: string, shopName: string) =>
+    `/cliente/conversa/${requestId}?shopId=${encodeURIComponent(shopId)}&shopName=${encodeURIComponent(shopName)}`;
+
   if (loadError) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 text-center md:px-8">
@@ -190,6 +238,8 @@ export function PedidoClient({
   }
 
   const deviceName = getDeviceName(req.device);
+  const isPaid = payment?.status === 'pago';
+  const canDispute = isPaid && (!dispute || dispute.status === 'recusada' || dispute.status === 'cancelada');
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-8">
@@ -246,10 +296,27 @@ export function PedidoClient({
             </div>
           )}
 
+          <Link
+            href={chatHref(order.shop_id, order.shop?.name ?? 'Assistência')}
+            className="flex items-center justify-center gap-2 rounded-xl bg-ink py-3.5 font-head text-sm font-bold text-white"
+          >
+            Conversar com a assistência
+          </Link>
+
           <div className="rounded-2xl border border-line bg-white p-5">
             <h2 className="mb-4 font-head text-base font-extrabold text-ink">Acompanhamento</h2>
             <Timeline status={order.status} events={events} />
           </div>
+
+          <DisputePanel dispute={dispute} canOpen={canDispute} onOpen={openDispute} />
+
+          {order.status === 'concluida' ? (
+            review ? (
+              <ReviewDisplay rating={review.rating} comment={review.comment} />
+            ) : (
+              <ReviewForm onSubmit={submitReview} />
+            )
+          ) : null}
         </section>
       ) : (
         <section className="mt-6">
@@ -276,14 +343,22 @@ export function PedidoClient({
                   {q.description ? (
                     <p className="mt-2 text-sm leading-relaxed text-g600">{q.description}</p>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={() => onChoose(q)}
-                    disabled={accepting !== null}
-                    className="mt-4 w-full rounded-xl bg-blue py-3 font-head text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
-                  >
-                    {accepting === q.id ? 'Confirmando…' : 'Escolher esta'}
-                  </button>
+                  <div className="mt-4 flex gap-2">
+                    <Link
+                      href={chatHref(q.shop_id, q.shop?.name ?? 'Assistência')}
+                      className="flex flex-1 items-center justify-center rounded-xl border border-line py-3 font-head text-sm font-bold text-ink"
+                    >
+                      Chat
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => onChoose(q)}
+                      disabled={accepting !== null}
+                      className="flex-[2] rounded-xl bg-blue py-3 font-head text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
+                    >
+                      {accepting === q.id ? 'Confirmando…' : 'Escolher'}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -291,57 +366,15 @@ export function PedidoClient({
         </section>
       )}
 
-      {payModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 sm:items-center"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            {payment?.status === 'pago' ? (
-              <div className="text-center">
-                <p className="text-4xl">✓</p>
-                <h3 className="mt-2 font-head text-xl font-extrabold text-ink">Pagamento confirmado!</h3>
-                <button
-                  type="button"
-                  onClick={() => setPayModal(false)}
-                  className="mt-6 w-full rounded-xl bg-ink py-3 font-head text-sm font-bold text-white"
-                >
-                  Fechar
-                </button>
-              </div>
-            ) : (
-              <>
-                <h3 className="font-head text-xl font-extrabold text-ink">Pague com Pix</h3>
-                <p className="mt-1 text-sm text-g600">Escaneie o QR Code ou copie o código abaixo.</p>
-                {pix?.encodedImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`data:image/png;base64,${pix.encodedImage}`}
-                    alt="QR Code Pix"
-                    className="mx-auto mt-4 h-52 w-52 object-contain"
-                  />
-                ) : null}
-                <button
-                  type="button"
-                  onClick={copyPix}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-ink py-3 font-head text-sm font-bold text-white"
-                >
-                  {copied ? 'Copiado!' : 'Copiar código Pix'}
-                </button>
-                <p className="mt-4 text-center text-xs text-g600">Aguardando pagamento…</p>
-                <button
-                  type="button"
-                  onClick={() => setPayModal(false)}
-                  className="mt-3 w-full text-center text-sm font-semibold text-g600"
-                >
-                  Fechar
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      ) : null}
+      <PixModal
+        open={payModal}
+        paid={payment?.status === 'pago'}
+        pix={pix}
+        copied={copied}
+        error={payError}
+        onClose={() => setPayModal(false)}
+        onCopy={copyPix}
+      />
     </div>
   );
 }

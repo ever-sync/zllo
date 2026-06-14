@@ -74,7 +74,9 @@ export default function Orcamentos() {
   }
   if (!shop) return <Redirect href="/(shop)/setup" />;
 
-  const active = (items ?? []).filter((it) => it.request && it.request.status === 'aberta');
+  const active = (items ?? []).filter(
+    (it) => it.request && it.request.status === 'aberta' && !['orcou', 'recusou', 'expirou'].includes(it.status),
+  );
 
   return (
     <Screen background={colors.canvas}>

@@ -44,7 +44,9 @@ export default async function PainelPage() {
   const targets = (targetsData as unknown as FeedItem[]) ?? [];
   const orders = (ordersData as unknown as OrderRow[]) ?? [];
 
-  const chegando = targets.filter((t) => t.request?.status === 'aberta' && t.status !== 'orcou');
+  const chegando = targets.filter(
+    (t) => t.request?.status === 'aberta' && !['orcou', 'recusou', 'expirou'].includes(t.status),
+  );
   const orcou = targets.filter((t) => t.status === 'orcou').length;
   const andamento = orders.filter((o) => o.status !== 'concluida' && o.status !== 'cancelada');
   const concluidas = orders.filter((o) => o.status === 'concluida').length;

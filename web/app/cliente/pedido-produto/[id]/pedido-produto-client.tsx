@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DisputePanel, type DisputeInfo } from '@/components/dispute-panel';
 import { PixModal } from '@/components/pix-modal';
+import { ReviewDisplay, ReviewForm } from '@/components/review-form';
 import { formatBRL } from '@/lib/format';
 import { STATUS_META } from '@/lib/product-orders';
 import { createClient } from '@/lib/supabase/client';
@@ -23,18 +25,23 @@ type Order = {
   shop: { name: string } | null;
   items: OrderItem[];
 };
+type Review = { id: string; rating: number; comment: string | null };
 
 export function PedidoProdutoClient({
   orderId,
+  userId,
   initial,
   initialError = false,
 }: {
   orderId: string;
+  userId: string;
   initial: Order | null;
   initialError?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [order, setOrder] = useState<Order | null>(initial);
+  const [dispute, setDispute] = useState<DisputeInfo | null>(null);
+  const [review, setReview] = useState<Review | null>(null);
   const [loadError, setLoadError] = useState(initialError);
   const [busy, setBusy] = useState(false);
   const [pix, setPix] = useState<{ payload: string; encodedImage: string } | null>(null);
@@ -57,6 +64,21 @@ export function PedidoProdutoClient({
     }
     setLoadError(false);
     setOrder((data as unknown as Order) ?? null);
+
+    const { data: d } = await supabase
+      .from('disputes')
+      .select('id, status, reason, resolution')
+      .eq('product_order_id', orderId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    setDispute((d?.[0] as DisputeInfo) ?? null);
+
+    const { data: rev } = await supabase
+      .from('reviews')
+      .select('id, rating, comment')
+      .eq('product_order_id', orderId)
+      .maybeSingle();
+    setReview((rev as Review) ?? null);
   }, [supabase, orderId]);
 
   const scheduleLoad = useDebouncedCallback(() => {
@@ -126,6 +148,35 @@ export function PedidoProdutoClient({
     await load();
   };
 
+  const submitReview = async (rating: number, comment: string) => {
+    if (!order) return;
+    const { error } = await supabase.from('reviews').insert({
+      product_order_id: order.id,
+      shop_id: order.shop_id,
+      client_id: userId,
+      rating,
+      comment: comment || null,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await load();
+  };
+
+  const openDispute = async (reason: string) => {
+    const { error } = await supabase.rpc('open_dispute', {
+      p_kind: 'produto',
+      p_order_id: orderId,
+      p_reason: reason,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await load();
+  };
+
   if (loadError) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 text-center md:px-8">
@@ -151,6 +202,7 @@ export function PedidoProdutoClient({
   const st = STATUS_META[order.status] ?? { label: order.status, cls: 'bg-g100 text-g600' };
   const isPending = order.status === 'aguardando_pagamento';
   const isPaid = !isPending && order.status !== 'cancelado';
+  const canDispute = isPaid && (!dispute || dispute.status === 'recusada' || dispute.status === 'cancelada');
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-8">
@@ -216,6 +268,18 @@ export function PedidoProdutoClient({
         <div className="mt-6 rounded-xl bg-[#DCFCE7] px-4 py-3 text-sm font-semibold text-[#15803D]">
           ✓ Pagamento confirmado — a loja vai preparar seu pedido.
         </div>
+      ) : null}
+
+      <div className="mt-6">
+        <DisputePanel dispute={dispute} canOpen={canDispute} onOpen={openDispute} />
+      </div>
+
+      {order.status === 'concluido' ? (
+        review ? (
+          <ReviewDisplay rating={review.rating} comment={review.comment} />
+        ) : (
+          <ReviewForm onSubmit={submitReview} />
+        )
       ) : null}
 
       <PixModal

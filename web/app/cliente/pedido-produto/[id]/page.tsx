@@ -25,11 +25,14 @@ export default async function PedidoProdutoPage({ params }: { params: Promise<{ 
     )
     .eq('id', id)
     .maybeSingle();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = (claims?.claims?.sub as string) ?? '';
 
   return (
     <ClientShell>
       <PedidoProdutoClient
         orderId={id}
+        userId={userId}
         initial={(data as unknown as Order) ?? null}
         initialError={!!error}
       />

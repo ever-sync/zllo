@@ -14,7 +14,7 @@ import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, MessageBanner, Skeleton, SkeletonCard } from '@/components/ui/states';
-import { notify } from '@/lib/confirm';
+import { confirmAsync, notify } from '@/lib/confirm';
 import { getDeviceName } from '@/lib/format';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
@@ -64,6 +64,10 @@ export default function SolicitacaoDetail() {
       .eq('shop_id', shop.id)
       .maybeSingle();
     setTarget((tgt as TargetInfo) ?? null);
+
+    if (tgt && (tgt as TargetInfo).status === 'pendente') {
+      await supabase.rpc('mark_target_viewed', { p_request_id: id });
+    }
   }, [id, shop]);
 
   useEffect(() => {
@@ -91,6 +95,25 @@ export default function SolicitacaoDetail() {
     setSending(false);
     setModal(false);
     notify('Orçamento enviado!', 'O cliente vai receber sua proposta.');
+    router.back();
+  };
+
+  const decline = async () => {
+    if (!id) return;
+    const ok = await confirmAsync(
+      'Recusar solicitação?',
+      'Ela sairá do seu feed de orçamentos.',
+      'Recusar',
+      true,
+    );
+    if (!ok) return;
+    setSending(true);
+    const { error: rpcErr } = await supabase.rpc('decline_target', { p_request_id: id });
+    setSending(false);
+    if (rpcErr) {
+      notify('Ops', rpcErr.message);
+      return;
+    }
     router.back();
   };
 
@@ -179,7 +202,10 @@ export default function SolicitacaoDetail() {
           <Text style={[styles.quotedText, { color: colors.gray600 }]}>Esta solicitação não está mais disponível.</Text>
         </View>
       ) : (
-        <Button label="Enviar orçamento" onPress={() => setModal(true)} style={{ marginTop: 22 }} />
+        <>
+          <Button label="Enviar orçamento" onPress={() => setModal(true)} style={{ marginTop: 22 }} />
+          <Button label="Recusar solicitação" variant="secondary" onPress={decline} loading={sending} style={{ marginTop: 10 }} />
+        </>
       )}
 
       {/* POPUP de orçamento */}

@@ -4,6 +4,7 @@ import { getDeviceName } from '@/lib/format';
 import { distanceLabel } from '@/lib/time';
 import { Countdown } from '@/components/countdown';
 import { QuoteForm } from './quote-form';
+import { SolicitacaoTargetActions } from './solicitacao-target-actions';
 
 type RequestDetail = {
   id: string;
@@ -128,7 +129,14 @@ export default async function SolicitacaoPage({
             Esta solicitação não está mais disponível.
           </div>
         ) : (
-          <QuoteForm requestId={request.id} deviceName={deviceName} />
+          <>
+            <QuoteForm requestId={request.id} deviceName={deviceName} />
+            <SolicitacaoTargetActions
+              requestId={request.id}
+              targetStatus={target?.status ?? null}
+              unavailable={unavailable}
+            />
+          </>
         )}
       </div>
     </div>

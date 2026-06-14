@@ -74,7 +74,9 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
     if (isNew) beep();
   }, [items]);
 
-  const chegando = items.filter((it) => it.request?.status === 'aberta' && it.status !== 'orcou');
+  const chegando = items.filter(
+    (it) => it.request?.status === 'aberta' && !['orcou', 'recusou', 'expirou'].includes(it.status),
+  );
 
   return (
     <div className="rounded-[14px] border border-line bg-white p-[18px]">
