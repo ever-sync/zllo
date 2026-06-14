@@ -17,6 +17,7 @@
     "test:notifications": "node scripts/test-notification-href.mjs",
     "smoke:platform": "bash scripts/platform-smoke.sh",
     "maestro:smoke": "bash scripts/maestro-smoke.sh",
+    "maestro:cloud:prepare": "bash scripts/maestro-cloud-prepare.sh",
     "eas:post-build": "bash scripts/eas-post-build.sh"
   },
   "dependencies": {

@@ -13,7 +13,7 @@ brew tap mobile-dev-inc/tap && brew install maestro
 
 3. `.env` com Supabase apontando para o projeto com seed (`cliente@zllo.dev` / `assistencia@zllo.dev`, senha `senha123`)
 
-## Executar
+## Executar (local)
 
 ```bash
 # Todos os flows
@@ -56,6 +56,44 @@ Definidas em `.maestro/config.yaml` (override via env Maestro):
 - `CLIENT_EMAIL` / `CLIENT_PASSWORD`
 - `SHOP_EMAIL` / `SHOP_PASSWORD`
 
-## CI
+## Maestro Cloud (CI)
 
-Maestro **não roda no GitHub Actions Linux** (precisa simulador macOS). Use localmente ou Maestro Cloud no futuro.
+Workflow: [`.github/workflows/maestro-cloud.yml`](../.github/workflows/maestro-cloud.yml)
+
+Roda no **Maestro Cloud** (simuladores na nuvem) — não precisa runner macOS no GitHub.
+
+### Secrets do repositório
+
+| Secret | Onde obter |
+|--------|------------|
+| `EXPO_TOKEN` | [expo.dev/settings/access-tokens](https://expo.dev/settings/access-tokens) |
+| `MAESTRO_API_KEY` | Maestro Cloud → Settings → API Keys |
+| `MAESTRO_PROJECT_ID` | Maestro Cloud → Settings → Project ID |
+
+### Quando roda
+
+- **Manual:** Actions → *Maestro Cloud* → Run workflow (escolha `ios` ou `android`)
+- **Semanal:** segunda 10:00 UTC
+- **Push:** alterações em `.maestro/**`
+
+### Pré-requisito
+
+Precisa existir um build EAS **FINISHED** com profile `development`:
+
+```bash
+npm run eas:build:dev
+```
+
+O workflow baixa o artefato mais recente via `scripts/maestro-cloud-prepare.sh`.
+
+### Testar preparação localmente
+
+```bash
+eas login
+npm run maestro:cloud:prepare -- ios
+# imprime caminho do .zip (iOS) ou .apk (Android)
+```
+
+### CI Linux (lint only)
+
+O workflow [`ci.yml`](../.github/workflows/ci.yml) continua no Ubuntu (lint + build web). E2E mobile fica no Maestro Cloud.

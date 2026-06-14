@@ -38,12 +38,13 @@ Status em jun/2026 após execução do plano de melhorias.
 
 ## Pendências (backlog)
 
-- Maestro Cloud no CI (runner macOS)
+- Configurar secrets `EXPO_TOKEN`, `MAESTRO_API_KEY`, `MAESTRO_PROJECT_ID` no GitHub para ativar Maestro Cloud
 
 ## Fase 8C — Maestro E2E ✅
 
 - Flows `.maestro/flows/` (welcome, login cliente/loja, auth links)
 - `npm run maestro:smoke` + `docs/MAESTRO.md`
+- Maestro Cloud CI: `.github/workflows/maestro-cloud.yml` + `scripts/maestro-cloud-prepare.sh`
 - Integrado em `platform-smoke.sh` e `eas-post-build.sh`
 
 ## Fase 8B — concluído ✅

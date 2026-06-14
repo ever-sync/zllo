@@ -72,10 +72,11 @@ npm run test:notifications
 npm run smoke:ci
 ```
 
-Pós-build no simulador (Maestro):
+Pós-build no simulador (Maestro local ou Cloud):
 
 ```bash
-npm run maestro:smoke
+npm run maestro:smoke          # simulador local
+# CI: GitHub Actions → Maestro Cloud (ver docs/MAESTRO.md)
 ```
 
 Ver `docs/MAESTRO.md`.

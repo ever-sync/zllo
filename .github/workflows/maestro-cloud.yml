@@ -1,0 +1,89 @@
+name: Maestro Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Plataforma do build EAS
+        type: choice
+        options:
+          - ios
+          - android
+        default: ios
+  schedule:
+    # Segunda 10:00 UTC — smoke semanal
+    - cron: '0 10 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - '.maestro/**'
+      - '.github/workflows/maestro-cloud.yml'
+      - 'scripts/maestro-cloud-prepare.sh'
+
+jobs:
+  maestro-cloud:
+    name: E2E mobile (Maestro Cloud)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar secrets
+        run: |
+          missing=0
+          for key in EXPO_TOKEN MAESTRO_API_KEY MAESTRO_PROJECT_ID; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::Secret $key não configurado no repositório."
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          MAESTRO_API_KEY: ${{ secrets.MAESTRO_API_KEY }}
+          MAESTRO_PROJECT_ID: ${{ secrets.MAESTRO_PROJECT_ID }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Preparar app do EAS
+        id: prepare
+        env:
+          MAESTRO_PREPARE_DIR: ${{ runner.temp }}/maestro-cloud
+        run: |
+          PLATFORM="${{ github.event.inputs.platform || 'ios' }}"
+          APP_FILE="$(bash scripts/maestro-cloud-prepare.sh "$PLATFORM" development)"
+          echo "app-file=$APP_FILE" >> "$GITHUB_OUTPUT"
+          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
+          echo "Artefato: $APP_FILE"
+
+      - name: Executar flows no Maestro Cloud
+        id: maestro
+        uses: mobile-dev-inc/action-maestro-cloud@v2.0.2
+        with:
+          api-key: ${{ secrets.MAESTRO_API_KEY }}
+          project-id: ${{ secrets.MAESTRO_PROJECT_ID }}
+          app-file: ${{ steps.prepare.outputs.app-file }}
+          workspace: .maestro
+          name: zllo-${{ steps.prepare.outputs.platform }}-${{ github.sha }}
+          timeout: 40
+          env: |
+            CLIENT_EMAIL=cliente@zllo.dev
+            CLIENT_PASSWORD=senha123
+            SHOP_EMAIL=assistencia@zllo.dev
+            SHOP_PASSWORD=senha123
+
+      - name: Resultado
+        if: always()
+        run: |
+          echo "Console: ${{ steps.maestro.outputs.MAESTRO_CLOUD_CONSOLE_URL }}"
+          echo "Status: ${{ steps.maestro.outputs.MAESTRO_CLOUD_UPLOAD_STATUS }}"
