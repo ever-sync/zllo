@@ -46,6 +46,13 @@ eas build:run -p ios --profile development
 eas build:run -p android --profile development
 ```
 
+Ver status e próximos passos após um build:
+
+```bash
+npm run eas:post-build              # lista builds recentes
+npm run eas:post-build -- <build-id>
+```
+
 ## Smoke test pós-build
 
 1. Login cliente e assistência

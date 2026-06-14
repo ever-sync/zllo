@@ -1,10 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, Skeleton, SkeletonCard } from '@/components/ui/states';
+import { SegmentedChip, SegmentedChipRow } from '@/components/ui/segmented-chips';
+import { filterByPeriod, PERIOD_LABELS, txsToCsv, type FinancePeriod } from '@/lib/finance';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -31,6 +34,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function Financeiro() {
   const { shop } = useShop();
   const [txs, setTxs] = useState<Tx[] | null>(null);
+  const [period, setPeriod] = useState<FinancePeriod>('30d');
 
   const load = useCallback(async () => {
     if (!shop) {
@@ -104,19 +108,24 @@ export default function Financeiro() {
     }, [load]),
   );
 
+  const filteredTxs = useMemo(() => filterByPeriod(txs ?? [], period), [txs, period]);
+
   const stats = useMemo(() => {
-    const all = txs ?? [];
+    const all = filteredTxs;
     const paid = all.filter((t) => t.status === 'pago');
     const pending = all.filter((t) => t.status === 'pendente');
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthPaid = paid.filter((t) => new Date(t.created_at) >= monthStart);
     return {
       available: paid.reduce((s, t) => s + t.shop_amount, 0),
       pending: pending.reduce((s, t) => s + t.shop_amount, 0),
-      monthGross: monthPaid.reduce((s, t) => s + t.shop_amount + t.commission, 0),
+      gross: paid.reduce((s, t) => s + t.shop_amount + t.commission, 0),
     };
-  }, [txs]);
+  }, [filteredTxs]);
+
+  const exportCsv = async () => {
+    if (!filteredTxs.length) return;
+    const csv = txsToCsv(filteredTxs);
+    await Share.share({ message: csv, title: 'zllo-financeiro.csv' });
+  };
 
   if (!shop) {
     return (
@@ -161,14 +170,28 @@ export default function Financeiro() {
           <Text style={[styles.capValue, { fontSize: 22 }]}>{brl(stats.pending)}</Text>
         </Card>
         <Card style={{ flex: 1, backgroundColor: colors.ink }}>
-          <Text style={[styles.capLabel, { color: '#A1A1A1' }]}>Faturado no mês</Text>
-          <Text style={[styles.capValue, { fontSize: 22, color: colors.white }]}>{brl(stats.monthGross)}</Text>
+          <Text style={[styles.capLabel, { color: '#A1A1A1' }]}>Bruto no período</Text>
+          <Text style={[styles.capValue, { fontSize: 22, color: colors.white }]}>{brl(stats.gross)}</Text>
         </Card>
       </View>
 
+      <SegmentedChipRow style={{ marginBottom: 12 }}>
+        {(Object.keys(PERIOD_LABELS) as FinancePeriod[]).map((p) => (
+          <SegmentedChip key={p} label={PERIOD_LABELS[p]} active={period === p} onPress={() => setPeriod(p)} />
+        ))}
+      </SegmentedChipRow>
+
+      <Button
+        label="Exportar CSV"
+        variant="secondary"
+        onPress={() => void exportCsv()}
+        disabled={filteredTxs.length === 0}
+        style={{ marginBottom: 12 }}
+      />
+
       <Card>
         <Text style={styles.section}>Histórico de transações</Text>
-        {txs.length === 0 ? (
+        {filteredTxs.length === 0 ? (
           <EmptyState
             icon="receipt-outline"
             title="Nenhuma transação"
@@ -176,7 +199,7 @@ export default function Financeiro() {
             style={{ paddingVertical: 8, borderWidth: 0, backgroundColor: 'transparent' }}
           />
         ) : (
-          txs.map((p) => {
+          filteredTxs.map((p) => {
             const paid = p.status === 'pago';
             const tone = paid
               ? { bg: colors.greenBg, fg: colors.greenText }

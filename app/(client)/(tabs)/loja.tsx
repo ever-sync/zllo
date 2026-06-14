@@ -112,7 +112,7 @@ export default function Loja() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="cube-outline"
-          title={q || cat ? 'Nenhum produto encontrado' : 'Catálogo em breve'}
+          title={q || cat ? 'Nenhum produto encontrado' : 'Nenhum produto disponível'}
           description={
             q || cat
               ? 'Tente outro termo ou remova os filtros.'
