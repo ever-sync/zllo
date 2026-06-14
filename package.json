@@ -14,6 +14,7 @@
     "eas:build:prod": "eas build --profile production --platform all",
     "eas:env:sync": "bash scripts/eas-env-sync.sh",
     "smoke:ci": "bash scripts/smoke-ci.sh",
+    "smoke:platform": "bash scripts/platform-smoke.sh",
     "eas:post-build": "bash scripts/eas-post-build.sh"
   },
   "dependencies": {

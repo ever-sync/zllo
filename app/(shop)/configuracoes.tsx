@@ -51,6 +51,7 @@ export default function Configuracoes() {
           <Card style={{ marginBottom: 12 }}>
             <Text style={styles.section}>Loja</Text>
             <MenuRow icon="storefront-outline" label="Editar dados da loja" onPress={() => router.push('/(shop)/setup')} />
+            <MenuRow icon="cube-outline" label="Produtos do marketplace" onPress={() => router.push('/(shop)/produtos')} />
             <MenuRow
               icon="wallet-outline"
               label="Conta Asaas (Pix)"

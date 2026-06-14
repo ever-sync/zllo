@@ -71,7 +71,7 @@ export default function ShopProfile() {
               <CheckRow
                 done={checklist.hasProducts}
                 label="Produto ativo no marketplace"
-                hint="Cadastre no painel web"
+                onPress={() => router.push('/(shop)/produtos')}
               />
             </Card>
           ) : null}
@@ -95,6 +95,7 @@ export default function ShopProfile() {
           </View>
 
           <View style={styles.menu}>
+            <MenuRow icon="cube-outline" label="Produtos" onPress={() => router.push('/(shop)/produtos')} />
             <MenuRow icon="cash-outline" label="Financeiro" onPress={() => router.push('/(shop)/financeiro')} />
             <MenuRow icon="star-outline" label="Reputação" onPress={() => router.push('/(shop)/reputacao')} />
             <MenuRow icon="create-outline" label="Editar dados da loja" onPress={() => router.push('/(shop)/setup')} />

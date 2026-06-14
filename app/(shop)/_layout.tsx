@@ -21,6 +21,7 @@ export default function ShopLayout() {
         <Stack.Screen name="vendas" />
         <Stack.Screen name="financeiro" />
         <Stack.Screen name="reputacao" />
+        <Stack.Screen name="produtos" />
         <Stack.Screen name="configuracoes" />
       </Stack>
     </ShopProvider>
