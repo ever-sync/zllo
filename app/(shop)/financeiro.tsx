@@ -1,88 +1,203 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
+import { EmptyState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
-type Payment = {
+type Tx = {
   id: string;
-  amount: number;
-  commission: number;
+  kind: 'reparo' | 'produto';
+  label: string;
   shop_amount: number;
-  status: 'pendente' | 'pago' | 'cancelado' | 'estornado';
+  commission: number;
+  status: string;
   created_at: string;
-  order: { device: { brand: string | null; model: string | null } | null } | null;
 };
+
 const brl = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const STATUS_LABEL: Record<string, string> = {
+  pago: 'pago',
+  pendente: 'pendente',
+  cancelado: 'cancelado',
+  estornado: 'estornado',
+};
 
 export default function Financeiro() {
   const { shop } = useShop();
-  const [payments, setPayments] = useState<Payment[] | null>(null);
+  const [txs, setTxs] = useState<Tx[] | null>(null);
 
   const load = useCallback(async () => {
-    if (!shop) return;
-    const { data } = await supabase
-      .from('payments')
-      .select('id, amount, commission, shop_amount, status, created_at, order:service_orders(device:devices(brand, model))')
-      .eq('shop_id', shop.id)
-      .order('created_at', { ascending: false });
-    setPayments((data as unknown as Payment[]) ?? []);
+    if (!shop) {
+      setTxs([]);
+      return;
+    }
+
+    const [{ data: pays }, { data: pords }] = await Promise.all([
+      supabase
+        .from('payments')
+        .select('id, amount, commission, shop_amount, status, created_at, order:service_orders(device:devices(brand, model))')
+        .eq('shop_id', shop.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('product_orders')
+        .select('id, total, commission, shop_amount, status, created_at')
+        .eq('shop_id', shop.id)
+        .neq('status', 'cancelado')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    const repairTxs: Tx[] = ((pays ?? []) as {
+      id: string;
+      amount: number;
+      commission: number;
+      shop_amount: number;
+      status: string;
+      created_at: string;
+      order: { device: { brand: string | null; model: string | null } | null } | null;
+    }[]).map((p) => {
+      const dev = p.order?.device;
+      const name = `${dev?.brand ?? ''} ${dev?.model ?? ''}`.trim() || 'Reparo';
+      return {
+        id: p.id,
+        kind: 'reparo',
+        label: name,
+        shop_amount: Number(p.shop_amount),
+        commission: Number(p.commission),
+        status: p.status,
+        created_at: p.created_at,
+      };
+    });
+
+    const productTxs: Tx[] = ((pords ?? []) as {
+      id: string;
+      total: number;
+      commission: number | null;
+      shop_amount: number | null;
+      status: string;
+      created_at: string;
+    }[]).map((o) => ({
+      id: o.id,
+      kind: 'produto',
+      label: 'Pedido marketplace',
+      shop_amount: Number(o.shop_amount ?? Number(o.total) * 0.97),
+      commission: Number(o.commission ?? Number(o.total) * 0.03),
+      status: o.status === 'aguardando_pagamento' ? 'pendente' : 'pago',
+      created_at: o.created_at,
+    }));
+
+    setTxs(
+      [...repairTxs, ...productTxs].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      ),
+    );
   }, [shop]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
-  const all = payments ?? [];
-  const available = all.filter((p) => p.status === 'pago').reduce((s, p) => s + Number(p.shop_amount), 0);
-  const pending = all.filter((p) => p.status === 'pendente').reduce((s, p) => s + Number(p.shop_amount), 0);
-  const month = all.filter((p) => p.status === 'pago').reduce((s, p) => s + Number(p.amount), 0);
+  const stats = useMemo(() => {
+    const all = txs ?? [];
+    const paid = all.filter((t) => t.status === 'pago');
+    const pending = all.filter((t) => t.status === 'pendente');
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthPaid = paid.filter((t) => new Date(t.created_at) >= monthStart);
+    return {
+      available: paid.reduce((s, t) => s + t.shop_amount, 0),
+      pending: pending.reduce((s, t) => s + t.shop_amount, 0),
+      monthGross: monthPaid.reduce((s, t) => s + t.shop_amount + t.commission, 0),
+    };
+  }, [txs]);
+
+  if (!shop) {
+    return (
+      <Screen background={colors.canvas}>
+        <AppHeader title="Financeiro" subtitle="Saldo e histórico" />
+        <EmptyState
+          icon="storefront-outline"
+          title="Configure sua loja"
+          description="Complete o cadastro para ver recebíveis e histórico de pagamentos."
+        />
+      </Screen>
+    );
+  }
+
+  if (txs === null) {
+    return (
+      <Screen background={colors.canvas}>
+        <AppHeader title="Financeiro" subtitle="Saldo e histórico" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <Skeleton height={80} style={{ borderRadius: radius['2xl'] }} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen background={colors.canvas}>
       <AppHeader title="Financeiro" subtitle="Saldo e histórico" />
 
       <Card style={{ backgroundColor: colors.lime, marginBottom: 12 }}>
-        <Text style={styles.capLabel}>Disponível para saque</Text>
-        <Text style={styles.capValue}>{brl(available)}</Text>
-        <View style={styles.sacar}><Text style={styles.sacarText}>Sacar agora →</Text></View>
+        <Text style={styles.capLabel}>Total recebido (líquido)</Text>
+        <Text style={styles.capValue}>{brl(stats.available)}</Text>
+        <Text style={styles.asaasNote}>
+          Repasse via Pix split (97%) direto na sua conta Asaas. Saques são feitos no app Asaas.
+        </Text>
       </Card>
 
       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
         <Card style={{ flex: 1 }}>
           <Text style={[styles.capLabel, { color: colors.gray600 }]}>A liberar</Text>
-          <Text style={[styles.capValue, { fontSize: 22 }]}>{brl(pending)}</Text>
+          <Text style={[styles.capValue, { fontSize: 22 }]}>{brl(stats.pending)}</Text>
         </Card>
         <Card style={{ flex: 1, backgroundColor: colors.ink }}>
-          <Text style={[styles.capLabel, { color: '#A1A1A1' }]}>Faturado</Text>
-          <Text style={[styles.capValue, { fontSize: 22, color: colors.white }]}>{brl(month)}</Text>
+          <Text style={[styles.capLabel, { color: '#A1A1A1' }]}>Faturado no mês</Text>
+          <Text style={[styles.capValue, { fontSize: 22, color: colors.white }]}>{brl(stats.monthGross)}</Text>
         </Card>
       </View>
 
       <Card>
         <Text style={styles.section}>Histórico de transações</Text>
-        {payments === null ? (
-          <ActivityIndicator color={colors.blue} style={{ marginVertical: 20 }} />
-        ) : all.length === 0 ? (
-          <Text style={styles.muted}>Nenhuma transação ainda. Os pagamentos aparecem aqui quando o cliente paga.</Text>
+        {txs.length === 0 ? (
+          <EmptyState
+            icon="receipt-outline"
+            title="Nenhuma transação"
+            description="Os pagamentos aparecem aqui quando o cliente paga via Pix."
+            style={{ paddingVertical: 8, borderWidth: 0, backgroundColor: 'transparent' }}
+          />
         ) : (
-          all.map((p) => {
-            const dev = p.order?.device;
-            const name = `${dev?.brand ?? ''} ${dev?.model ?? ''}`.trim() || 'Reparo';
+          txs.map((p) => {
             const paid = p.status === 'pago';
-            const tone = paid ? { bg: colors.greenBg, fg: colors.greenText } : p.status === 'pendente' ? { bg: colors.amberBg, fg: colors.amberText } : { bg: colors.gray100, fg: colors.gray600 };
+            const tone = paid
+              ? { bg: colors.greenBg, fg: colors.greenText }
+              : p.status === 'pendente'
+                ? { bg: colors.amberBg, fg: colors.amberText }
+                : { bg: colors.gray100, fg: colors.gray600 };
             return (
-              <View key={p.id} style={styles.tx}>
+              <View key={p.kind + p.id} style={styles.tx}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.txName}>{name}</Text>
-                  <Text style={styles.txSub}>Comissão {brl(Number(p.commission))}</Text>
+                  <Text style={styles.txName}>
+                    {p.kind === 'produto' ? '🛒 ' : '🔧 '}
+                    {p.label}
+                  </Text>
+                  <Text style={styles.txSub}>Comissão {brl(p.commission)}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.txValue}>{brl(Number(p.shop_amount))}</Text>
+                  <Text style={styles.txValue}>{brl(p.shop_amount)}</Text>
                   <View style={[styles.txBadge, { backgroundColor: tone.bg }]}>
-                    <Text style={[styles.txBadgeText, { color: tone.fg }]}>{p.status}</Text>
+                    <Text style={[styles.txBadgeText, { color: tone.fg }]}>
+                      {STATUS_LABEL[p.status] ?? p.status}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -97,10 +212,8 @@ export default function Financeiro() {
 const styles = StyleSheet.create({
   capLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.6, color: 'rgba(30,30,30,0.7)' },
   capValue: { fontFamily: fonts.headBlack, fontSize: 28, color: colors.ink, letterSpacing: -1, marginTop: 8 },
-  sacar: { alignSelf: 'flex-start', backgroundColor: colors.ink, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 9, marginTop: 12 },
-  sacarText: { fontFamily: fonts.headBold, fontSize: 12, color: colors.lime, textTransform: 'uppercase' },
+  asaasNote: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(30,30,30,0.75)', marginTop: 12, lineHeight: 17 },
   section: { fontFamily: fonts.head, fontSize: 15, color: colors.ink, marginBottom: 12 },
-  muted: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, paddingVertical: 6 },
   tx: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.gray100 },
   txName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   txSub: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, marginTop: 2 },

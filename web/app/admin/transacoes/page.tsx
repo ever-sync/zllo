@@ -1,5 +1,7 @@
 import { fetchAdminOrders } from '@/lib/cached-data';
+import { createClient } from '@/lib/supabase/server';
 import { formatPrice } from '@/lib/product-orders';
+import { OrphansPanel, type OrphanPayment } from './orphans-panel';
 
 type Tx = {
   type: 'Produto' | 'Reparo';
@@ -16,7 +18,12 @@ function fmt(iso: string): string {
 }
 
 export default async function AdminTransacoes() {
-  const data = await fetchAdminOrders();
+  const supabase = await createClient();
+  const [{ data: orphanData }, data] = await Promise.all([
+    supabase.rpc('admin_orphan_payments'),
+    fetchAdminOrders(),
+  ]);
+  const orphans = (orphanData as unknown as OrphanPayment[]) ?? [];
   const txs = (data as unknown as Tx[]) ?? [];
 
   return (
@@ -25,6 +32,8 @@ export default async function AdminTransacoes() {
         <h1 className="font-head text-2xl font-black text-ink">Transações</h1>
         <p className="font-body text-sm text-g600">Reparos e vendas do marketplace — mais recentes primeiro.</p>
       </header>
+
+      <OrphansPanel orphans={orphans} />
 
       {txs.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center">
@@ -40,8 +49,16 @@ export default async function AdminTransacoes() {
             <span className="text-right">Valor</span>
           </div>
           {txs.map((t) => (
-            <div key={t.type + t.id} className="grid grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-4 border-b border-line px-4 py-3 last:border-0">
-              <span className={'rounded-md px-2 py-1 font-head text-[10px] font-bold ' + (t.type === 'Produto' ? 'bg-[#EEEEFF] text-blue' : 'bg-g100 text-g600')}>
+            <div
+              key={t.type + t.id}
+              className="grid grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-4 border-b border-line px-4 py-3 last:border-0"
+            >
+              <span
+                className={
+                  'rounded-md px-2 py-1 font-head text-[10px] font-bold ' +
+                  (t.type === 'Produto' ? 'bg-[#EEEEFF] text-blue' : 'bg-g100 text-g600')
+                }
+              >
                 {t.type}
               </span>
               <div className="min-w-0">

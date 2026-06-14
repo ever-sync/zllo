@@ -1,10 +1,10 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
-import { ErrorState } from '@/components/ui/states';
+import { EmptyState, ErrorState, Skeleton, SkeletonCard } from '@/components/ui/states';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -74,6 +74,18 @@ export default function Reputacao() {
     );
   }
 
+  if (ranking === null || reviews === null) {
+    return (
+      <Screen background={colors.canvas}>
+        <AppHeader title="Reputação" subtitle="Notas, ranking e avaliações" />
+        <View style={{ gap: 12, marginTop: 8 }}>
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen background={colors.canvas}>
       <AppHeader title="Reputação" subtitle="Notas, ranking e avaliações" />
@@ -99,10 +111,7 @@ export default function Reputacao() {
 
       <Card style={{ marginBottom: 14 }}>
         <Text style={styles.section}>Ranking por nota</Text>
-        {ranking === null ? (
-          <ActivityIndicator color={colors.blue} style={{ marginVertical: 12 }} />
-        ) : (
-          ranking.map((r, i) => {
+        {ranking.map((r, i) => {
             const you = r.id === shop?.id;
             return (
               <View key={r.id} style={[styles.rankRow, you && { backgroundColor: colors.lime, borderRadius: radius.md, paddingHorizontal: 10 }]}>
@@ -113,16 +122,18 @@ export default function Reputacao() {
                 <Text style={styles.rankRating}>★ {r.rating.toFixed(1)}</Text>
               </View>
             );
-          })
-        )}
+          })}
       </Card>
 
       <Card>
         <Text style={styles.section}>Avaliações recentes</Text>
-        {reviews === null ? (
-          <ActivityIndicator color={colors.blue} style={{ marginVertical: 12 }} />
-        ) : list.length === 0 ? (
-          <Text style={styles.note}>Ainda não há avaliações. Conclua reparos para receber as primeiras.</Text>
+        {list.length === 0 ? (
+          <EmptyState
+            icon="star-outline"
+            title="Sem avaliações ainda"
+            description="Conclua reparos e vendas para receber as primeiras notas dos clientes."
+            style={{ paddingVertical: 8, borderWidth: 0, backgroundColor: 'transparent' }}
+          />
         ) : (
           list.slice(0, 8).map((r, i) => (
             <View key={r.id} style={[styles.review, i < Math.min(list.length, 8) - 1 && styles.reviewBorder]}>

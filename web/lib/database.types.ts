@@ -1058,7 +1058,12 @@ export type Database = {
       admin_disputes: { Args: never; Returns: Json }
       admin_metrics: { Args: never; Returns: Json }
       admin_orders: { Args: never; Returns: Json }
+      admin_orphan_payments: { Args: never; Returns: Json }
       admin_products: { Args: never; Returns: Json }
+      admin_reconcile_payment: {
+        Args: { p_id: string; p_kind: string }
+        Returns: undefined
+      }
       admin_resolve_dispute: {
         Args: {
           p_id: string

@@ -50,3 +50,21 @@ export async function adminResolveDispute(
   updateTag(CACHE_TAG_ADMIN);
   return {};
 }
+
+export async function adminReconcilePayment(
+  kind: 'reparo' | 'produto',
+  id: string,
+): Promise<{ error?: string }> {
+  const { supabase, error: authErr } = await requireAdmin();
+  if (authErr || !supabase) return { error: authErr ?? 'Sem permissão' };
+
+  const { error } = await supabase.rpc('admin_reconcile_payment', {
+    p_kind: kind,
+    p_id: id,
+  });
+  if (error) return { error: error.message };
+
+  updateTag(CACHE_TAG_ADMIN);
+  updateTag(CACHE_TAG_CATALOG);
+  return {};
+}
