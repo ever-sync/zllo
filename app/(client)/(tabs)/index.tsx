@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ClientTourModal } from '@/components/client-tour-modal';
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, SkeletonCard } from '@/components/ui/states';
+import { hasSeenClientTour, markClientTourSeen } from '@/lib/client-tour';
 import { getDeviceName } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -33,6 +35,8 @@ export default function ClientHome() {
   const router = useRouter();
   const [recent, setRecent] = useState<RecentRequest[] | null>(null);
   const [stats, setStats] = useState<{ ativos: number; aparelhos: number }>({ ativos: 0, aparelhos: 0 });
+  const [tourVisible, setTourVisible] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -54,9 +58,34 @@ export default function ClientHome() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  useEffect(() => {
+    hasSeenClientTour().then((seen) => {
+      if (!seen) setTourVisible(true);
+    });
+  }, []);
+
+  const finishTour = () => {
+    void markClientTourSeen();
+    setTourVisible(false);
+  };
+
   return (
     <Screen background={colors.canvas}>
       <StatusBar style="dark" />
+
+      <ClientTourModal
+        visible={tourVisible}
+        step={tourStep}
+        onNext={() => {
+          if (tourStep >= 2) finishTour();
+          else setTourStep((s) => s + 1);
+        }}
+        onSkip={finishTour}
+        onGoDevices={() => {
+          finishTour();
+          router.push('/(client)/aparelho-novo');
+        }}
+      />
 
       <ClientHeader greeting subtitle="O que você precisa hoje?" />
 

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
 import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
+import { SegmentedChip, SegmentedChipRow } from '@/components/ui/segmented-chips';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel, stepIndex } from '@/lib/order-status';
@@ -63,10 +64,10 @@ export default function Ordens() {
     <Screen background={colors.canvas}>
       <ShopHeader title="Ordens de serviço" subtitle="Reparos em andamento e histórico" />
 
-      <View style={styles.chips}>
-        <Chip label={`Em andamento (${andamentoCount})`} active={tab === 'andamento'} onPress={() => setTab('andamento')} />
-        <Chip label={`Finalizadas (${finalizadasCount})`} active={tab === 'finalizadas'} onPress={() => setTab('finalizadas')} />
-      </View>
+      <SegmentedChipRow style={styles.chips}>
+        <SegmentedChip label={`Em andamento (${andamentoCount})`} active={tab === 'andamento'} onPress={() => setTab('andamento')} />
+        <SegmentedChip label={`Finalizadas (${finalizadasCount})`} active={tab === 'finalizadas'} onPress={() => setTab('finalizadas')} />
+      </SegmentedChipRow>
 
       {loadError ? (
         <ErrorState onRetry={load} />
@@ -115,18 +116,8 @@ export default function Ordens() {
   );
 }
 
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, { backgroundColor: active ? colors.ink : colors.white, borderColor: active ? colors.ink : colors.gray200 }]}>
-      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 14 },
-  chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
-  chipText: { fontFamily: fonts.headBold, fontSize: 12 },
+  chips: { marginTop: 14, marginBottom: 14 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 14, gap: 12 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dot: { width: 10, height: 10, borderRadius: 5 },

@@ -2,23 +2,13 @@
 // marketplace automaticamente) e grava em `payments`. Retorna o QR Code Pix.
 // O provedor está isolado aqui: trocar p/ Pagar.me/Stripe = mudar só este arquivo.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { log } from '../_shared/log.ts';
 
 const ASAAS_BASE = Deno.env.get('ASAAS_BASE_URL') ?? 'https://api-sandbox.asaas.com/v3';
 const ASAAS_KEY = Deno.env.get('ASAAS_API_KEY') ?? '';
 const COMMISSION = 0.03;
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-}
-
-// Asaas autentica via header `access_token` (não Bearer).
 async function asaas(path: string, init?: RequestInit) {
   const res = await fetch(`${ASAAS_BASE}${path}`, {
     ...init,
@@ -30,7 +20,7 @@ async function asaas(path: string, init?: RequestInit) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -41,10 +31,10 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     });
     const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return json({ error: 'Não autenticado' }, 401);
+    if (!user) return jsonResponse(req, { error: 'Não autenticado' }, 401);
 
     const { order_id } = await req.json().catch(() => ({}));
-    if (!order_id) return json({ error: 'order_id obrigatório' }, 400);
+    if (!order_id) return jsonResponse(req, { error: 'order_id obrigatório' }, 400);
 
     const admin = createClient(supabaseUrl, serviceKey);
 
@@ -53,18 +43,18 @@ Deno.serve(async (req) => {
       .select('id, value, client_id, shop_id, status')
       .eq('id', order_id)
       .maybeSingle();
-    if (!order) return json({ error: 'OS não encontrada' }, 404);
-    if (order.client_id !== user.id) return json({ error: 'Sem permissão' }, 403);
+    if (!order) return jsonResponse(req, { error: 'OS não encontrada' }, 404);
+    if (order.client_id !== user.id) return jsonResponse(req, { error: 'Sem permissão' }, 403);
 
     const { data: existing } = await admin
       .from('payments')
       .select('status, pix_payload, pix_qr')
       .eq('order_id', order_id)
       .maybeSingle();
-    if (existing?.status === 'pago') return json({ error: 'Esta OS já foi paga.' }, 409);
+    if (existing?.status === 'pago') return jsonResponse(req, { error: 'Esta OS já foi paga.' }, 409);
     // Se já existe um Pix pendente, devolve o mesmo (idempotente).
     if (existing?.pix_payload) {
-      return json({ payload: existing.pix_payload, encodedImage: existing.pix_qr, value: Number(order.value) });
+      return jsonResponse(req, { payload: existing.pix_payload, encodedImage: existing.pix_qr, value: Number(order.value) });
     }
 
     const { data: shop } = await admin
@@ -72,7 +62,7 @@ Deno.serve(async (req) => {
       .select('asaas_wallet_id')
       .eq('id', order.shop_id)
       .maybeSingle();
-    if (!shop?.asaas_wallet_id) return json({ error: 'A loja ainda não configurou a conta de recebimento.' }, 422);
+    if (!shop?.asaas_wallet_id) return jsonResponse(req, { error: 'A loja ainda não configurou a conta de recebimento.' }, 422);
 
     const { data: profile } = await admin
       .from('profiles')
@@ -125,11 +115,11 @@ Deno.serve(async (req) => {
       { onConflict: 'order_id' },
     );
 
-    return json({ payload: qr.payload, encodedImage: qr.encodedImage, value });
+    return jsonResponse(req, { payload: qr.payload, encodedImage: qr.encodedImage, value });
   } catch (e) {
     log('error', 'create-pix-payment failed', {
       error: e instanceof Error ? e.message : String(e),
     });
-    return json({ error: e instanceof Error ? e.message : 'Erro inesperado' }, 500);
+    return jsonResponse(req, { error: e instanceof Error ? e.message : 'Erro inesperado' }, 500);
   }
 });

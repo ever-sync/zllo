@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { ClientHeader } from '@/components/ui/client-header';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
+import { SegmentedChip, SegmentedChipRow } from '@/components/ui/segmented-chips';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { geocodeCEP } from '@/lib/geocode';
@@ -92,12 +93,12 @@ export default function Loja() {
       </View>
 
       {cats.length ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          <Chip label="Todos" active={cat === null} onPress={() => setCat(null)} />
+        <SegmentedChipRow scroll style={styles.chips}>
+          <SegmentedChip label="Todos" active={cat === null} onPress={() => setCat(null)} />
           {cats.map((c) => (
-            <Chip key={c} label={c} active={cat === c} onPress={() => setCat(c)} />
+            <SegmentedChip key={c} label={c} active={cat === c} onPress={() => setCat(c)} />
           ))}
-        </ScrollView>
+        </SegmentedChipRow>
       ) : null}
 
       {loadError ? (
@@ -149,17 +150,6 @@ export default function Loja() {
         </View>
       )}
     </Screen>
-  );
-}
-
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.chip, { backgroundColor: active ? colors.ink : colors.white, borderColor: active ? colors.ink : colors.gray200 }]}
-    >
-      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }]}>{label}</Text>
-    </Pressable>
   );
 }
 

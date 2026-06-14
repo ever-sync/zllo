@@ -15,6 +15,7 @@ marketplace da zllo automaticamente). O provedor está isolado em
    supabase secrets set ASAAS_BASE_URL=https://api-sandbox.asaas.com/v3   # produção: https://api.asaas.com/v3
    supabase secrets set ASAAS_WEBHOOK_TOKEN=um-token-secreto-qualquer
    supabase secrets set WEB_APP_URL=https://seu-console-web.up.railway.app
+   supabase secrets set ALLOWED_ORIGINS=https://seu-console-web.up.railway.app,http://localhost:3000
    supabase secrets set REVALIDATE_SECRET=mesmo-valor-do-next-js
    ```
    (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` já são injetadas.)

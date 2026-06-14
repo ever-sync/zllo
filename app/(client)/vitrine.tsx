@@ -7,6 +7,7 @@ import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
+import { SegmentedChip, SegmentedChipRow } from '@/components/ui/segmented-chips';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
@@ -81,10 +82,10 @@ export default function Vitrine() {
         ) : null}
       </View>
 
-      <View style={styles.chips}>
-        <Chip label="Todos" active={tab === 'todos'} onPress={() => setTab('todos')} />
-        <Chip label="Meus anúncios" active={tab === 'meus'} onPress={() => setTab('meus')} />
-      </View>
+      <SegmentedChipRow style={styles.chips}>
+        <SegmentedChip label="Todos" active={tab === 'todos'} onPress={() => setTab('todos')} />
+        <SegmentedChip label="Meus anúncios" active={tab === 'meus'} onPress={() => setTab('meus')} />
+      </SegmentedChipRow>
 
       {loadError ? (
         <ErrorState onRetry={load} />
@@ -149,14 +150,6 @@ export default function Vitrine() {
   );
 }
 
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, { backgroundColor: active ? colors.ink : colors.white, borderColor: active ? colors.ink : colors.gray200 }]}>
-      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   search: {
     flexDirection: 'row',
@@ -170,9 +163,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   searchInput: { flex: 1, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.ink },
-  chips: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 14 },
-  chip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 14, paddingVertical: 8 },
-  chipText: { fontFamily: fonts.headBold, fontSize: 12 },
+  chips: { marginTop: 12, marginBottom: 14 },
   card: {
     flexDirection: 'row',
     gap: 12,

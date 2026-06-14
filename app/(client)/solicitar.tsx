@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { MessageBanner } from '@/components/ui/states';
+import { SegmentedOption, SegmentedOptionRow } from '@/components/ui/segmented-chips';
 import { useAuth, type Profile } from '@/lib/auth';
 import { notify } from '@/lib/confirm';
 import { geocodeCEP } from '@/lib/geocode';
@@ -204,19 +205,18 @@ export default function Solicitar() {
 
       {/* Envio */}
       <Text style={[styles.label, { marginTop: 20 }]}>Como entregar o aparelho?</Text>
-      <View style={styles.shipRow}>
-        <ShipOption icon="walk-outline" label="Levo no local" active={shipping === 'levar_local'} onPress={() => setShipping('levar_local')} />
-        <ShipOption icon="bicycle-outline" label="Pago frete" active={shipping === 'frete'} onPress={() => setShipping('frete')} />
-      </View>
+      <SegmentedOptionRow>
+        <SegmentedOption icon="walk-outline" label="Levo no local" active={shipping === 'levar_local'} onPress={() => setShipping('levar_local')} />
+        <SegmentedOption icon="bicycle-outline" label="Pago frete" active={shipping === 'frete'} onPress={() => setShipping('frete')} />
+      </SegmentedOptionRow>
 
-      {/* Localização (para encontrar assistências perto) */}
       {hasAddress ? (
         <>
           <Text style={[styles.label, { marginTop: 20 }]}>De onde buscar assistências?</Text>
-          <View style={styles.shipRow}>
-            <ShipOption icon="home-outline" label="Meu endereço" active={source === 'cadastrado'} onPress={() => setLocSource('cadastrado')} />
-            <ShipOption icon="locate-outline" label="Localização atual" active={source === 'atual'} onPress={() => setLocSource('atual')} />
-          </View>
+          <SegmentedOptionRow>
+            <SegmentedOption icon="home-outline" label="Meu endereço" active={source === 'cadastrado'} onPress={() => setLocSource('cadastrado')} />
+            <SegmentedOption icon="locate-outline" label="Localização atual" active={source === 'atual'} onPress={() => setLocSource('atual')} />
+          </SegmentedOptionRow>
           <Text style={styles.locHint}>
             {source === 'cadastrado' ? savedAddress : 'Vamos usar o GPS do aparelho.'}
           </Text>
@@ -234,28 +234,6 @@ export default function Solicitar() {
       />
       <Text style={styles.note}>Sua solicitação vai para as assistências próximas de você.</Text>
     </Screen>
-  );
-}
-
-function ShipOption({
-  icon,
-  label,
-  active,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.shipOption, { borderColor: active ? colors.blue : colors.gray200, backgroundColor: active ? '#EEEEFF' : colors.white }]}
-    >
-      <Ionicons name={icon} size={22} color={active ? colors.blue : colors.gray600} />
-      <Text style={[styles.shipText, { color: active ? colors.blue : colors.ink }]}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -319,17 +297,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shipRow: { flexDirection: 'row', gap: 10 },
-  shipOption: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingVertical: 18,
-  },
-  shipText: { fontFamily: fonts.bodyBold, fontSize: 13 },
   locHint: { fontFamily: fonts.body, fontSize: 12.5, color: colors.gray600, marginTop: 8 },
-  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 14 },
   note: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, textAlign: 'center', marginTop: 10 },
 });

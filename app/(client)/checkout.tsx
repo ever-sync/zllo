@@ -1,11 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { MessageBanner } from '@/components/ui/states';
+import { SegmentedOption, SegmentedOptionRow } from '@/components/ui/segmented-chips';
 import { useAuth, type Profile } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { notify } from '@/lib/confirm';
@@ -84,10 +84,10 @@ export default function Checkout() {
       </View>
 
       <Text style={[styles.label, { marginTop: 20 }]}>Como receber?</Text>
-      <View style={styles.shipRow}>
-        <ShipOption icon="walk-outline" label="Retirar na loja" active={shipping === 'retirada'} onPress={() => setShipping('retirada')} />
-        <ShipOption icon="bicycle-outline" label="Entrega" active={shipping === 'entrega'} onPress={() => setShipping('entrega')} />
-      </View>
+      <SegmentedOptionRow>
+        <SegmentedOption icon="walk-outline" label="Retirar na loja" active={shipping === 'retirada'} onPress={() => setShipping('retirada')} />
+        <SegmentedOption icon="bicycle-outline" label="Entrega" active={shipping === 'entrega'} onPress={() => setShipping('entrega')} />
+      </SegmentedOptionRow>
 
       {shipping === 'entrega' ? (
         <>
@@ -116,28 +116,6 @@ export default function Checkout() {
   );
 }
 
-function ShipOption({
-  icon,
-  label,
-  active,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.shipOption, { borderColor: active ? colors.blue : colors.gray200, backgroundColor: active ? '#EEEEFF' : colors.white }]}
-    >
-      <Ionicons name={icon} size={22} color={active ? colors.blue : colors.gray600} />
-      <Text style={[styles.shipText, { color: active ? colors.blue : colors.ink }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   muted: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   label: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink, marginBottom: 8 },
@@ -145,9 +123,6 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   itemName: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   itemVal: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
-  shipRow: { flexDirection: 'row', gap: 10 },
-  shipOption: { flex: 1, alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: radius.lg, paddingVertical: 18 },
-  shipText: { fontFamily: fonts.bodyBold, fontSize: 13 },
   addressInput: {
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -163,6 +138,5 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
   totalLabel: { fontFamily: fonts.headBold, fontSize: 16, color: colors.ink },
   totalValue: { fontFamily: fonts.headBlack, fontSize: 24, color: colors.blue, letterSpacing: -0.5 },
-  error: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 14 },
   note: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, textAlign: 'center', marginTop: 10 },
 });
