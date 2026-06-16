@@ -41,7 +41,7 @@ export default async function ClienteHomePage() {
     await Promise.all([
       supabase
         .from('repair_requests')
-        .select('id, description, shipping_type, status, created_at, expires_at, device:devices(nickname, brand, model), quotes(id, value, status, shop:shops(name, rating))')
+        .select('id, description, shipping_type, status, created_at, expires_at, device:devices(nickname, brand, model), quotes:quotes!quotes_request_id_fkey(id, value, status, shop:shops(name, rating))')
         .order('created_at', { ascending: false })
         .limit(5),
       supabase
