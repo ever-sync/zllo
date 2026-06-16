@@ -25,11 +25,15 @@ export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<
     .insert({ request_id: requestId, shop_id: shop.id, value, description: note || null, warranty_days: warranty });
 
   if (insErr) {
-    return {
-      error: /duplicate|unique/i.test(insErr.message)
-        ? 'Você já enviou um orçamento para esta solicitação.'
-        : 'Não foi possível enviar o orçamento.',
-    };
+    if (/duplicate|unique/i.test(insErr.message)) {
+      return { error: 'Você já enviou um orçamento para esta solicitação.' };
+    }
+    // Regras de negócio do banco (ex.: wallet Asaas obrigatória) chegam como
+    // mensagem de exceção — repassamos para o lojista saber o que fazer.
+    if (/asaas|wallet|configur/i.test(insErr.message)) {
+      return { error: insErr.message };
+    }
+    return { error: 'Não foi possível enviar o orçamento.' };
   }
 
   await supabase

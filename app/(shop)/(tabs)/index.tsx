@@ -1,10 +1,11 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { ShopHeader } from '@/components/ui/shop-header';
 import { ErrorState, Skeleton, SkeletonCard } from '@/components/ui/states';
+import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import { useShop } from '@/lib/shop';
@@ -73,7 +74,21 @@ export default function Painel() {
     setLoadError(false);
   }, [shop]);
 
+  const scheduleLoad = useDebouncedReload(load);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Realtime: novas solicitações e mudanças de OS aparecem no painel sem precisar
+  // sair e voltar para a aba.
+  useEffect(() => {
+    if (!shop) return;
+    const channel = supabase
+      .channel(`shop-${shop.id}-painel`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'request_targets', filter: `shop_id=eq.${shop.id}` }, scheduleLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `shop_id=eq.${shop.id}` }, scheduleLoad)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [shop, scheduleLoad]);
 
   if (loading) {
     return (
