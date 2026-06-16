@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { fetchActiveProducts } from '@/lib/cached-data';
 import { formatBRL } from '@/lib/format';
 import { STATUS_META } from '@/lib/product-orders';
 import { ClientShell } from '../client-shell';
@@ -30,8 +29,14 @@ type ProductOrder = {
 
 export default async function ClienteLojaPage() {
   const supabase = await createClient();
-  const [products, { data: orders }] = await Promise.all([
-    fetchActiveProducts(),
+  const [{ data: products }, { data: orders }] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, description, category, price, stock, shop_id, photos, shop:shops(name, rating)')
+      .eq('is_active', true)
+      .gt('stock', 0)
+      .order('created_at', { ascending: false })
+      .limit(24),
     supabase
       .from('product_orders')
       .select('id, total, status, shipping_type, created_at, shop:shops(name), items:product_order_items(id, name, qty, subtotal)')
