@@ -50,6 +50,7 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
   }, 400);
 
   useEffect(() => {
+    scheduleFetch();
     const channel = supabase
       .channel(`shop-${shopId}-targets`)
       .on(
@@ -57,11 +58,35 @@ export function OperacaoBoard({ shopId, initial }: { shopId: string; initial: Fe
         { event: '*', schema: 'public', table: 'request_targets', filter: `shop_id=eq.${shopId}` },
         scheduleFetch,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') scheduleFetch();
+      });
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, shopId, scheduleFetch]);
+  }, [supabase, shopId, scheduleFetch, fetchFeed]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void fetchFeed();
+    }, 8000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void fetchFeed();
+    };
+    const onFocus = () => {
+      void fetchFeed();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [fetchFeed]);
 
   useEffect(() => {
     let isNew = false;
