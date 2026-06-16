@@ -88,14 +88,14 @@ export default function ClientHome() {
         onSkip={finishTour}
         onGoDevices={() => {
           finishTour();
-          router.push('/(client)/aparelho-novo');
+          router.push('/aparelho-novo');
         }}
       />
 
       <ClientHeader greeting subtitle="O que você precisa hoje?" />
 
       {/* Card destaque: faixa lima + corpo escuro (CTA) */}
-      <Pressable style={styles.heroCard} onPress={() => router.push('/(client)/solicitar')}>
+      <Pressable style={styles.heroCard} onPress={() => router.push('/solicitar')}>
         <View style={styles.heroBanner}>
           <Text style={styles.heroBannerLabel}>ASSISTÊNCIA</Text>
           <Text style={styles.heroBannerRight}>perto de você</Text>
@@ -113,19 +113,19 @@ export default function ClientHome() {
 
       {/* Par de métricas */}
       <View style={styles.metrics}>
-        <Pressable style={styles.metricCard} onPress={() => router.push('/(client)/(tabs)/pedidos')}>
+        <Pressable style={styles.metricCard} onPress={() => router.push('/pedidos')}>
           <Text style={styles.metricLabel}>Pedidos ativos</Text>
           <Text style={styles.metricValue}>{stats.ativos}</Text>
           <Text style={[styles.metricDelta, { color: colors.green }]}>em andamento</Text>
         </Pressable>
-        <Pressable style={styles.metricCard} onPress={() => router.push('/(client)/(tabs)/aparelhos')}>
+        <Pressable style={styles.metricCard} onPress={() => router.push('/aparelhos')}>
           <Text style={styles.metricLabel}>Aparelhos</Text>
           <Text style={styles.metricValue}>{stats.aparelhos}</Text>
           <Text style={[styles.metricDelta, { color: colors.blue }]}>cadastrados</Text>
         </Pressable>
       </View>
 
-      <Pressable style={styles.vitrineCard} onPress={() => router.push('/(client)/vitrine')}>
+      <Pressable style={styles.vitrineCard} onPress={() => router.push('/vitrine')}>
         <View style={styles.vitrineIcon}>
           <Ionicons name="pricetags-outline" size={18} color={colors.ink} />
         </View>
@@ -140,7 +140,7 @@ export default function ClientHome() {
         <>
           <View style={[styles.sectionRow, { marginTop: 20 }]}>
             <Text style={styles.section}>Melhores assistências</Text>
-            <Pressable onPress={() => router.push('/(client)/solicitar')} hitSlop={6}>
+            <Pressable onPress={() => router.push('/solicitar')} hitSlop={6}>
               <Text style={styles.seeAll}>Pedir assistência</Text>
             </Pressable>
           </View>
@@ -150,7 +150,7 @@ export default function ClientHome() {
               return (
                 <Pressable
                   key={row.id}
-                  onPress={() => router.push('/(client)/solicitar')}
+                  onPress={() => router.push('/solicitar')}
                   style={[styles.rankCard, row.rank_position === 1 && { borderColor: colors.lime, backgroundColor: '#F7FEE7' }]}
                 >
                   <Text style={styles.rankPos}>{row.rank_position}</Text>
@@ -175,7 +175,7 @@ export default function ClientHome() {
       {/* Lista */}
       <View style={styles.sectionRow}>
         <Text style={styles.section}>Meus pedidos</Text>
-        <Pressable onPress={() => router.push('/(client)/(tabs)/pedidos')} hitSlop={6}>
+        <Pressable onPress={() => router.push('/pedidos')} hitSlop={6}>
           <Text style={styles.seeAll}>Ver todos</Text>
         </Pressable>
       </View>
@@ -191,14 +191,14 @@ export default function ClientHome() {
           title="Nenhum pedido ainda"
           description="Peça assistência para receber orçamentos de lojas perto de você."
           actionLabel="Pedir assistência"
-          onAction={() => router.push('/(client)/solicitar')}
+          onAction={() => router.push('/solicitar')}
         />
       ) : (
         <View style={{ gap: 10 }}>
           {recent.map((r) => {
             const st = STATUS[r.status];
             return (
-              <Pressable key={r.id} style={styles.newsCard} onPress={() => router.push(`/(client)/pedido/${r.id}`)}>
+              <Pressable key={r.id} style={styles.newsCard} onPress={() => router.push(`/pedido/${r.id}`)}>
                 <View style={styles.newsIcon}>
                   <Ionicons name="phone-portrait-outline" size={18} color={colors.ink} />
                 </View>

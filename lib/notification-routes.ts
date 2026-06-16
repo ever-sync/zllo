@@ -23,34 +23,34 @@ export function notificationHref(n: NotificationRow, role: UserRole = 'cliente')
     switch (n.type) {
       case 'request':
         return str(d, 'request_id')
-          ? `/(shop)/solicitacao/${d.request_id}`
-          : '/(shop)/(tabs)/orcamentos';
+          ? `/solicitacao/${d.request_id}`
+          : '/orcamentos';
       case 'message':
         return str(d, 'request_id')
-          ? `/(shop)/conversa/${d.request_id}`
-          : '/(shop)/(tabs)/mensagens';
+          ? `/conversa/${d.request_id}`
+          : '/mensagens';
       case 'payment':
-        return str(d, 'order_id') ? `/(shop)/os/${d.order_id}` : '/(shop)/(tabs)/ordens';
+        return str(d, 'order_id') ? `/os/${d.order_id}` : '/ordens';
       case 'product_order':
-        return '/(shop)/vendas';
+        return '/vendas';
       case 'dispute':
-        if (str(d, 'kind') === 'produto') return '/(shop)/vendas';
-        if (str(d, 'service_order_id')) return `/(shop)/os/${d.service_order_id}`;
-        if (str(d, 'order_id')) return `/(shop)/os/${d.order_id}`;
-        return '/(shop)/(tabs)/ordens';
+        if (str(d, 'kind') === 'produto') return '/vendas';
+        if (str(d, 'service_order_id')) return `/os/${d.service_order_id}`;
+        if (str(d, 'order_id')) return `/os/${d.order_id}`;
+        return '/ordens';
       case 'listing_interest':
         return str(d, 'listing_id')
           ? str(d, 'buyer_id')
-            ? `/(client)/anuncio-chat/${d.listing_id}?buyerId=${encodeURIComponent(d.buyer_id as string)}`
-            : `/(client)/anuncio/${d.listing_id}`
-          : '/(client)/vitrine';
+            ? `/anuncio-chat/${d.listing_id}?buyerId=${encodeURIComponent(d.buyer_id as string)}`
+            : `/anuncio/${d.listing_id}`
+          : '/vitrine';
       case 'listing_message': {
         const listingId = str(d, 'listing_id');
         const buyerId = str(d, 'buyer_id');
         if (listingId && buyerId) {
-          return `/(client)/anuncio-chat/${listingId}?buyerId=${encodeURIComponent(buyerId)}`;
+          return `/anuncio-chat/${listingId}?buyerId=${encodeURIComponent(buyerId)}`;
         }
-        return listingId ? `/(client)/anuncio-chat/${listingId}` : '/(client)/vitrine';
+        return listingId ? `/anuncio-chat/${listingId}` : '/vitrine';
       }
       default:
         return null;
@@ -60,34 +60,34 @@ export function notificationHref(n: NotificationRow, role: UserRole = 'cliente')
   switch (n.type) {
     case 'order': {
       const requestId = str(d, 'request_id');
-      return requestId ? `/(client)/pedido/${requestId}` : '/(client)/(tabs)/pedidos';
+      return requestId ? `/pedido/${requestId}` : '/pedidos';
     }
     case 'message': {
       const requestId = str(d, 'request_id');
       const shopId = str(d, 'shop_id');
       if (requestId && shopId) {
-        return `/(client)/chat/${requestId}?shopId=${encodeURIComponent(shopId)}&shopName=${encodeURIComponent('Assistência')}`;
+        return `/chat/${requestId}?shopId=${encodeURIComponent(shopId)}&shopName=${encodeURIComponent('Assistência')}`;
       }
-      return '/(client)/(tabs)/pedidos';
+      return '/pedidos';
     }
     case 'quote':
     case 'request': {
       const requestId = str(d, 'request_id');
-      return requestId ? `/(client)/pedido/${requestId}` : '/(client)/(tabs)/pedidos';
+      return requestId ? `/pedido/${requestId}` : '/pedidos';
     }
     case 'product_order': {
       const orderId = str(d, 'product_order_id') ?? str(d, 'order_id');
-      return orderId ? `/(client)/pedido-produto/${orderId}` : '/(client)/(tabs)/pedidos';
+      return orderId ? `/pedido-produto/${orderId}` : '/pedidos';
     }
     case 'dispute': {
       if (str(d, 'kind') === 'produto' && str(d, 'product_order_id')) {
-        return `/(client)/pedido-produto/${d.product_order_id}`;
+        return `/pedido-produto/${d.product_order_id}`;
       }
       const requestId = str(d, 'request_id');
-      return requestId ? `/(client)/pedido/${requestId}` : '/(client)/(tabs)/pedidos';
+      return requestId ? `/pedido/${requestId}` : '/pedidos';
     }
     case 'listing_interest':
-      return str(d, 'listing_id') ? `/(client)/anuncio/${d.listing_id}` : '/(client)/vitrine';
+      return str(d, 'listing_id') ? `/anuncio/${d.listing_id}` : '/vitrine';
     default:
       return null;
   }

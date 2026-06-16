@@ -53,7 +53,7 @@ export function ShopHeader({
 
       <View style={styles.right}>
         {right}
-        <Pressable style={styles.bell} onPress={() => router.push('/(shop)/notificacoes')} hitSlop={8}>
+        <Pressable style={styles.bell} onPress={() => router.push('/notificacoes')} hitSlop={8}>
           <Ionicons name="notifications-outline" size={20} color={colors.ink} />
           {unread > 0 ? (
             <View style={styles.badge}>

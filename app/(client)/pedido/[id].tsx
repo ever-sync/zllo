@@ -167,7 +167,7 @@ export default function PedidoDetail() {
   const openChat = (shopId: string, shopName?: string | null) => {
     if (!req) return;
     router.push({
-      pathname: '/(client)/chat/[id]',
+      pathname: '/chat/[id]',
       params: { id: req.id, shopId, shopName: shopName ?? 'Assistência' },
     });
   };
@@ -287,7 +287,7 @@ export default function PedidoDetail() {
           title="Pedido não encontrado"
           description="Este pedido pode ter sido removido ou você não tem acesso."
           actionLabel="Voltar aos pedidos"
-          onAction={() => router.replace('/(client)/(tabs)/pedidos')}
+          onAction={() => router.replace('/pedidos')}
         />
       </Screen>
     );

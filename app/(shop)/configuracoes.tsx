@@ -30,7 +30,7 @@ export default function Configuracoes() {
       <AppHeader title="Configurações" subtitle="Loja, recebimento e painel web" />
 
       {!shop ? (
-        <Button label="Configurar minha loja" onPress={() => router.push('/(shop)/setup')} />
+        <Button label="Configurar minha loja" onPress={() => router.push('/setup')} />
       ) : (
         <>
           <Card style={{ marginBottom: 12 }}>
@@ -50,13 +50,13 @@ export default function Configuracoes() {
 
           <Card style={{ marginBottom: 12 }}>
             <Text style={styles.section}>Loja</Text>
-            <MenuRow icon="storefront-outline" label="Editar dados da loja" onPress={() => router.push('/(shop)/setup')} />
-            <MenuRow icon="cube-outline" label="Produtos do marketplace" onPress={() => router.push('/(shop)/produtos')} />
+            <MenuRow icon="storefront-outline" label="Editar dados da loja" onPress={() => router.push('/setup')} />
+            <MenuRow icon="cube-outline" label="Produtos do marketplace" onPress={() => router.push('/produtos')} />
             <MenuRow
               icon="wallet-outline"
               label="Conta Asaas (Pix)"
               value={walletId ? 'Configurada' : 'Pendente'}
-              onPress={() => router.push('/(shop)/setup')}
+              onPress={() => router.push('/setup')}
               last
             />
           </Card>

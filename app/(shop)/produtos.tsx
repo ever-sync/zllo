@@ -171,7 +171,7 @@ export default function Produtos() {
           title="Configure sua loja"
           description="Complete o cadastro antes de publicar produtos."
           actionLabel="Configurar loja"
-          onAction={() => router.push('/(shop)/setup')}
+          onAction={() => router.push('/setup')}
         />
       </Screen>
     );

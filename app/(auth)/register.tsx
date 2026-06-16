@@ -250,11 +250,11 @@ export default function Register() {
         <Checkbox checked={lgpd} onToggle={() => setLgpd((v) => !v)} style={{ marginTop: 8 }}>
           <Text style={styles.lgpdText}>
             Li e concordo com os{' '}
-            <Text style={styles.lgpdLink} onPress={() => router.push('/(auth)/termos')}>
+            <Text style={styles.lgpdLink} onPress={() => router.push('/termos')}>
               Termos de Uso
             </Text>{' '}
             e a{' '}
-            <Text style={styles.lgpdLink} onPress={() => router.push('/(auth)/privacidade')}>
+            <Text style={styles.lgpdLink} onPress={() => router.push('/privacidade')}>
               Política de Privacidade
             </Text>
             , e autorizo o tratamento dos meus dados conforme a LGPD.
@@ -266,7 +266,7 @@ export default function Register() {
 
         <Button label="Criar conta" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
 
-        <Pressable onPress={() => router.replace('/(auth)/login')} style={styles.footer}>
+        <Pressable onPress={() => router.replace('/login')} style={styles.footer}>
           <Text style={styles.footerText}>
             Já tem conta? <Text style={styles.footerLink}>Entrar</Text>
           </Text>

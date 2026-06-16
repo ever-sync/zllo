@@ -56,16 +56,21 @@ export default function Financeiro() {
         .order('created_at', { ascending: false }),
     ]);
 
-    const repairTxs: Tx[] = ((pays ?? []) as {
+    const repairTxs: Tx[] = ((pays ?? []) as unknown as {
       id: string;
       amount: number;
       commission: number;
       shop_amount: number;
       status: string;
       created_at: string;
-      order: { device: { brand: string | null; model: string | null } | null } | null;
+      order:
+        | { device?: { brand: string | null; model: string | null } | { brand: string | null; model: string | null }[] | null }
+        | { device?: { brand: string | null; model: string | null } | { brand: string | null; model: string | null }[] | null }[]
+        | null;
     }[]).map((p) => {
-      const dev = p.order?.device;
+      const order = Array.isArray(p.order) ? p.order[0] ?? null : p.order;
+      const device = order && Array.isArray(order.device) ? order.device[0] ?? null : order?.device ?? null;
+      const dev = Array.isArray(device) ? device[0] ?? null : device;
       const name = `${dev?.brand ?? ''} ${dev?.model ?? ''}`.trim() || 'Reparo';
       return {
         id: p.id,

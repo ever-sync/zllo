@@ -66,7 +66,7 @@ export default function AnuncioNovo() {
       if (insErr) throw insErr;
 
       notify('Anúncio publicado!', 'Seu celular já está na vitrine.');
-      router.replace('/(client)/vitrine');
+      router.replace('/vitrine');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível publicar.');
     } finally {

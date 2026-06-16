@@ -144,7 +144,7 @@ export default function AnuncioDetail() {
           title="Anúncio não encontrado"
           description="Este anúncio pode ter sido removido ou expirado."
           actionLabel="Voltar à vitrine"
-          onAction={() => router.replace('/(client)/vitrine')}
+          onAction={() => router.replace('/vitrine')}
         />
       </Screen>
     );
@@ -188,7 +188,7 @@ export default function AnuncioDetail() {
 
       {isOwner ? (
         <>
-          <Button label="Editar anúncio" onPress={() => router.push(`/(client)/anuncio-editar/${listing.id}`)} style={{ marginTop: 24 }} />
+          <Button label="Editar anúncio" onPress={() => router.push(`/anuncio-editar/${listing.id}`)} style={{ marginTop: 24 }} />
           {ownerThreads.length > 0 ? (
             <View style={styles.threadsBox}>
               <Text style={styles.contactTitle}>Interessados</Text>
@@ -202,7 +202,7 @@ export default function AnuncioDetail() {
                   </View>
                   <Pressable
                     style={styles.chatBtn}
-                    onPress={() => router.push(`/(client)/anuncio-chat/${listing.id}?buyerId=${t.buyer_id}`)}
+                    onPress={() => router.push(`/anuncio-chat/${listing.id}?buyerId=${t.buyer_id}`)}
                   >
                     <Text style={styles.chatBtnText}>Conversar</Text>
                   </Pressable>
@@ -225,7 +225,7 @@ export default function AnuncioDetail() {
           ) : null}
           <Button
             label="Conversar"
-            onPress={() => router.push(`/(client)/anuncio-chat/${listing.id}`)}
+            onPress={() => router.push(`/anuncio-chat/${listing.id}`)}
             style={{ marginTop: 12 }}
           />
         </View>

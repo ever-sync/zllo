@@ -134,7 +134,7 @@ export default function Solicitar() {
       if (rpcErr) throw rpcErr;
 
       notify('Solicitação enviada!', 'As assistências próximas já foram notificadas.');
-      router.replace('/(client)/(tabs)/pedidos');
+      router.replace('/pedidos');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível enviar.');
     } finally {
@@ -149,7 +149,7 @@ export default function Solicitar() {
       {/* Aparelho */}
       <Text style={styles.label}>Aparelho</Text>
       {devices === null ? null : devices.length === 0 ? (
-        <Pressable style={styles.addDevice} onPress={() => router.push('/(client)/aparelho-novo')}>
+        <Pressable style={styles.addDevice} onPress={() => router.push('/aparelho-novo')}>
           <Ionicons name="add-circle-outline" size={20} color={colors.blue} />
           <Text style={styles.addDeviceText}>Cadastrar um aparelho primeiro</Text>
         </Pressable>

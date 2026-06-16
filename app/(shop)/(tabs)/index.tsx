@@ -86,7 +86,7 @@ export default function Painel() {
       </Screen>
     );
   }
-  if (!shop) return <Redirect href="/(shop)/setup" />;
+  if (!shop) return <Redirect href="/setup" />;
   if (loadError) return <Screen scroll={false} background={colors.canvas}><ErrorState onRetry={load} /></Screen>;
 
   const pending = targets.filter((t) => t.request && t.request.status === 'aberta');
@@ -107,7 +107,7 @@ export default function Painel() {
         <View style={{ flex: 1, zIndex: 1 }}>
           <Text style={styles.heroTitle}>Sua nota está em {shop.rating?.toFixed(1) ?? '5.0'} ⭐</Text>
           <Text style={styles.heroSub}>Responda rápido para subir no ranking da sua região.</Text>
-          <Pressable style={styles.heroBtn} onPress={() => router.push('/(shop)/reputacao')}>
+          <Pressable style={styles.heroBtn} onPress={() => router.push('/reputacao')}>
             <Text style={styles.heroBtnText}>Ver ranking →</Text>
           </Pressable>
         </View>
@@ -123,7 +123,7 @@ export default function Painel() {
       </View>
 
       {/* Vendas do marketplace */}
-      <Pressable style={styles.salesCard} onPress={() => router.push('/(shop)/vendas')}>
+      <Pressable style={styles.salesCard} onPress={() => router.push('/vendas')}>
         <View style={styles.salesIcon}><Text style={{ fontSize: 20 }}>🛍️</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.salesTitle}>Vendas do marketplace</Text>
@@ -134,14 +134,14 @@ export default function Painel() {
 
       {/* Orçamentos pendentes */}
       <Card style={{ marginTop: 4 }}>
-        <CardHeader title="Orçamentos pendentes" count={pending.length} actionLabel="Ver todos →" onAction={() => router.push('/(shop)/(tabs)/orcamentos')} />
+        <CardHeader title="Orçamentos pendentes" count={pending.length} actionLabel="Ver todos →" onAction={() => router.push('/orcamentos')} />
         {pending.length === 0 ? (
           <Text style={styles.muted}>Nenhum no momento.</Text>
         ) : (
           pending.slice(0, 4).map((t) => {
             const name = getDeviceName(t.request!.device);
             return (
-              <Pressable key={t.id} style={styles.rowItem} onPress={() => router.push(`/(shop)/solicitacao/${t.request!.id}`)}>
+              <Pressable key={t.id} style={styles.rowItem} onPress={() => router.push(`/solicitacao/${t.request!.id}`)}>
                 <View style={styles.thumb}><Text style={{ fontSize: 18 }}>📱</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{name}</Text>
@@ -171,14 +171,14 @@ export default function Painel() {
 
       {/* OS em andamento */}
       <Card style={{ marginTop: 14 }}>
-        <CardHeader title="OS em andamento" count={inProgress.length} actionLabel="Ver todas →" onAction={() => router.push('/(shop)/(tabs)/ordens')} />
+        <CardHeader title="OS em andamento" count={inProgress.length} actionLabel="Ver todas →" onAction={() => router.push('/ordens')} />
         {inProgress.length === 0 ? (
           <Text style={styles.muted}>Nenhuma OS ativa.</Text>
         ) : (
           inProgress.slice(0, 5).map((o) => {
             const name = getDeviceName(o.device);
             return (
-              <Pressable key={o.id} style={styles.osRow} onPress={() => router.push(`/(shop)/os/${o.id}`)}>
+              <Pressable key={o.id} style={styles.osRow} onPress={() => router.push(`/os/${o.id}`)}>
                 <View style={[styles.dotSm, { backgroundColor: colors.blue }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{name}</Text>

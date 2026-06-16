@@ -59,7 +59,7 @@ export function FloatingTabBar({ state, navigation }: TabBarProps) {
 
       {/* FAB central: ação principal */}
       <View style={styles.fabSlot}>
-        <Pressable style={styles.fab} onPress={() => router.push('/(client)/solicitar')} hitSlop={8}>
+        <Pressable style={styles.fab} onPress={() => router.push('/solicitar')} hitSlop={8}>
           <Ionicons name="construct" size={24} color={colors.lime} />
         </Pressable>
       </View>

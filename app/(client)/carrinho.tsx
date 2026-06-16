@@ -23,7 +23,7 @@ export default function Carrinho() {
           title="Carrinho vazio"
           description="Explore produtos das assistências da sua região e adicione ao carrinho."
           actionLabel="Ver produtos"
-          onAction={() => router.replace('/(client)/(tabs)/loja')}
+          onAction={() => router.replace('/loja')}
         />
       </Screen>
     );
@@ -66,7 +66,7 @@ export default function Carrinho() {
         <Text style={styles.totalValue}>{priceBRL(total)}</Text>
       </View>
 
-      <Button label="Finalizar pedido" onPress={() => router.push('/(client)/checkout')} style={{ marginTop: 16 }} />
+      <Button label="Finalizar pedido" onPress={() => router.push('/checkout')} style={{ marginTop: 16 }} />
     </Screen>
   );
 }

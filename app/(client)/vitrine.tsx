@@ -63,7 +63,7 @@ export default function Vitrine() {
     <Screen background={colors.canvas}>
       <AppHeader title="Vitrine" subtitle="Celulares à venda" />
 
-      <Button label="Anunciar meu celular" variant="accent" onPress={() => router.push('/(client)/anuncio-novo')} />
+      <Button label="Anunciar meu celular" variant="accent" onPress={() => router.push('/anuncio-novo')} />
 
       <View style={styles.search}>
         <Ionicons name="search-outline" size={18} color={colors.gray400} />
@@ -114,14 +114,14 @@ export default function Vitrine() {
           actionLabel={tab === 'meus' || !q ? 'Anunciar celular' : 'Limpar busca'}
           onAction={
             tab === 'meus' || !q
-              ? () => router.push('/(client)/anuncio-novo')
+              ? () => router.push('/anuncio-novo')
               : () => setQ('')
           }
         />
       ) : (
         <View style={{ gap: 12, marginTop: 4 }}>
           {filtered.map((l) => (
-            <Pressable key={l.id} style={styles.card} onPress={() => router.push(`/(client)/anuncio/${l.id}`)}>
+            <Pressable key={l.id} style={styles.card} onPress={() => router.push(`/anuncio/${l.id}`)}>
               {l.photos?.[0] ? (
                 <Image source={{ uri: l.photos[0] }} style={styles.photo} contentFit="cover" />
               ) : (

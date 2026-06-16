@@ -7,7 +7,7 @@ export default function ClientLayout() {
   const { session, profile, loading } = useAuth();
 
   if (loading) return null;
-  if (!session) return <Redirect href="/(auth)/welcome" />;
+  if (!session) return <Redirect href="/welcome" />;
   if (profile?.role === 'assistencia') return <Redirect href="/(shop)/(tabs)" />;
 
   return (

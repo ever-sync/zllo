@@ -14,6 +14,6 @@ export default function Index() {
     );
   }
 
-  if (!session) return <Redirect href="/(auth)/welcome" />;
+  if (!session) return <Redirect href="/welcome" />;
   return <Redirect href={profile?.role === 'assistencia' ? '/(shop)/(tabs)' : '/(client)/(tabs)'} />;
 }

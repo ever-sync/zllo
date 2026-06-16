@@ -145,7 +145,7 @@ export default function PedidoProduto() {
           title="Pedido não encontrado"
           description="Este pedido pode ter sido removido ou você não tem acesso."
           actionLabel="Voltar aos pedidos"
-          onAction={() => router.replace('/(client)/(tabs)/pedidos')}
+          onAction={() => router.replace('/pedidos')}
         />
       </Screen>
     );
@@ -379,7 +379,7 @@ export default function PedidoProduto() {
           <Button label="Cancelar pedido" variant="secondary" loading={busy} onPress={onCancel} style={{ marginTop: 10 }} />
         </>
       ) : (
-        <Button label="Voltar para a Loja" variant="secondary" onPress={() => router.replace('/(client)/(tabs)/loja')} style={{ marginTop: 22 }} />
+        <Button label="Voltar para a Loja" variant="secondary" onPress={() => router.replace('/loja')} style={{ marginTop: 22 }} />
       )}
 
       <Modal visible={payModal} transparent animationType="slide" onRequestClose={() => setPayModal(false)}>

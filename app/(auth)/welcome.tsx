@@ -32,8 +32,8 @@ export default function Welcome() {
         </View>
 
         <View style={styles.actions}>
-          <Button label="Criar conta grátis" variant="accent" onPress={() => router.push('/(auth)/register')} />
-          <Button label="Já tenho conta" variant="secondary" onPress={() => router.push('/(auth)/login')} />
+          <Button label="Criar conta grátis" variant="accent" onPress={() => router.push('/register')} />
+          <Button label="Já tenho conta" variant="secondary" onPress={() => router.push('/login')} />
         </View>
       </View>
     </Screen>

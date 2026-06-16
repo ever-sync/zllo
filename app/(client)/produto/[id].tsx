@@ -83,7 +83,7 @@ export default function ProdutoDetail() {
           title="Produto indisponível"
           description="Este produto não existe ou foi removido do catálogo."
           actionLabel="Voltar à loja"
-          onAction={() => router.replace('/(client)/(tabs)/loja')}
+          onAction={() => router.replace('/loja')}
         />
       </Screen>
     );
@@ -93,7 +93,7 @@ export default function ProdutoDetail() {
 
   const confirmAdded = async () => {
     if (await confirmAsync('Adicionado ✓', `${p.name} foi para o carrinho.`, 'Ver carrinho')) {
-      router.push('/(client)/carrinho');
+      router.push('/carrinho');
     }
   };
 

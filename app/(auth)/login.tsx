@@ -70,11 +70,11 @@ export default function Login() {
 
         <Button label="Entrar" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
 
-        <Pressable onPress={() => router.push('/(auth)/esqueci-senha')} style={styles.forgot}>
+        <Pressable onPress={() => router.push('/esqueci-senha')} style={styles.forgot}>
           <Text style={styles.footerLink}>Esqueci minha senha</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.replace('/(auth)/register')} style={styles.footer}>
+        <Pressable onPress={() => router.replace('/register')} style={styles.footer}>
           <Text style={styles.footerText}>
             Não tem conta? <Text style={styles.footerLink}>Criar agora</Text>
           </Text>

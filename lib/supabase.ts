@@ -1,6 +1,8 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
+// Use the CommonJS entry so the Android Hermes bundle does not pick the ESM
+// tracing path with a dynamic import that fails bytecode generation.
+import { createClient } from '@supabase/supabase-js/dist/index.cjs';
 import { AppState, Platform } from 'react-native';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';

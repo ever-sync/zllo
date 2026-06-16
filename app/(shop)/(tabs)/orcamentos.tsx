@@ -72,7 +72,7 @@ export default function Orcamentos() {
       </Screen>
     );
   }
-  if (!shop) return <Redirect href="/(shop)/setup" />;
+  if (!shop) return <Redirect href="/setup" />;
 
   const active = (items ?? []).filter(
     (it) => it.request && it.request.status === 'aberta' && !['orcou', 'recusou', 'expirou'].includes(it.status),
@@ -96,7 +96,7 @@ export default function Orcamentos() {
           title="Nenhuma solicitação agora"
           description="Novos pedidos de reparo aparecem aqui automaticamente quando clientes da região solicitam assistência."
           actionLabel="Ver perfil da loja"
-          onAction={() => router.push('/(shop)/(tabs)/perfil')}
+          onAction={() => router.push('/perfil')}
           style={{ marginTop: 14 }}
         />
       ) : (
@@ -106,7 +106,7 @@ export default function Orcamentos() {
             const deviceName = getDeviceName(it.request!.device);
             const quoted = it.status === 'orcou';
             return (
-              <Pressable key={it.id} onPress={() => router.push(`/(shop)/solicitacao/${it.request!.id}`)} style={styles.card}>
+              <Pressable key={it.id} onPress={() => router.push(`/solicitacao/${it.request!.id}`)} style={styles.card}>
                 <View style={styles.cardTop}>
                   <View style={styles.thumb}><Text style={{ fontSize: 22 }}>📱</Text></View>
                   <View style={{ flex: 1 }}>

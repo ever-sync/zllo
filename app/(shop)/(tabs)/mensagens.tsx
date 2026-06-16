@@ -50,7 +50,7 @@ export default function Mensagens() {
       </Screen>
     );
   }
-  if (!shop) return <Redirect href="/(shop)/setup" />;
+  if (!shop) return <Redirect href="/setup" />;
 
   const convos = (items ?? []).filter((c) => c.request);
 
@@ -71,7 +71,7 @@ export default function Mensagens() {
           title="Nenhuma conversa ainda"
           description="Depois de enviar um orçamento, você pode conversar com o cliente por aqui."
           actionLabel="Ver orçamentos"
-          onAction={() => router.push('/(shop)/(tabs)/orcamentos')}
+          onAction={() => router.push('/orcamentos')}
           style={{ marginTop: 14 }}
         />
       ) : (
@@ -81,7 +81,7 @@ export default function Mensagens() {
             const deviceName = getDeviceName(c.request!.device);
             const initials = name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
             return (
-              <Pressable key={c.request_id} style={styles.row} onPress={() => router.push(`/(shop)/conversa/${c.request_id}`)}>
+              <Pressable key={c.request_id} style={styles.row} onPress={() => router.push(`/conversa/${c.request_id}`)}>
                 <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{name}</Text>

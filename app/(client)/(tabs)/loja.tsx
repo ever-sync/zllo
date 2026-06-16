@@ -64,7 +64,7 @@ export default function Loja() {
         title="Loja"
         subtitle="Produtos das assistências perto de você"
         right={
-          <Pressable style={styles.cartBtn} onPress={() => router.push('/(client)/carrinho')} hitSlop={8}>
+          <Pressable style={styles.cartBtn} onPress={() => router.push('/carrinho')} hitSlop={8}>
             <Ionicons name="cart-outline" size={22} color={colors.ink} />
             {count > 0 ? (
               <View style={styles.cartBadge}>
@@ -127,7 +127,7 @@ export default function Loja() {
           {filtered.map((p) => {
             const dist = distanceLabel(p.distance_m);
             return (
-              <Pressable key={p.id} style={styles.card} onPress={() => router.push(`/(client)/produto/${p.id}`)}>
+              <Pressable key={p.id} style={styles.card} onPress={() => router.push(`/produto/${p.id}`)}>
                 {p.photos?.[0] ? (
                   <Image source={{ uri: p.photos[0] }} style={styles.photo} contentFit="cover" />
                 ) : (

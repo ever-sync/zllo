@@ -86,7 +86,7 @@ export default function Ordens() {
               : 'Ordens concluídas ficam registradas nesta aba.'
           }
           actionLabel={tab === 'andamento' ? 'Ver orçamentos' : undefined}
-          onAction={tab === 'andamento' ? () => router.push('/(shop)/(tabs)/orcamentos') : undefined}
+          onAction={tab === 'andamento' ? () => router.push('/orcamentos') : undefined}
         />
       ) : (
         <View style={{ gap: 10 }}>
@@ -97,7 +97,7 @@ export default function Ordens() {
             const idx = stepIndex(o.status);
             const progress = finished ? 100 : Math.max(8, Math.round(((idx + 1) / total) * 100));
             return (
-              <Pressable key={o.id} style={styles.card} onPress={() => router.push(`/(shop)/os/${o.id}`)}>
+              <Pressable key={o.id} style={styles.card} onPress={() => router.push(`/os/${o.id}`)}>
                 <View style={styles.rowTop}>
                   <View style={[styles.dot, { backgroundColor: finished ? colors.green : colors.blue }]} />
                   <View style={{ flex: 1 }}>

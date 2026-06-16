@@ -65,13 +65,13 @@ export default function ShopProfile() {
               <CheckRow
                 done={checklist.hasWallet}
                 label="Conta Asaas (recebimento Pix)"
-                onPress={() => router.push('/(shop)/setup')}
+                onPress={() => router.push('/setup')}
               />
               <CheckRow done={shop.is_online} label="Loja online para solicitações" />
               <CheckRow
                 done={checklist.hasProducts}
                 label="Produto ativo no marketplace"
-                onPress={() => router.push('/(shop)/produtos')}
+                onPress={() => router.push('/produtos')}
               />
             </Card>
           ) : null}
@@ -95,16 +95,16 @@ export default function ShopProfile() {
           </View>
 
           <View style={styles.menu}>
-            <MenuRow icon="notifications-outline" label="Notificações" onPress={() => router.push('/(shop)/notificacoes')} />
-            <MenuRow icon="cube-outline" label="Produtos" onPress={() => router.push('/(shop)/produtos')} />
-            <MenuRow icon="cash-outline" label="Financeiro" onPress={() => router.push('/(shop)/financeiro')} />
-            <MenuRow icon="star-outline" label="Reputação" onPress={() => router.push('/(shop)/reputacao')} />
-            <MenuRow icon="create-outline" label="Editar dados da loja" onPress={() => router.push('/(shop)/setup')} />
-            <MenuRow icon="settings-outline" label="Configurações" onPress={() => router.push('/(shop)/configuracoes')} last />
+            <MenuRow icon="notifications-outline" label="Notificações" onPress={() => router.push('/notificacoes')} />
+            <MenuRow icon="cube-outline" label="Produtos" onPress={() => router.push('/produtos')} />
+            <MenuRow icon="cash-outline" label="Financeiro" onPress={() => router.push('/financeiro')} />
+            <MenuRow icon="star-outline" label="Reputação" onPress={() => router.push('/reputacao')} />
+            <MenuRow icon="create-outline" label="Editar dados da loja" onPress={() => router.push('/setup')} />
+            <MenuRow icon="settings-outline" label="Configurações" onPress={() => router.push('/configuracoes')} last />
           </View>
         </>
       ) : (
-        <Button label="Configurar minha loja" onPress={() => router.push('/(shop)/setup')} />
+        <Button label="Configurar minha loja" onPress={() => router.push('/setup')} />
       )}
 
       <Button label="Sair da conta" variant="secondary" onPress={signOut} style={{ marginTop: 16 }} />

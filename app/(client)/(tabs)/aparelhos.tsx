@@ -65,7 +65,7 @@ export default function Aparelhos() {
           title="Nenhum aparelho cadastrado"
           description="Cadastre seu celular para pedir reparo mais rápido, com fotos e dados já salvos."
           actionLabel="Cadastrar aparelho"
-          onAction={() => router.push('/(client)/aparelho-novo')}
+          onAction={() => router.push('/aparelho-novo')}
           style={{ marginTop: 16 }}
         />
       ) : (
@@ -92,7 +92,7 @@ export default function Aparelhos() {
 
       <Button
         label="Cadastrar aparelho"
-        onPress={() => router.push('/(client)/aparelho-novo')}
+        onPress={() => router.push('/aparelho-novo')}
         style={{ marginTop: devices?.length ? 20 : 0 }}
       />
     </Screen>

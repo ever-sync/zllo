@@ -7,6 +7,9 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": {
+        "image": "sdk-54"
+      },
       "ios": {
         "simulator": true
       },
@@ -16,12 +19,18 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "image": "sdk-54"
+      },
       "env": {
         "APP_VARIANT": "preview"
       }
     },
     "production": {
       "autoIncrement": true,
+      "android": {
+        "image": "sdk-54"
+      },
       "env": {
         "APP_VARIANT": "production"
       }

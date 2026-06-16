@@ -59,14 +59,14 @@ export default function Checkout() {
       if (/indispon|carrinho|constraint|foreign key/i.test(rpcErr.message)) {
         clear();
         notify('Carrinho desatualizado', 'Os itens não estão mais disponíveis. Esvaziamos o carrinho — escolha novamente na Loja.');
-        router.replace('/(client)/(tabs)/loja');
+        router.replace('/loja');
         return;
       }
       setError(rpcErr.message);
       return;
     }
     clear();
-    router.replace(`/(client)/pedido-produto/${orderId as string}`);
+    router.replace(`/pedido-produto/${orderId as string}`);
   };
 
   return (

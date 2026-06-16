@@ -104,7 +104,7 @@ export default function Pedidos() {
           }
           actionLabel={tab === 'reparos' ? 'Pedir assistência' : 'Ir para a loja'}
           onAction={() =>
-            router.push(tab === 'reparos' ? '/(client)/solicitar' : '/(client)/(tabs)/loja')
+            router.push(tab === 'reparos' ? '/solicitar' : '/loja')
           }
           style={{ marginTop: 16 }}
         />
@@ -114,7 +114,7 @@ export default function Pedidos() {
             const st = REQ_STATUS[r.status];
             const count = r.quotes?.[0]?.count ?? 0;
             return (
-              <Pressable key={r.id} style={styles.card} onPress={() => router.push(`/(client)/pedido/${r.id}`)}>
+              <Pressable key={r.id} style={styles.card} onPress={() => router.push(`/pedido/${r.id}`)}>
                 <View style={styles.cardTop}>
                   <Text style={styles.cardTitle}>{getDeviceName(r.device)}</Text>
                   <View style={[styles.badge, { backgroundColor: st.bg }]}>
@@ -139,7 +139,7 @@ export default function Pedidos() {
             const st = PORDER_STATUS[o.status] ?? { label: o.status, bg: colors.gray100, fg: colors.gray600 };
             const items = (o.items ?? []).map((i) => `${i.qty}x ${i.name}`).join(', ');
             return (
-              <Pressable key={o.id} style={styles.card} onPress={() => router.push(`/(client)/pedido-produto/${o.id}`)}>
+              <Pressable key={o.id} style={styles.card} onPress={() => router.push(`/pedido-produto/${o.id}`)}>
                 <View style={styles.cardTop}>
                   <Text style={styles.cardTitle}>{o.shop?.name ?? 'Loja'}</Text>
                   <View style={[styles.badge, { backgroundColor: st.bg }]}>
