@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle, type TextStyle } from 'react-native';
 import { colors, fonts, radius } from '@/theme';
 
 /** Pill chip para filtros (loja, vitrine, ordens). */
@@ -8,10 +8,14 @@ export function SegmentedChip({
   label,
   active,
   onPress,
+  style,
+  textStyle,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }) {
   return (
     <Pressable
@@ -19,9 +23,10 @@ export function SegmentedChip({
       style={[
         styles.chip,
         { backgroundColor: active ? colors.ink : colors.white, borderColor: active ? colors.ink : colors.gray200 },
+        style,
       ]}
     >
-      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }]}>{label}</Text>
+      <Text style={[styles.chipText, { color: active ? colors.white : colors.ink }, textStyle]}>{label}</Text>
     </Pressable>
   );
 }

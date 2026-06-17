@@ -17,6 +17,19 @@
         "APP_VARIANT": "development"
       }
     },
+    "development-device": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "image": "sdk-54"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "APP_VARIANT": "development"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {

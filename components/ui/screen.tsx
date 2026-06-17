@@ -27,7 +27,7 @@ export function Screen({
   contentStyle?: StyleProp<ViewStyle>;
 }) {
   const inner = (
-    <View style={[padded && styles.padded, contentStyle]}>{children}</View>
+    <View style={[!scroll && styles.flex, padded && styles.padded, contentStyle]}>{children}</View>
   );
 
   return (

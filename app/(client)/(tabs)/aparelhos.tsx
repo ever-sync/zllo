@@ -20,6 +20,7 @@ export type Device = {
   color: string | null;
   storage: string | null;
   photo_url: string | null;
+  verification_status: 'pendente' | 'aprovado' | 'recusado';
 };
 
 export default function Aparelhos() {
@@ -32,7 +33,7 @@ export default function Aparelhos() {
     if (!session) return;
     const { data, error } = await supabase
       .from('devices')
-      .select('id, nickname, brand, model, color, storage, photo_url')
+      .select('id, nickname, brand, model, color, storage, photo_url, verification_status')
       .order('created_at', { ascending: false });
     if (error) {
       setLoadError(true);
@@ -84,6 +85,7 @@ export default function Aparelhos() {
                 <Text style={styles.cardSub}>
                   {[d.brand, d.model, d.storage, d.color].filter(Boolean).join(' · ') || 'Sem detalhes'}
                 </Text>
+                <ImeiBadge status={d.verification_status} />
               </View>
             </View>
           ))}
@@ -99,7 +101,23 @@ export default function Aparelhos() {
   );
 }
 
+function ImeiBadge({ status }: { status: Device['verification_status'] }) {
+  const map = {
+    aprovado: { bg: colors.greenBg, fg: colors.greenText, icon: 'shield-checkmark' as const, label: 'IMEI verificado' },
+    recusado: { bg: colors.redBg, fg: colors.redText, icon: 'warning' as const, label: 'IMEI bloqueado (roubo)' },
+    pendente: { bg: colors.amberBg, fg: colors.amberText, icon: 'time-outline' as const, label: 'IMEI pendente' },
+  }[status];
+  return (
+    <View style={[styles.badge, { backgroundColor: map.bg }]}>
+      <Ionicons name={map.icon} size={12} color={map.fg} />
+      <Text style={[styles.badgeText, { color: map.fg }]}>{map.label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.md },
+  badgeText: { fontFamily: fonts.headBold, fontSize: 10.5 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

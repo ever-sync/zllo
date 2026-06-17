@@ -44,6 +44,33 @@ export default function Login() {
       <Text style={styles.title}>Entrar</Text>
       <Text style={styles.subtitle}>Bem-vindo de volta 👋</Text>
 
+      {__DEV__ && (
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 16, marginBottom: 4 }}>
+          <Pressable
+            onPress={() => {
+              setEmail('cliente@zllo.dev');
+              setPassword('senha123');
+            }}
+            style={{ flex: 1, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: colors.gray100, borderRadius: 10, borderWidth: 1, borderColor: colors.gray200, alignItems: 'center' }}
+          >
+            <Text style={{ fontSize: 12, fontFamily: fonts.bodyBold, color: colors.blue }}>
+              🔑 Cliente Dev
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setEmail('assistencia@zllo.dev');
+              setPassword('senha123');
+            }}
+            style={{ flex: 1, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: colors.gray100, borderRadius: 10, borderWidth: 1, borderColor: colors.gray200, alignItems: 'center' }}
+          >
+            <Text style={{ fontSize: 12, fontFamily: fonts.bodyBold, color: colors.blue }}>
+              🔑 Assistência Dev
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
       <View style={styles.form}>
         <TextField
           label="E-mail"
@@ -85,7 +112,7 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 8, paddingBottom: 24 },
+  header: { paddingTop: 40, paddingBottom: 64 },
   title: { fontFamily: fonts.headBlack, fontSize: 28, color: colors.ink, letterSpacing: -0.5 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 4 },
   form: { gap: 14, marginTop: 24 },

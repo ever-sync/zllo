@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { ClientHeader } from '@/components/ui/client-header';
@@ -7,9 +8,18 @@ import { useAuth } from '@/lib/auth';
 import { colors, fonts, radius } from '@/theme';
 
 export default function ClientProfile() {
+  const router = useRouter();
   const { profile, signOut } = useAuth();
   const initials =
     profile?.full_name?.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() ?? '?';
+
+  const addressParts = [
+    profile?.street,
+    profile?.number,
+    profile?.neighborhood,
+    profile?.city && profile?.uf ? `${profile.city}/${profile.uf}` : profile?.city,
+  ].filter(Boolean);
+  const address = addressParts.length ? addressParts.join(', ') : '—';
 
   return (
     <Screen background={colors.canvas}>
@@ -25,10 +35,13 @@ export default function ClientProfile() {
       <View style={styles.info}>
         <Row label="E-mail" value={profile?.email ?? '—'} />
         <Row label="Telefone" value={profile?.phone ? formatPhone(profile.phone) : '—'} />
-        <Row label="CPF" value={profile?.cpf ? formatCPF(profile.cpf) : '—'} last />
+        <Row label="CPF" value={profile?.cpf ? formatCPF(profile.cpf) : '—'} />
+        <Row label="CEP" value={profile?.cep || '—'} />
+        <Row label="Endereço" value={address} last />
       </View>
 
-      <Button label="Sair da conta" variant="secondary" onPress={signOut} style={{ marginTop: 20 }} />
+      <Button label="Editar perfil" onPress={() => router.push('/perfil-editar')} style={{ marginTop: 16 }} />
+      <Button label="Sair da conta" variant="secondary" onPress={signOut} style={{ marginTop: 10 }} />
     </Screen>
   );
 }
@@ -65,5 +78,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray100 },
   rowLabel: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
-  rowValue: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  rowValue: { flex: 1, marginLeft: 16, textAlign: 'right', fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
 });

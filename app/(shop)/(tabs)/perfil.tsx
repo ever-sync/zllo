@@ -95,6 +95,7 @@ export default function ShopProfile() {
           </View>
 
           <View style={styles.menu}>
+            <MenuRow icon="person-outline" label="Editar meus dados" onPress={() => router.push('/perfil-editar')} />
             <MenuRow icon="notifications-outline" label="Notificações" onPress={() => router.push('/notificacoes')} />
             <MenuRow icon="cube-outline" label="Produtos" onPress={() => router.push('/produtos')} />
             <MenuRow icon="cash-outline" label="Financeiro" onPress={() => router.push('/financeiro')} />
@@ -104,7 +105,10 @@ export default function ShopProfile() {
           </View>
         </>
       ) : (
-        <Button label="Configurar minha loja" onPress={() => router.push('/setup')} />
+        <>
+          <Button label="Configurar minha loja" onPress={() => router.push('/setup')} />
+          <Button label="Editar meus dados" variant="secondary" onPress={() => router.push('/perfil-editar')} style={{ marginTop: 10 }} />
+        </>
       )}
 
       <Button label="Sair da conta" variant="secondary" onPress={signOut} style={{ marginTop: 16 }} />

@@ -292,7 +292,7 @@ function RoleChip({ label, active, onPress }: { label: string; active: boolean; 
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 8, paddingBottom: 16 },
+  header: { paddingTop: 40, paddingBottom: 48 },
   title: { fontFamily: fonts.headBlack, fontSize: 28, color: colors.ink, letterSpacing: -0.5 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600, marginTop: 4 },
   roleRow: { flexDirection: 'row', gap: 8, marginTop: 18, backgroundColor: colors.gray100, borderRadius: radius.full, padding: 4 },

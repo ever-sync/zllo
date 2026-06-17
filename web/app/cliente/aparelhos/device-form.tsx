@@ -15,6 +15,18 @@ export function DeviceForm() {
       <Field name="model" label="Modelo" placeholder="iPhone 13 Pro" required />
       <Field name="storage" label="Armazenamento" placeholder="128 GB" />
       <Field name="color" label="Cor" placeholder="Grafite" />
+      <label className="flex flex-col gap-1.5 md:col-span-2">
+        <span className="text-sm text-g600">IMEI</span>
+        <input
+          name="imei"
+          required
+          inputMode="numeric"
+          maxLength={15}
+          placeholder="15 dígitos (disque *#06#)"
+          className="rounded-xl border border-line bg-white px-3.5 py-2.5 text-ink outline-none focus:border-blue"
+        />
+        <span className="text-xs text-g400">Verificamos o IMEI contra roubo antes de aprovar o aparelho.</span>
+      </label>
 
       {state.error ? (
         <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#B91C1C] md:col-span-2">{state.error}</p>

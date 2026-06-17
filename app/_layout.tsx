@@ -23,7 +23,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     Archivo_600SemiBold,
     Archivo_700Bold,
     Archivo_800ExtraBold,
@@ -33,7 +33,9 @@ export default function RootLayout() {
     DMSans_700Bold,
   });
 
-  if (!loaded) return null;
+  if (!loaded && !error) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>

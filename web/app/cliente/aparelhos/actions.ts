@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { imeiDigits, isValidImei } from '@/lib/imei';
 
 export type DeviceState = { error?: string };
 
@@ -12,9 +13,13 @@ export async function createDevice(_prev: DeviceState, formData: FormData): Prom
   const model = String(formData.get('model') ?? '').trim();
   const storage = String(formData.get('storage') ?? '').trim() || null;
   const color = String(formData.get('color') ?? '').trim() || null;
+  const imei = imeiDigits(String(formData.get('imei') ?? ''));
 
   if (!brand || !model) {
     return { error: 'Informe marca e modelo.' };
+  }
+  if (!isValidImei(imei)) {
+    return { error: 'Informe um IMEI válido (15 dígitos). Disque *#06# para ver o seu.' };
   }
 
   const supabase = await createClient();
@@ -29,6 +34,7 @@ export async function createDevice(_prev: DeviceState, formData: FormData): Prom
     model,
     storage,
     color,
+    imei,
   });
 
   if (error) return { error: error.message };

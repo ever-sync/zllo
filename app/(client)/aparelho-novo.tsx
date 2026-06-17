@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/lib/auth';
+import { imeiDigits, isValidImei } from '@/lib/imei';
 import { pickImage } from '@/lib/pick-image';
 import { uploadPhoto } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +22,7 @@ export default function NovoAparelho() {
   const [model, setModel] = useState('');
   const [storage, setStorage] = useState('');
   const [color, setColor] = useState('');
+  const [imei, setImei] = useState('');
   const [photo, setPhoto] = useState<{ uri: string; base64: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,10 @@ export default function NovoAparelho() {
     setError(null);
     if (!brand.trim() && !model.trim() && !nickname.trim()) {
       setError('Informe ao menos a marca e o modelo.');
+      return;
+    }
+    if (!isValidImei(imei)) {
+      setError('Informe um IMEI válido (15 dígitos). Disque *#06# para ver o seu.');
       return;
     }
     if (!session) return;
@@ -50,6 +56,7 @@ export default function NovoAparelho() {
         model: model.trim() || null,
         storage: storage.trim() || null,
         color: color.trim() || null,
+        imei: imeiDigits(imei),
         photo_url: photoUrl,
       });
       if (insErr) throw insErr;
@@ -88,6 +95,15 @@ export default function NovoAparelho() {
             <TextField label="Cor" placeholder="Grafite" value={color} onChangeText={setColor} />
           </View>
         </View>
+        <TextField
+          label="IMEI"
+          placeholder="15 dígitos"
+          value={imei}
+          onChangeText={(t) => setImei(imeiDigits(t).slice(0, 15))}
+          keyboardType="number-pad"
+          maxLength={15}
+          hint="Disque *#06# no celular para ver o IMEI. Verificamos contra roubo."
+        />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
