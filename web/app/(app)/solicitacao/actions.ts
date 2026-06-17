@@ -33,7 +33,7 @@ export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<
     if (/asaas|wallet|configur/i.test(insErr.message)) {
       return { error: insErr.message };
     }
-    return { error: 'Não foi possível enviar o orçamento.' };
+    return { error: insErr.message || 'Não foi possível enviar o orçamento.' };
   }
 
   await supabase

@@ -85,7 +85,7 @@ export default function Vendas() {
 
   const advance = async (id: string, status: string) => {
     setBusy(id);
-    const { error } = await supabase.rpc('advance_product_order', { p_order_id: id, p_status: status });
+    const { error } = await supabase.rpc('advance_product_order', { p_order_id: id, p_status: status as any });
     setBusy(null);
     if (error) {
       notify('Ops', error.message);

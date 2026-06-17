@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
-import { colors, fonts, radius } from '@/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { colors as staticColors, fonts, radius } from '@/theme';
 
 export function TextField({
   label,
@@ -15,6 +16,8 @@ export function TextField({
   hint?: string;
   prefix?: string;
 }) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [focused, setFocused] = useState(false);
   const borderColor = error ? colors.red : focused ? colors.blue : colors.gray200;
 
@@ -53,7 +56,7 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: { gap: 6 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.gray600 },
   field: {

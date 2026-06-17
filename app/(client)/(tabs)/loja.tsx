@@ -2,9 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, ScrollView } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import Animated from 'react-native-reanimated';
+
+const AnimatedImage = Animated.createAnimatedComponent(Image) as any;
 import { StatusBar } from 'expo-status-bar';
 import { Screen } from '@/components/ui/screen';
+import { Button } from '@/components/ui/button';
 import { EmptyState, ErrorState, SkeletonCard } from '@/components/ui/states';
 import { SegmentedChip, SegmentedChipRow } from '@/components/ui/segmented-chips';
 import { useAuth } from '@/lib/auth';
@@ -12,37 +18,40 @@ import { useCart } from '@/lib/cart';
 import { geocodeCEP } from '@/lib/geocode';
 import { CATEGORIES, distanceLabel, priceBRL, type BrowseProduct } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { colors, fonts, radius } from '@/theme';
 
 export default function Loja() {
   const router = useRouter();
   const { profile } = useAuth();
   const { count } = useCart();
-  const [rows, setRows] = useState<BrowseProduct[] | null>(null);
-  const [loadError, setLoadError] = useState(false);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [maxDistance, setMaxDistance] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    let coords: { lat: number; lng: number } | null = null;
-    if (profile?.cep) coords = await geocodeCEP(profile.cep);
-    const { data, error } = await supabase.rpc('browse_products', {
-      p_lat: coords?.lat ?? null,
-      p_lng: coords?.lng ?? null,
-    });
-    if (error) {
-      setLoadError(true);
-      return;
-    }
-    setLoadError(false);
-    setRows((data as BrowseProduct[]) ?? []);
-  }, [profile]);
+  const { data, error: queryError, refetch } = useQuery({
+    queryKey: ['browse_products', profile?.cep],
+    queryFn: async () => {
+      let coords: { lat: number; lng: number } | null = null;
+      if (profile?.cep) coords = await geocodeCEP(profile.cep);
+      const { data, error } = await supabase.rpc('browse_products', {
+        p_lat: coords?.lat ?? undefined,
+        p_lng: coords?.lng ?? undefined,
+      });
+      if (error) throw error;
+      return (data as BrowseProduct[]) ?? [];
+    },
+  });
+
+  const rows = data ?? null;
+  const loadError = !!queryError;
 
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load])
+      void refetch();
+    }, [refetch])
   );
 
   const cats = useMemo(
@@ -53,6 +62,9 @@ export default function Loja() {
   const filtered = useMemo(() => {
     let list = rows ?? [];
     if (cat) list = list.filter((p) => p.category === cat);
+    if (maxDistance) {
+      list = list.filter((p) => p.distance_m ? p.distance_m <= maxDistance * 1000 : true);
+    }
     const term = q.trim().toLowerCase();
     if (term) {
       list = list.filter((p) =>
@@ -60,16 +72,20 @@ export default function Loja() {
       );
     }
     return list;
-  }, [rows, q, cat]);
+  }, [rows, q, cat, maxDistance]);
 
   const toggleFavorite = (id: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((fId) => fId !== id) : [...prev, id]
     );
   };
 
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
-    <Screen background="#FFFFFF" padded={false}>
+    <Screen background={colors.white} padded={false}>
       <StatusBar style="dark" />
 
       {/* Top Header / Location Bar */}
@@ -82,7 +98,7 @@ export default function Loja() {
           <View style={styles.plusBadge}>
             <Text style={styles.plusBadgeText}>+1</Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+          <Ionicons name="chevron-forward" size={16} color={colors.gray600} />
         </View>
 
         <View style={styles.headerRight}>
@@ -101,18 +117,18 @@ export default function Loja() {
       {/* Search Input */}
       <View style={styles.searchContainer}>
         <View style={styles.search}>
-          <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+          <Ionicons name="search-outline" size={18} color={colors.gray400} />
           <TextInput
             value={q}
             onChangeText={setQ}
             placeholder="Buscar..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.gray400}
             style={styles.searchInput}
             autoCapitalize="none"
           />
           {q ? (
             <Pressable onPress={() => setQ('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+              <Ionicons name="close-circle" size={18} color={colors.gray400} />
             </Pressable>
           ) : null}
         </View>
@@ -125,7 +141,7 @@ export default function Loja() {
           <Text style={styles.filterButtonText}>Salvar Busca</Text>
         </Pressable>
         <View style={styles.divider} />
-        <Pressable style={styles.filterButton} onPress={() => {}}>
+        <Pressable style={styles.filterButton} onPress={() => setFiltersOpen(true)}>
           <Ionicons name="options-outline" size={16} color={colors.ink} />
           <Text style={styles.filterButtonText}>Filtros</Text>
         </Pressable>
@@ -163,7 +179,7 @@ export default function Loja() {
       <ScrollView contentContainerStyle={styles.listContent}>
         {loadError ? (
           <View style={{ padding: 16 }}>
-            <ErrorState onRetry={load} />
+            <ErrorState onRetry={() => refetch()} />
           </View>
         ) : rows === null ? (
           <View style={{ gap: 10, padding: 16 }}>
@@ -215,10 +231,10 @@ export default function Loja() {
                 >
                   <View style={styles.photoContainer}>
                     {p.photos?.[0] ? (
-                      <Image source={{ uri: p.photos[0] }} style={styles.photo} contentFit="cover" />
+                      <AnimatedImage source={{ uri: p.photos[0] }} style={styles.photo} sharedTransitionTag={`product-photo-${p.id}`} contentFit="cover" />
                     ) : (
                       <View style={[styles.photo, styles.photoPlaceholder]}>
-                        <Ionicons name="cube-outline" size={26} color="#9CA3AF" />
+                        <Ionicons name="cube-outline" size={26} color={colors.gray400} />
                       </View>
                     )}
                     <Pressable
@@ -232,7 +248,7 @@ export default function Loja() {
                       <Ionicons
                         name={isFavorited ? 'heart' : 'heart-outline'}
                         size={16}
-                        color={isFavorited ? '#FF4D4D' : '#1E1E1E'}
+                        color={isFavorited ? '#FF4D4D' : colors.ink}
                       />
                     </Pressable>
                   </View>
@@ -266,11 +282,44 @@ export default function Loja() {
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={filtersOpen} transparent animationType="slide" onRequestClose={() => setFiltersOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Filtros</Text>
+
+            <Text style={styles.modalLabel}>Raio de distância máximo</Text>
+            <View style={styles.radiusRow}>
+              {[
+                { label: 'Qualquer', val: null },
+                { label: '5 km', val: 5 },
+                { label: '10 km', val: 10 },
+                { label: '20 km', val: 20 },
+                { label: '50 km', val: 50 },
+              ].map((opt) => {
+                const active = maxDistance === opt.val;
+                return (
+                  <Pressable
+                    key={opt.label}
+                    onPress={() => setMaxDistance(opt.val)}
+                    style={[styles.radiusChip, active && styles.radiusChipActive]}
+                  >
+                    <Text style={[styles.radiusText, active && styles.radiusTextActive]}>{opt.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Button label="Aplicar filtros" onPress={() => setFiltersOpen(false)} style={{ marginTop: 28, alignSelf: 'stretch' }} />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,7 +327,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -333,13 +382,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.gray100,
     borderRadius: 10,
     paddingHorizontal: 12,
   },
@@ -356,8 +405,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.gray200,
+    backgroundColor: colors.white,
   },
   filterButton: {
     flex: 1,
@@ -374,12 +423,12 @@ const styles = StyleSheet.create({
   divider: {
     width: 1,
     height: 16,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.gray200,
   },
   chipsContainer: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   activeChip: {
     backgroundColor: colors.ink,
@@ -389,7 +438,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   inactiveChip: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.gray100,
     borderColor: 'transparent',
   },
   inactiveChipText: {
@@ -397,16 +446,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   card: {
     flexDirection: 'row',
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.gray200,
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   photoContainer: {
     position: 'relative',
@@ -417,7 +466,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   photoPlaceholder: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.gray100,
     alignItems: 'center',
     justifyContent: 'center',
     width: 110,
@@ -431,7 +480,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: colors.white === '#FFFFFF' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -491,7 +540,66 @@ const styles = StyleSheet.create({
   locationSubText: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.gray600,
     flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 22,
+    paddingBottom: 34,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.gray200,
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontFamily: fonts.headBlack,
+    fontSize: 20,
+    color: colors.ink,
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontFamily: fonts.headBold,
+    fontSize: 13,
+    color: colors.ink,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  radiusRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  radiusChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: radius.full,
+    backgroundColor: colors.gray100,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  radiusChipActive: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
+  radiusText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.gray600,
+  },
+  radiusTextActive: {
+    color: colors.white,
   },
 });

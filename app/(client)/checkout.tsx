@@ -51,7 +51,7 @@ export default function Checkout() {
       p_shop_id: shopId,
       p_items: items.map((i) => ({ product_id: i.product_id, qty: i.qty })),
       p_shipping_type: shipping,
-      p_address: shipping === 'entrega' ? address.trim() : null,
+      p_address: shipping === 'entrega' ? address.trim() : undefined,
     });
     setLoading(false);
     if (rpcErr) {

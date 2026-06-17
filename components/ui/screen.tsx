@@ -11,11 +11,13 @@ import {
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { colors } from '@/theme';
 
+import { useThemeColors } from '@/hooks/use-theme-colors';
+
 export function Screen({
   children,
   scroll = true,
   padded = true,
-  background = colors.paper,
+  background,
   edges = ['top', 'bottom'],
   contentStyle,
 }: {
@@ -26,12 +28,15 @@ export function Screen({
   edges?: Edge[];
   contentStyle?: StyleProp<ViewStyle>;
 }) {
+  const colors = useThemeColors();
+  const bg = background ?? colors.paper;
+
   const inner = (
     <View style={[!scroll && styles.flex, padded && styles.padded, contentStyle]}>{children}</View>
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: background }]} edges={edges}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: bg }]} edges={edges}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

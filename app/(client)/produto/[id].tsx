@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
+const AnimatedImage = Animated.createAnimatedComponent(Image) as any;
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -11,7 +14,8 @@ import { useCart } from '@/lib/cart';
 import { confirmAsync } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
-import { colors, fonts, radius } from '@/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { colors as staticColors, fonts, radius } from '@/theme';
 
 type Detail = {
   id: string;
@@ -28,6 +32,8 @@ type Detail = {
 const PHOTO_W = Dimensions.get('window').width - 40;
 
 export default function ProdutoDetail() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { add, replaceWith } = useCart();
@@ -123,7 +129,7 @@ export default function ProdutoDetail() {
       {p.photos?.length ? (
         <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.gallery}>
           {p.photos.map((url, i) => (
-            <Image key={i} source={{ uri: url }} style={[styles.photo, { width: PHOTO_W }]} contentFit="cover" />
+            <AnimatedImage key={i} source={{ uri: url }} style={[styles.photo, { width: PHOTO_W }]} sharedTransitionTag={i === 0 ? `product-photo-${p.id}` : undefined} contentFit="cover" />
           ))}
         </ScrollView>
       ) : (
@@ -160,16 +166,22 @@ export default function ProdutoDetail() {
   );
 }
 
+const metaStyles = StyleSheet.create({
+  meta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  metaText: { fontFamily: fonts.bodyMedium, fontSize: 13 },
+});
+
 function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  const colors = useThemeColors();
   return (
-    <View style={styles.meta}>
+    <View style={metaStyles.meta}>
       <Ionicons name={icon} size={14} color={colors.gray600} />
-      <Text style={styles.metaText}>{text}</Text>
+      <Text style={[metaStyles.metaText, { color: colors.gray600 }]}>{text}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   muted: { fontFamily: fonts.body, fontSize: 14, color: colors.gray600 },
   gallery: { marginBottom: 16 },
   photo: { height: 240, borderRadius: radius['2xl'] },
@@ -177,8 +189,6 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.headBlack, fontSize: 22, color: colors.ink, letterSpacing: -0.5 },
   price: { fontFamily: fonts.headBlack, fontSize: 26, color: colors.blue, letterSpacing: -1, marginTop: 4 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 12 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.gray600 },
   section: { fontFamily: fonts.headBold, fontSize: 11, color: colors.gray600, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 20, marginBottom: 8 },
   descBox: { backgroundColor: colors.gray100, borderRadius: radius.lg, padding: 14 },
   descText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink, lineHeight: 21 },

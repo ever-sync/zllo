@@ -93,7 +93,7 @@ export default function AnuncioDetail() {
     setInterestBusy(true);
     const { error } = await supabase.rpc('express_listing_interest', {
       p_listing_id: id,
-      p_message: interestMsg.trim() || null,
+      p_message: interestMsg.trim() || undefined,
     });
     setInterestBusy(false);
     if (error) {

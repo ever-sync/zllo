@@ -129,7 +129,7 @@ export default function Solicitar() {
         p_shipping_type: shipping,
         p_lat: lat,
         p_lng: lng,
-        p_address: address,
+        p_address: address ?? undefined,
       });
       if (rpcErr) throw rpcErr;
 

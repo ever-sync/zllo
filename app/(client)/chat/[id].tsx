@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,10 +15,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useDebouncedReload } from '@/hooks/use-debounced-reload';
 import { getDeviceName } from '@/lib/format';
+import { pickImage } from '@/lib/pick-image';
+import { uploadPhoto } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
-import { colors, fonts, radius } from '@/theme';
+import { colors as staticColors, fonts, radius } from '@/theme';
 
 type Msg = { id: string; sender_id: string; body: string; created_at: string };
 
@@ -29,9 +34,13 @@ export default function Conversa() {
   const { id, shopId, shopName } = useLocalSearchParams<{ id: string; shopId: string; shopName?: string }>();
   const router = useRouter();
   const { session } = useAuth();
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [header, setHeader] = useState({ name: shopName ?? 'Assistência', device: '' });
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState('');
+  const [uploading, setUploading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const load = useCallback(async () => {
@@ -77,6 +86,31 @@ export default function Conversa() {
     load();
   };
 
+  const onSendPhoto = async () => {
+    if (!id || !shopId || !session || uploading) return;
+    try {
+      const res = await pickImage();
+      if (!res) return;
+      setUploading(true);
+      const url = await uploadPhoto({
+        base64: res.base64,
+        userId: session.user.id,
+        folder: 'chat',
+      });
+      await supabase.from('messages').insert({
+        request_id: id,
+        shop_id: shopId,
+        sender_id: session.user.id,
+        body: url,
+      });
+      load();
+    } catch (err) {
+      console.error('[Chat] Erro ao enviar foto:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
@@ -97,10 +131,15 @@ export default function Conversa() {
           ) : (
             msgs.map((m) => {
               const mine = m.sender_id === session?.user.id;
+              const isPhoto = m.body.startsWith('https://') && m.body.includes('/storage/v1/object/public/photos');
               return (
                 <View key={m.id} style={[styles.bubbleRow, { justifyContent: mine ? 'flex-end' : 'flex-start' }]}>
-                  <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
-                    <Text style={[styles.bubbleText, { color: mine ? colors.white : colors.ink }]}>{m.body}</Text>
+                  <View style={[styles.bubble, mine ? styles.mine : styles.theirs, isPhoto && { paddingHorizontal: 6, paddingVertical: 6 }]}>
+                    {isPhoto ? (
+                      <Image source={{ uri: m.body }} style={styles.bubbleImage} contentFit="cover" />
+                    ) : (
+                      <Text style={[styles.bubbleText, { color: mine ? colors.white : colors.ink }]}>{m.body}</Text>
+                    )}
                   </View>
                 </View>
               );
@@ -109,6 +148,13 @@ export default function Conversa() {
         </ScrollView>
 
         <View style={styles.inputRow}>
+          <Pressable onPress={onSendPhoto} style={styles.attachBtn} disabled={uploading}>
+            {uploading ? (
+              <ActivityIndicator color={colors.ink} size="small" />
+            ) : (
+              <Ionicons name="camera-outline" size={22} color={colors.gray600} />
+            )}
+          </Pressable>
           <TextInput
             value={text}
             onChangeText={setText}
@@ -127,7 +173,7 @@ export default function Conversa() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.paper },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.gray200, backgroundColor: colors.white },
   back: { width: 36, height: 36, borderRadius: 8, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
@@ -145,4 +191,6 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderTopWidth: 1, borderTopColor: colors.gray200, backgroundColor: colors.white },
   input: { flex: 1, backgroundColor: colors.gray100, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   sendBtn: { width: 44, height: 44, borderRadius: radius.lg, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  attachBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  bubbleImage: { width: 200, height: 150, borderRadius: 12, marginTop: 4, marginBottom: 4 },
 });

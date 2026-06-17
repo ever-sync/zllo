@@ -1,6 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
 import { Brand } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,87 +21,87 @@ import { colors, fonts, radius } from '@/theme';
 /** Versão do termo aceito — incremente ao mudar o texto do consentimento. */
 const LGPD_VERSION = '1.0';
 
+const registerSchema = z.object({
+  fullName: z.string().min(3, 'Informe seu nome completo.'),
+  cpf: z.string().refine((val) => isValidCPF(val), { message: 'CPF inválido.' }),
+  phone: z.string().refine((val) => isValidPhone(val), { message: 'Telefone inválido (com DDD).' }),
+  email: z.string().email('E-mail inválido.'),
+  password: z.string().min(6, 'Mínimo de 6 caracteres.'),
+  cep: z.string().refine((val) => isValidCEP(val), { message: 'CEP inválido.' }),
+  street: z.string().min(2, 'Informe o logradouro.'),
+  number: z.string().min(1, 'Nº'),
+  complement: z.string().optional(),
+  neighborhood: z.string().min(2, 'Informe o bairro.'),
+  city: z.string().min(2, 'Informe a cidade.'),
+  uf: z.string().length(2, 'UF'),
+  lgpd: z.literal(true, {
+    message: 'É preciso aceitar os termos e a Política de Privacidade (LGPD).',
+  }),
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 export default function Register() {
   const router = useRouter();
   const [role, setRole] = useState<UserRole>('cliente');
-  const [fullName, setFullName] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  // Endereço
-  const [cep, setCep] = useState('');
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [complement, setComplement] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [uf, setUf] = useState('');
   const [cepLoading, setCepLoading] = useState(false);
-
-  const [lgpd, setLgpd] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const onCepBlur = async () => {
-    if (!isValidCEP(cep)) return;
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      cpf: '',
+      phone: '',
+      email: '',
+      password: '',
+      cep: '',
+      street: '',
+      number: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      uf: '',
+      lgpd: false as any,
+    },
+  });
+
+  const onCepBlur = async (cepValue: string) => {
+    if (!isValidCEP(cepValue)) return;
     setCepLoading(true);
-    const addr = await fetchAddressByCEP(cep);
+    const addr = await fetchAddressByCEP(cepValue);
     setCepLoading(false);
     if (addr) {
-      if (addr.street) setStreet(addr.street);
-      if (addr.neighborhood) setNeighborhood(addr.neighborhood);
-      if (addr.city) setCity(addr.city);
-      if (addr.uf) setUf(addr.uf);
+      if (addr.street) setValue('street', addr.street, { shouldValidate: true });
+      if (addr.neighborhood) setValue('neighborhood', addr.neighborhood, { shouldValidate: true });
+      if (addr.city) setValue('city', addr.city, { shouldValidate: true });
+      if (addr.uf) setValue('uf', addr.uf, { shouldValidate: true });
     }
   };
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (fullName.trim().length < 3) e.fullName = 'Informe seu nome completo.';
-    if (!isValidCPF(cpf)) e.cpf = 'CPF inválido.';
-    if (!isValidPhone(phone)) e.phone = 'Telefone inválido (com DDD).';
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = 'E-mail inválido.';
-    if (password.length < 6) e.password = 'Mínimo de 6 caracteres.';
-    if (!isValidCEP(cep)) e.cep = 'CEP inválido.';
-    if (street.trim().length < 2) e.street = 'Informe o logradouro.';
-    if (number.trim().length < 1) e.number = 'Nº';
-    if (neighborhood.trim().length < 2) e.neighborhood = 'Informe o bairro.';
-    if (city.trim().length < 2) e.city = 'Informe a cidade.';
-    if (uf.trim().length !== 2) e.uf = 'UF';
-    setErrors(e);
-    if (!lgpd) {
-      setFormError('É preciso aceitar os termos e a Política de Privacidade (LGPD).');
-      return false;
-    }
-    return Object.keys(e).length === 0;
-  };
-
-  const onSubmit = async () => {
+  const onSubmit = async (values: RegisterFormValues) => {
     setFormError(null);
     setInfo(null);
-    if (!validate()) return;
-
     setLoading(true);
+
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
+      email: values.email.trim().toLowerCase(),
+      password: values.password,
       options: {
         data: {
-          full_name: fullName.trim(),
-          cpf: onlyDigits(cpf),
-          phone: onlyDigits(phone),
+          full_name: values.fullName.trim(),
+          cpf: onlyDigits(values.cpf),
+          phone: onlyDigits(values.phone),
           role,
-          cep: onlyDigits(cep),
-          street: street.trim(),
-          number: number.trim(),
-          complement: complement.trim() || null,
-          neighborhood: neighborhood.trim(),
-          city: city.trim(),
-          uf: uf.trim().toUpperCase(),
+          cep: onlyDigits(values.cep),
+          street: values.street.trim(),
+          number: values.number.trim(),
+          complement: values.complement?.trim() || null,
+          neighborhood: values.neighborhood.trim(),
+          city: values.city.trim(),
+          uf: values.uf.trim().toUpperCase(),
           lgpd_accepted: 'true',
           lgpd_version: LGPD_VERSION,
         },
@@ -114,7 +118,7 @@ export default function Register() {
       setInfo('Conta criada! Enviamos um e-mail de confirmação. Confirme para entrar.');
       return;
     }
-    // Sessão ativa → onAuthStateChange redireciona automaticamente.
+    // Sessão activa → onAuthStateChange redireciona automaticamente.
   };
 
   return (
@@ -132,139 +136,241 @@ export default function Register() {
       </View>
 
       <View style={styles.form}>
-        <TextField
-          label="Nome completo"
-          placeholder="Seu nome"
-          autoCapitalize="words"
-          value={fullName}
-          onChangeText={setFullName}
-          error={errors.fullName}
+        <Controller
+          control={control}
+          name="fullName"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="Nome completo"
+              placeholder="Seu nome"
+              autoCapitalize="words"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              error={errors.fullName?.message}
+            />
+          )}
         />
-        <TextField
-          label="CPF"
-          placeholder="000.000.000-00"
-          keyboardType="number-pad"
-          value={cpf}
-          onChangeText={(t) => setCpf(formatCPF(t))}
-          error={errors.cpf}
+
+        <Controller
+          control={control}
+          name="cpf"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="CPF"
+              placeholder="000.000.000-00"
+              keyboardType="number-pad"
+              onBlur={onBlur}
+              onChangeText={(t) => onChange(formatCPF(t))}
+              value={value}
+              error={errors.cpf?.message}
+            />
+          )}
         />
-        <TextField
-          label="Telefone"
-          placeholder="(11) 91234-5678"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={(t) => setPhone(formatPhone(t))}
-          error={errors.phone}
+
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="Telefone"
+              placeholder="(11) 91234-5678"
+              keyboardType="phone-pad"
+              onBlur={onBlur}
+              onChangeText={(t) => onChange(formatPhone(t))}
+              value={value}
+              error={errors.phone?.message}
+            />
+          )}
         />
-        <TextField
-          label="E-mail"
-          placeholder="voce@email.com"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          error={errors.email}
+
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="E-mail"
+              placeholder="voce@email.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              error={errors.email?.message}
+            />
+          )}
         />
-        <TextField
-          label="Senha"
-          placeholder="Crie uma senha"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          error={errors.password}
+
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="Senha"
+              placeholder="Crie uma senha"
+              secureTextEntry
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              error={errors.password?.message}
+            />
+          )}
         />
 
         <Text style={styles.sectionTitle}>Endereço</Text>
         <Text style={styles.sectionSub}>Usamos para localizar assistências perto de você.</Text>
 
-        <TextField
-          label="CEP"
-          placeholder="00000-000"
-          keyboardType="number-pad"
-          value={cep}
-          onChangeText={(t) => setCep(formatCEP(t))}
-          onBlur={onCepBlur}
-          error={errors.cep}
-          hint={cepLoading ? 'Buscando endereço…' : undefined}
+        <Controller
+          control={control}
+          name="cep"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="CEP"
+              placeholder="00000-000"
+              keyboardType="number-pad"
+              onBlur={() => {
+                onBlur();
+                void onCepBlur(value);
+              }}
+              onChangeText={(t) => onChange(formatCEP(t))}
+              value={value}
+              error={errors.cep?.message}
+              hint={cepLoading ? 'Buscando endereço…' : undefined}
+            />
+          )}
         />
-        <TextField
-          label="Logradouro"
-          placeholder="Rua, avenida…"
-          autoCapitalize="words"
-          value={street}
-          onChangeText={setStreet}
-          error={errors.street}
+
+        <Controller
+          control={control}
+          name="street"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="Logradouro"
+              placeholder="Rua, avenida…"
+              autoCapitalize="words"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              error={errors.street?.message}
+            />
+          )}
         />
+
         <View style={styles.row}>
           <View style={{ width: 110 }}>
-            <TextField
-              label="Número"
-              placeholder="Nº"
-              keyboardType="number-pad"
-              value={number}
-              onChangeText={setNumber}
-              error={errors.number}
+            <Controller
+              control={control}
+              name="number"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Número"
+                  placeholder="Nº"
+                  keyboardType="number-pad"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.number?.message}
+                />
+              )}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <TextField
-              label="Complemento"
-              placeholder="Apto, bloco… (opcional)"
-              value={complement}
-              onChangeText={setComplement}
+            <Controller
+              control={control}
+              name="complement"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Complemento"
+                  placeholder="Apto, bloco… (opcional)"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.complement?.message}
+                />
+              )}
             />
           </View>
         </View>
-        <TextField
-          label="Bairro"
-          placeholder="Bairro"
-          autoCapitalize="words"
-          value={neighborhood}
-          onChangeText={setNeighborhood}
-          error={errors.neighborhood}
+
+        <Controller
+          control={control}
+          name="neighborhood"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextField
+              label="Bairro"
+              placeholder="Bairro"
+              autoCapitalize="words"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              error={errors.neighborhood?.message}
+            />
+          )}
         />
+
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <TextField
-              label="Cidade"
-              placeholder="Cidade"
-              autoCapitalize="words"
-              value={city}
-              onChangeText={setCity}
-              error={errors.city}
+            <Controller
+              control={control}
+              name="city"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Cidade"
+                  placeholder="Cidade"
+                  autoCapitalize="words"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.city?.message}
+                />
+              )}
             />
           </View>
           <View style={{ width: 80 }}>
-            <TextField
-              label="UF"
-              placeholder="UF"
-              autoCapitalize="characters"
-              maxLength={2}
-              value={uf}
-              onChangeText={(t) => setUf(t.toUpperCase())}
-              error={errors.uf}
+            <Controller
+              control={control}
+              name="uf"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="UF"
+                  placeholder="UF"
+                  autoCapitalize="characters"
+                  maxLength={2}
+                  onBlur={onBlur}
+                  onChangeText={(t) => onChange(t.toUpperCase())}
+                  value={value}
+                  error={errors.uf?.message}
+                />
+              )}
             />
           </View>
         </View>
 
-        <Checkbox checked={lgpd} onToggle={() => setLgpd((v) => !v)} style={{ marginTop: 8 }}>
-          <Text style={styles.lgpdText}>
-            Li e concordo com os{' '}
-            <Text style={styles.lgpdLink} onPress={() => router.push('/termos')}>
-              Termos de Uso
-            </Text>{' '}
-            e a{' '}
-            <Text style={styles.lgpdLink} onPress={() => router.push('/privacidade')}>
-              Política de Privacidade
-            </Text>
-            , e autorizo o tratamento dos meus dados conforme a LGPD.
-          </Text>
-        </Checkbox>
+        <Controller
+          control={control}
+          name="lgpd"
+          render={({ field: { onChange, value } }) => (
+            <Checkbox checked={!!value} onToggle={() => onChange(!value)} style={{ marginTop: 8 }}>
+              <Text style={styles.lgpdText}>
+                Li e concordo com os{' '}
+                <Text style={styles.lgpdLink} onPress={() => router.push('/termos')}>
+                  Termos de Uso
+                </Text>{' '}
+                e a{' '}
+                <Text style={styles.lgpdLink} onPress={() => router.push('/privacidade')}>
+                  Política de Privacidade
+                </Text>
+                , e autorizo o tratamento dos meus dados conforme a LGPD.
+              </Text>
+            </Checkbox>
+          )}
+        />
 
+        {errors.lgpd?.message ? <MessageBanner variant="error">{errors.lgpd.message}</MessageBanner> : null}
         {formError ? <MessageBanner variant="error">{formError}</MessageBanner> : null}
         {info ? <MessageBanner variant="success">{info}</MessageBanner> : null}
 
-        <Button label="Criar conta" onPress={onSubmit} loading={loading} style={{ marginTop: 4 }} />
+        <Button label="Criar conta" onPress={handleSubmit(onSubmit)} loading={loading} style={{ marginTop: 4 }} />
 
         <Pressable onPress={() => router.replace('/login')} style={styles.footer}>
           <Text style={styles.footerText}>

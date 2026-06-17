@@ -60,7 +60,7 @@ export default function ShopOrderDetail() {
     const next = nextStep(order.status);
     if (!next) return;
     setSaving(true);
-    const { error } = await supabase.rpc('advance_service_order', { p_order_id: id, p_status: next.key, p_note: null });
+    const { error } = await supabase.rpc('advance_service_order', { p_order_id: id, p_status: next.key as any, p_note: undefined });
     setSaving(false);
     if (error) {
       notify('Ops', error.message);

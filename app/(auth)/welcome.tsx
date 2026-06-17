@@ -1,18 +1,24 @@
 import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Brand } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
-import { colors, fonts } from '@/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { fonts } from '@/theme';
 
 export default function Welcome() {
   const router = useRouter();
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const isDark = useColorScheme() === 'dark';
 
   return (
-    <Screen background={colors.blue} scroll={false}>
+    <Screen background={colors.paper} scroll={false}>
       <View style={styles.container}>
         <View style={styles.top}>
-          <Brand size={40} onDark />
+          <Brand size={40} onDark={isDark} />
         </View>
 
         <View style={styles.middle}>
@@ -32,11 +38,11 @@ export default function Welcome() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, paddingVertical: 24, justifyContent: 'space-between' },
   top: { paddingTop: 24 },
   middle: { gap: 14 },
-  title: { fontFamily: fonts.headBlack, fontSize: 34, lineHeight: 38, color: colors.white, letterSpacing: -1 },
-  subtitle: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: 'rgba(255,255,255,0.85)' },
+  title: { fontFamily: fonts.headBlack, fontSize: 34, lineHeight: 38, color: colors.ink, letterSpacing: -1 },
+  subtitle: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: colors.gray600 },
   actions: { gap: 12, paddingBottom: 12 },
 });

@@ -1,9 +1,13 @@
+import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts } from '@/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+import { colors as staticColors, fonts } from '@/theme';
 
 export function AppHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
   return (
     <View style={styles.row}>
@@ -18,7 +22,7 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
   back: {
     width: 38,

@@ -148,6 +148,30 @@ export default function PedidoDetail() {
     };
   }, [order?.id, scheduleLoad]);
 
+  // Realtime: alterações no status da solicitação de reparo.
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`req-${id}-status`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'repair_requests', filter: `id=eq.${id}` }, scheduleLoad)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, scheduleLoad]);
+
+  // Realtime: alterações no status da ordem de serviço.
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`req-${id}-so`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_orders', filter: `request_id=eq.${id}` }, scheduleLoad)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, scheduleLoad]);
+
   const onChoose = async (q: Quote) => {
     const ok = await confirmAsync(
       'Escolher esta assistência?',

@@ -59,7 +59,7 @@ export function ProfileEditor() {
     if (!cpfLocked && cpf.trim()) {
       update.cpf = onlyDigits(cpf);
     }
-    const { error: upErr } = await supabase.from('profiles').update(update).eq('id', profile.id);
+    const { error: upErr } = await supabase.from('profiles').update(update as any).eq('id', profile.id);
     if (upErr) {
       setSaving(false);
       setError(

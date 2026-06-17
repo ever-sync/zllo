@@ -66,7 +66,7 @@ export default function ShopSetup() {
     try {
       const { error: rpcErr } = await supabase.rpc('upsert_my_shop', {
         p_name: name.trim(),
-        p_address: address.trim() || null,
+        p_address: address.trim(),
         p_brands: brands,
         p_radius: Number(radiusKm) || 10,
         p_lat: loc.lat,

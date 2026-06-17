@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
+import { useEffect } from 'react';
 import { Button } from './button';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { colors, fonts, radius } from '@/theme';
 
 /** Estado de erro de carregamento, com botão opcional de "tentar de novo". */
@@ -11,15 +14,16 @@ export function ErrorState({
   message?: string;
   onRetry?: () => void;
 }) {
+  const themeColors = useThemeColors();
   return (
     <View style={styles.wrap}>
-      <View style={styles.iconCircle}>
-        <Ionicons name="cloud-offline-outline" size={28} color={colors.gray600} />
+      <View style={[styles.iconCircle, { backgroundColor: themeColors.gray100 }]}>
+        <Ionicons name="cloud-offline-outline" size={28} color={themeColors.gray600} />
       </View>
-      <Text style={styles.text}>{message}</Text>
+      <Text style={[styles.text, { color: themeColors.gray600 }]}>{message}</Text>
       {onRetry ? (
-        <Pressable onPress={onRetry} style={styles.btn} hitSlop={6}>
-          <Text style={styles.btnText}>Tentar de novo</Text>
+        <Pressable onPress={onRetry} style={[styles.btn, { backgroundColor: themeColors.ink }]} hitSlop={6}>
+          <Text style={[styles.btnText, { color: themeColors.white }]}>Tentar de novo</Text>
         </Pressable>
       ) : null}
     </View>
@@ -42,13 +46,14 @@ export function EmptyState({
   onAction?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
+  const themeColors = useThemeColors();
   return (
-    <View style={[styles.emptyCard, style]}>
-      <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={26} color={colors.gray600} />
+    <View style={[styles.emptyCard, { backgroundColor: themeColors.white, borderColor: themeColors.gray200 }, style]}>
+      <View style={[styles.iconCircle, { backgroundColor: themeColors.gray100 }]}>
+        <Ionicons name={icon} size={26} color={themeColors.gray600} />
       </View>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {description ? <Text style={styles.emptyDesc}>{description}</Text> : null}
+      <Text style={[styles.emptyTitle, { color: themeColors.ink }]}>{title}</Text>
+      {description ? <Text style={[styles.emptyDesc, { color: themeColors.gray600 }]}>{description}</Text> : null}
       {actionLabel && onAction ? (
         <Button label={actionLabel} variant="dark" size="md" onPress={onAction} style={{ marginTop: 4, alignSelf: 'stretch' }} />
       ) : null}
@@ -64,10 +69,11 @@ export function MessageBanner({
   variant: 'error' | 'success' | 'info';
   children: string;
 }) {
+  const themeColors = useThemeColors();
   const palette = {
-    error: { bg: colors.redBg, border: 'rgba(220,38,38,0.15)', text: colors.redText },
-    success: { bg: colors.greenBg, border: 'rgba(22,163,74,0.15)', text: colors.greenText },
-    info: { bg: '#EEEEFF', border: 'rgba(30,27,224,0.12)', text: colors.blue },
+    error: { bg: themeColors.redBg, border: 'rgba(220,38,38,0.15)', text: themeColors.redText },
+    success: { bg: themeColors.greenBg, border: 'rgba(22,163,74,0.15)', text: themeColors.greenText },
+    info: { bg: themeColors.blue === '#1E1BE0' ? '#EEEEFF' : 'rgba(30, 27, 224, 0.12)', border: 'rgba(30,27,224,0.12)', text: themeColors.blue },
   }[variant];
 
   return (
@@ -79,27 +85,40 @@ export function MessageBanner({
 
 /** Spinner centralizado para telas ou seções. */
 export function LoadingState({ label = 'Carregando…' }: { label?: string }) {
+  const themeColors = useThemeColors();
   return (
     <View style={styles.wrap}>
       <View style={styles.loadingDots}>
-        <View style={[styles.dot, styles.dotA]} />
-        <View style={[styles.dot, styles.dotB]} />
-        <View style={[styles.dot, styles.dotC]} />
+        <View style={[styles.dot, styles.dotA, { backgroundColor: themeColors.blue }]} />
+        <View style={[styles.dot, styles.dotB, { backgroundColor: themeColors.blue }]} />
+        <View style={[styles.dot, styles.dotC, { backgroundColor: themeColors.blue }]} />
       </View>
-      <Text style={styles.loadingLabel}>{label}</Text>
+      <Text style={[styles.loadingLabel, { color: themeColors.gray600 }]}>{label}</Text>
     </View>
   );
 }
 
 /** Placeholder animado (bloco único). */
 export function Skeleton({ height = 16, width = '100%', style }: { height?: number; width?: number | `${number}%`; style?: StyleProp<ViewStyle> }) {
-  return <View style={[styles.skeleton, { height, width }, style]} />;
+  const themeColors = useThemeColors();
+  const opacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    opacity.value = withRepeat(withTiming(1.0, { duration: 800 }), -1, true);
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return <Animated.View style={[{ backgroundColor: themeColors.gray200, borderRadius: radius.sm }, { height, width }, animStyle, style]} />;
 }
 
 /** Card skeleton para listas. */
 export function SkeletonCard() {
+  const themeColors = useThemeColors();
   return (
-    <View style={styles.skeletonCard}>
+    <View style={[styles.skeletonCard, { backgroundColor: themeColors.white, borderColor: themeColors.gray200 }]}>
       <Skeleton height={40} width={40} style={{ borderRadius: radius.md }} />
       <View style={{ flex: 1, gap: 8 }}>
         <Skeleton height={14} width="70%" />

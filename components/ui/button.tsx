@@ -8,26 +8,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { colors, fonts, radius } from '@/theme';
 
 type Variant = 'primary' | 'accent' | 'dark' | 'secondary' | 'ghost';
 type Size = 'md' | 'lg';
-
-const bg: Record<Variant, string> = {
-  primary: colors.blue,
-  accent: colors.lime,
-  dark: colors.ink,
-  secondary: colors.white,
-  ghost: 'transparent',
-};
-
-const fg: Record<Variant, string> = {
-  primary: colors.white,
-  accent: colors.ink,
-  dark: colors.white,
-  secondary: colors.ink,
-  ghost: colors.blue,
-};
 
 export function Button({
   label,
@@ -46,6 +31,24 @@ export function Button({
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
+  const themeColors = useThemeColors();
+
+  const bg: Record<Variant, string> = {
+    primary: themeColors.blue,
+    accent: themeColors.lime,
+    dark: themeColors.ink,
+    secondary: themeColors.white,
+    ghost: 'transparent',
+  };
+
+  const fg: Record<Variant, string> = {
+    primary: themeColors.white,
+    accent: themeColors.ink,
+    dark: themeColors.white,
+    secondary: themeColors.ink,
+    ghost: themeColors.blue,
+  };
+
   const isDisabled = disabled || loading;
   const onPressWithFeedback = () => {
     if (isDisabled || !onPress) return;
@@ -60,18 +63,18 @@ export function Button({
         styles.base,
         size === 'lg' ? styles.lg : styles.md,
         {
-          backgroundColor: isDisabled ? colors.gray200 : bg[variant],
-          borderColor: variant === 'secondary' ? colors.gray200 : 'transparent',
+          backgroundColor: isDisabled ? themeColors.gray200 : bg[variant],
+          borderColor: variant === 'secondary' ? themeColors.gray200 : 'transparent',
           opacity: pressed ? 0.85 : 1,
         },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isDisabled ? colors.gray600 : fg[variant]} />
+        <ActivityIndicator color={isDisabled ? themeColors.gray600 : fg[variant]} />
       ) : (
         <View style={styles.row}>
-          <Text style={[styles.label, { color: isDisabled ? colors.gray600 : fg[variant] }]}>
+          <Text style={[styles.label, { color: isDisabled ? themeColors.gray600 : fg[variant] }]}>
             {label}
           </Text>
         </View>
