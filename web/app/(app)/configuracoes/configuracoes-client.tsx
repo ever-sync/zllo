@@ -20,10 +20,23 @@ export type ShopConfig = {
   lng?: number;
 };
 
-export function ConfiguracoesClient({ initial }: { initial: ShopConfig | null }) {
+export type ProfileConfig = { fullName: string; cpf: string };
+
+const onlyDigits = (s: string) => s.replace(/\D/g, '');
+
+export function ConfiguracoesClient({
+  initial,
+  profile,
+}: {
+  initial: ShopConfig | null;
+  profile: ProfileConfig;
+}) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const isNew = !initial?.id;
+
+  const [fullName, setFullName] = useState(profile.fullName);
+  const [cpf, setCpf] = useState(profile.cpf);
 
   const [form, setForm] = useState<ShopConfig>(
     initial ?? {
@@ -82,9 +95,40 @@ export function ConfiguracoesClient({ initial }: { initial: ShopConfig | null })
       setMsg({ ok: false, text: 'Selecione ao menos uma marca.' });
       return;
     }
+    if (fullName.trim().length < 3) {
+      setMsg({ ok: false, text: 'Informe seu nome completo.' });
+      return;
+    }
+    if (onlyDigits(cpf).length !== 11) {
+      setMsg({ ok: false, text: 'Informe um CPF válido (11 dígitos).' });
+      return;
+    }
 
     const loc = coords ?? SHOP_LOCATION_FALLBACK;
     setSaving(true);
+
+    // O upsert_my_shop exige CPF e nome no cadastro — grava o perfil primeiro.
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) {
+      setSaving(false);
+      setMsg({ ok: false, text: 'Sessão expirada. Faça login novamente.' });
+      return;
+    }
+    const { error: profErr } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName.trim(), cpf: onlyDigits(cpf) })
+      .eq('id', uid);
+    if (profErr) {
+      setSaving(false);
+      setMsg({
+        ok: false,
+        text: /duplicate|unique/i.test(profErr.message)
+          ? 'Este CPF já está cadastrado em outra conta.'
+          : profErr.message,
+      });
+      return;
+    }
 
     const { error: shopErr } = await supabase.rpc('upsert_my_shop', {
       p_name: form.name.trim(),
@@ -155,6 +199,34 @@ export function ConfiguracoesClient({ initial }: { initial: ShopConfig | null })
             }
           />
         </button>
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-5">
+        <div>
+          <p className="font-head text-sm font-bold text-ink">Seus dados</p>
+          <p className="font-body text-xs text-g600">
+            Necessários para configurar a loja e emitir orçamentos.
+          </p>
+        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="font-body text-sm text-g600">Nome completo</span>
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Seu nome completo"
+            className={field}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="font-body text-sm text-g600">CPF</span>
+          <input
+            value={cpf}
+            onChange={(e) => setCpf(e.target.value)}
+            inputMode="numeric"
+            placeholder="000.000.000-00"
+            className={field}
+          />
+        </label>
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-5">

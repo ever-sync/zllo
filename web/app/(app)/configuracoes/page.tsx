@@ -4,7 +4,15 @@ import { ConfiguracoesClient, type ShopConfig } from './configuracoes-client';
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient();
-  const { data: shop } = await supabase.rpc('get_my_shop');
+  const [{ data: shop }, { data: profile }] = await Promise.all([
+    supabase.rpc('get_my_shop'),
+    supabase.rpc('get_my_profile'),
+  ]);
+
+  const initialProfile = {
+    fullName: profile?.full_name ?? '',
+    cpf: profile?.cpf ?? '',
+  };
 
   let initial: ShopConfig | null = null;
 
@@ -35,7 +43,7 @@ export default async function ConfiguracoesPage() {
           : 'Complete o cadastro para receber orçamentos.'}
       </p>
       <div className="mt-6">
-        <ConfiguracoesClient initial={initial} />
+        <ConfiguracoesClient initial={initial} profile={initialProfile} />
       </div>
     </div>
   );
