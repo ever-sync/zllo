@@ -10,6 +10,7 @@ import { formatBRL, getDeviceName } from '@/lib/format';
 import { statusLabel } from '@/lib/order-status';
 import {
   eventsMap,
+  quoteRangeLabel,
   type RepairDetailOrder,
   type RepairDetailQuote,
   type RepairDetailRequest,
@@ -120,7 +121,7 @@ export function PedidoClient({
   }, [supabase, order?.id, scheduleLoad]);
 
   const onChoose = async (q: RepairDetailQuote) => {
-    if (!window.confirm(`Escolher ${q.shop?.name ?? 'esta assistência'} por ${formatBRL(Number(q.value))}?`)) {
+    if (!window.confirm(`Escolher ${q.shop?.name ?? 'esta assistência'}? Estimativa ${quoteRangeLabel(q)}. O valor final é confirmado após o diagnóstico.`)) {
       return;
     }
     setAccepting(q.id);
@@ -265,12 +266,18 @@ export function PedidoClient({
               <p className="font-head text-base font-extrabold text-ink">{order.shop?.name ?? 'Assistência'}</p>
               <p className="text-sm text-ink/70">{statusLabel(order.status)}</p>
             </div>
-            <p className="font-head text-xl font-extrabold text-ink">{formatBRL(Number(order.value))}</p>
+            <p className="font-head text-xl font-extrabold text-ink">
+              {Number(order.value) > 0 ? formatBRL(Number(order.value)) : 'A definir'}
+            </p>
           </div>
 
           {payment?.status === 'pago' ? (
             <div className="flex items-center gap-2 rounded-xl bg-[#DCFCE7] px-4 py-3 text-sm font-semibold text-[#15803D]">
               ✓ Pagamento confirmado
+            </div>
+          ) : Number(order.value) <= 0 ? (
+            <div className="flex items-center gap-2 rounded-xl bg-[#FEF3C7] px-4 py-3 text-sm font-semibold text-[#B45309]">
+              ⏳ Aguardando a assistência definir o valor final do reparo.
             </div>
           ) : (
             <div className="space-y-2">
@@ -338,7 +345,10 @@ export function PedidoClient({
                         ★ {q.shop?.rating?.toFixed(1) ?? '—'} · {q.shop?.reviews_count ?? 0} reparos
                       </p>
                     </div>
-                    <p className="font-head text-lg font-extrabold text-blue">{formatBRL(Number(q.value))}</p>
+                    <div className="text-right">
+                      <p className="font-head text-base font-extrabold text-blue">{quoteRangeLabel(q)}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-g400">estimativa</p>
+                    </div>
                   </div>
                   {q.description ? (
                     <p className="mt-2 text-sm leading-relaxed text-g600">{q.description}</p>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -24,11 +24,43 @@ function fmt(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
+/** Máscara de moeda: dígitos → "1.234,56" (centavos). */
+function maskBRL(input: string): string {
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+  return (Number(digits) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function ShopOrderDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
   const [events, setEvents] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [editingValue, setEditingValue] = useState(false);
+  const [valueInput, setValueInput] = useState('');
+  const [valueSaving, setValueSaving] = useState(false);
+  const [valueError, setValueError] = useState<string | null>(null);
+
+  const saveValue = async () => {
+    if (!id) return;
+    setValueError(null);
+    const v = Number(valueInput.replace(/\./g, '').replace(',', '.'));
+    if (!v || v <= 0) {
+      setValueError('Informe um valor válido.');
+      return;
+    }
+    setValueSaving(true);
+    const { error } = await supabase.rpc('set_order_value', { p_order_id: id, p_value: v });
+    setValueSaving(false);
+    if (error) {
+      setValueError(error.message);
+      return;
+    }
+    setEditingValue(false);
+    setValueInput('');
+    notify('Valor definido', 'O cliente já pode pagar o reparo.');
+    load();
+  };
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -106,8 +138,43 @@ export default function ShopOrderDetail() {
           <Text style={styles.status}>{statusLabel(order.status)}</Text>
           <Text style={styles.devSub}>{[dev?.storage, dev?.color].filter(Boolean).join(' · ') || '—'}</Text>
         </View>
-        <Text style={styles.value}>R$ {order.value.toLocaleString('pt-BR')}</Text>
+        <Text style={styles.value}>{order.value > 0 ? `R$ ${order.value.toLocaleString('pt-BR')}` : 'A definir'}</Text>
       </View>
+
+      {/* Valor final do reparo (definido no diagnóstico) */}
+      {editingValue || order.value <= 0 ? (
+        <View style={styles.valueCard}>
+          <Text style={styles.valueCardTitle}>
+            {order.value > 0 ? 'Ajustar valor final' : 'Definir valor final do reparo'}
+          </Text>
+          <Text style={styles.valueCardSub}>O cliente só consegue pagar depois que você fechar o valor.</Text>
+          <View style={styles.valueField}>
+            <Text style={styles.valuePrefix}>R$</Text>
+            <TextInput
+              value={valueInput}
+              onChangeText={(t) => setValueInput(maskBRL(t))}
+              placeholder="0,00"
+              placeholderTextColor={colors.gray400}
+              keyboardType="number-pad"
+              style={styles.valueInput}
+            />
+          </View>
+          {valueError ? <Text style={styles.valueError}>{valueError}</Text> : null}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            {order.value > 0 ? (
+              <Button label="Cancelar" variant="secondary" onPress={() => setEditingValue(false)} style={{ flex: 1 }} />
+            ) : null}
+            <Button label="Salvar valor" onPress={saveValue} loading={valueSaving} style={{ flex: 2 }} />
+          </View>
+        </View>
+      ) : (
+        <Button
+          label="Ajustar valor do reparo"
+          variant="secondary"
+          onPress={() => { setValueInput(''); setEditingValue(true); }}
+          style={{ marginTop: 12 }}
+        />
+      )}
 
       <Text style={styles.section}>Linha do tempo</Text>
       <View style={styles.card}>
@@ -131,6 +198,13 @@ const styles = StyleSheet.create({
   status: { fontFamily: fonts.head, fontSize: 17, color: colors.ink },
   devSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginTop: 2 },
   value: { fontFamily: fonts.headBlack, fontSize: 18, color: colors.ink },
+  valueCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 16, marginTop: 12 },
+  valueCardTitle: { fontFamily: fonts.head, fontSize: 15, color: colors.ink },
+  valueCardSub: { fontFamily: fonts.body, fontSize: 12.5, color: colors.gray600, marginTop: 2, marginBottom: 12, lineHeight: 17 },
+  valueField: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, paddingHorizontal: 14 },
+  valuePrefix: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.gray400, marginRight: 8 },
+  valueInput: { flex: 1, paddingVertical: 14, fontFamily: fonts.head, fontSize: 20, color: colors.ink },
+  valueError: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.red, marginTop: 8 },
   section: { fontFamily: fonts.head, fontSize: 16, color: colors.ink, marginTop: 20, marginBottom: 12 },
   card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius['2xl'], padding: 18 },
   done: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: 16, marginTop: 20 },

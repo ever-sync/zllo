@@ -21,6 +21,8 @@ const TEST_PAY = process.env.EXPO_PUBLIC_ALLOW_TEST_PAY === 'true';
 type Quote = {
   id: string;
   value: number;
+  value_min: number | null;
+  value_max: number | null;
   description: string | null;
   status: string;
   shop_id: string;
@@ -53,6 +55,15 @@ const DISPUTE_LABEL: Record<string, string> = {
 function fmt(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+const brl = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** Faixa estimada do orçamento (mín–máx); cai para valor único se faltar. */
+function quoteRange(q: Quote): string {
+  const min = q.value_min ?? q.value;
+  const max = q.value_max ?? q.value;
+  return min === max ? brl(min) : `${brl(min)} – ${brl(max)}`;
 }
 
 export default function PedidoDetail() {
@@ -175,7 +186,7 @@ export default function PedidoDetail() {
   const onChoose = async (q: Quote) => {
     const ok = await confirmAsync(
       'Escolher esta assistência?',
-      `${q.shop?.name ?? 'Assistência'} — R$ ${q.value.toLocaleString('pt-BR')}`,
+      `${q.shop?.name ?? 'Assistência'} — ${quoteRange(q)} (estimativa). O valor final é confirmado após o diagnóstico.`,
     );
     if (!ok) return;
     setAccepting(q.id);
@@ -331,7 +342,7 @@ export default function PedidoDetail() {
               <Text style={styles.osShop}>{order.shop?.name ?? 'Assistência'}</Text>
               <Text style={styles.osStatus}>{statusLabel(order.status)}</Text>
             </View>
-            <Text style={styles.osValue}>R$ {order.value.toLocaleString('pt-BR')}</Text>
+            <Text style={styles.osValue}>{order.value > 0 ? brl(order.value) : 'A definir'}</Text>
           </View>
 
           {order.warranty_days > 0 ? (
@@ -347,6 +358,13 @@ export default function PedidoDetail() {
             <View style={styles.paidBanner}>
               <Ionicons name="checkmark-circle" size={18} color={colors.greenText} />
               <Text style={styles.paidText}>Pagamento confirmado</Text>
+            </View>
+          ) : order.value <= 0 ? (
+            <View style={styles.paidBanner}>
+              <Ionicons name="time-outline" size={18} color={colors.amberText} />
+              <Text style={[styles.paidText, { color: colors.amberText }]}>
+                Aguardando a assistência definir o valor final do reparo.
+              </Text>
             </View>
           ) : (
             <>
@@ -478,7 +496,10 @@ export default function PedidoDetail() {
                       <Text style={styles.quoteShop}>{q.shop?.name ?? 'Assistência'}</Text>
                       <Text style={styles.quoteRating}>★ {q.shop?.rating?.toFixed(1) ?? '—'} · {q.shop?.reviews_count ?? 0} reparos</Text>
                     </View>
-                    <Text style={styles.quoteValue}>R$ {q.value.toLocaleString('pt-BR')}</Text>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={styles.quoteValue}>{quoteRange(q)}</Text>
+                      <Text style={styles.quoteEstimate}>estimativa</Text>
+                    </View>
                   </View>
                   {q.description ? <Text style={styles.quoteDesc}>{q.description}</Text> : null}
                   <View style={styles.quoteActions}>
@@ -552,7 +573,8 @@ const styles = StyleSheet.create({
   quoteTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   quoteShop: { fontFamily: fonts.head, fontSize: 16, color: colors.ink },
   quoteRating: { fontFamily: fonts.body, fontSize: 12, color: colors.gray600, marginTop: 2 },
-  quoteValue: { fontFamily: fonts.headBlack, fontSize: 18, color: colors.ink },
+  quoteValue: { fontFamily: fonts.headBlack, fontSize: 15, color: colors.ink, textAlign: 'right' },
+  quoteEstimate: { fontFamily: fonts.body, fontSize: 10, color: colors.gray400, textTransform: 'uppercase', letterSpacing: 0.4 },
   quoteDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, lineHeight: 19 },
   quoteActions: { flexDirection: 'row', gap: 10 },
   chatBtn: { width: 46, borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },

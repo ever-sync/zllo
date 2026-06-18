@@ -12,12 +12,15 @@
 -- + atualização assíncrona.
 -- ============================================================================
 
-create type public.device_verification as enum ('pendente', 'aprovado', 'recusado');
+do $$ begin
+  create type public.device_verification as enum ('pendente', 'aprovado', 'recusado');
+exception when duplicate_object then null;
+end $$;
 
 alter table public.devices
-  add column verification_status public.device_verification not null default 'pendente',
-  add column verification_note   text,
-  add column verified_at         timestamptz;
+  add column if not exists verification_status public.device_verification not null default 'pendente',
+  add column if not exists verification_note   text,
+  add column if not exists verified_at         timestamptz;
 
 -- A contraparte já não lê imei (hardening). Liberamos só o status/observação
 -- para o dono poder ver o selo de verificação no app/web.
@@ -85,6 +88,7 @@ begin
   return new;
 end $$;
 
+drop trigger if exists trg_verify_device_imei on public.devices;
 create trigger trg_verify_device_imei
   before insert or update of imei on public.devices
   for each row execute function private.verify_device_imei();

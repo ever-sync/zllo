@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!order) return jsonResponse(req, { error: 'OS não encontrada' }, 404);
     if (order.client_id !== user.id) return jsonResponse(req, { error: 'Sem permissão' }, 403);
+    if (!(Number(order.value) > 0)) {
+      return jsonResponse(req, { error: 'A assistência ainda não definiu o valor final do reparo.' }, 422);
+    }
 
     const { data: existing } = await admin
       .from('payments')

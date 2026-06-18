@@ -6,15 +6,26 @@ import { createClient } from '@/lib/supabase/server';
 
 export type QuoteState = { error?: string };
 
+/** "1.234,56" / "1234,56" → 1234.56 */
+function parseBRL(raw: string): number {
+  const cleaned = raw.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+  return Number(cleaned);
+}
+
 export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<QuoteState> {
   const requestId = String(formData.get('request_id') ?? '');
-  const valueRaw = String(formData.get('value') ?? '');
   const note = String(formData.get('note') ?? '').trim();
   const warranty = Math.max(0, parseInt(String(formData.get('warranty_days') ?? '0'), 10) || 0);
 
-  const value = Number(valueRaw.replace(',', '.'));
+  const valueMin = parseBRL(String(formData.get('value_min') ?? ''));
+  const valueMax = parseBRL(String(formData.get('value_max') ?? ''));
   if (!requestId) return { error: 'Solicitação inválida.' };
-  if (!value || value <= 0) return { error: 'Informe um valor válido.' };
+  if (!valueMin || valueMin <= 0 || !valueMax || valueMax <= 0) {
+    return { error: 'Informe os valores mínimo e máximo.' };
+  }
+  if (valueMax < valueMin) {
+    return { error: 'O valor máximo não pode ser menor que o mínimo.' };
+  }
 
   const supabase = await createClient();
   const { data: shop } = await supabase.rpc('get_my_shop');
@@ -22,7 +33,15 @@ export async function sendQuote(_prev: QuoteState, formData: FormData): Promise<
 
   const { error: insErr } = await supabase
     .from('quotes')
-    .insert({ request_id: requestId, shop_id: shop.id, value, description: note || null, warranty_days: warranty });
+    .insert({
+      request_id: requestId,
+      shop_id: shop.id,
+      value: valueMin,
+      value_min: valueMin,
+      value_max: valueMax,
+      description: note || null,
+      warranty_days: warranty,
+    });
 
   if (insErr) {
     if (/duplicate|unique/i.test(insErr.message)) {

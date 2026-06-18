@@ -781,6 +781,8 @@ export type Database = {
           status: Database["public"]["Enums"]["quote_status"]
           updated_at: string
           value: number
+          value_min: number | null
+          value_max: number | null
           warranty_days: number
         }
         Insert: {
@@ -792,6 +794,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string
           value: number
+          value_min?: number | null
+          value_max?: number | null
           warranty_days?: number
         }
         Update: {
@@ -803,6 +807,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["quote_status"]
           updated_at?: string
           value?: number
+          value_min?: number | null
+          value_max?: number | null
           warranty_days?: number
         }
         Relationships: [
@@ -1375,6 +1381,7 @@ export type Database = {
         Returns: undefined
       }
       set_my_wallet: { Args: { p_wallet_id: string }; Returns: undefined }
+      set_order_value: { Args: { p_order_id: string; p_value: number }; Returns: undefined }
       upsert_my_shop: {
         Args: {
           p_address: string

@@ -33,6 +33,13 @@ type RequestDetail = {
 
 type TargetInfo = { distance_m: number | null; responds_by: string; status: string };
 
+/** Máscara de moeda: dígitos → "1.234,56" (centavos). */
+function maskBRL(input: string): string {
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+  return (Number(digits) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function SolicitacaoDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -42,7 +49,8 @@ export default function SolicitacaoDetail() {
   const [request, setRequest] = useState<RequestDetail | null | undefined>(undefined);
   const [target, setTarget] = useState<TargetInfo | null>(null);
   const [modal, setModal] = useState(false);
-  const [value, setValue] = useState('');
+  const [valueMin, setValueMin] = useState('');
+  const [valueMax, setValueMax] = useState('');
   const [warranty, setWarranty] = useState('90');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -76,16 +84,21 @@ export default function SolicitacaoDetail() {
 
   const sendQuote = async () => {
     setError(null);
-    const v = Number(value.replace(',', '.'));
-    if (!v || v <= 0) {
-      setError('Informe um valor válido.');
+    const vMin = Number(valueMin.replace(/\./g, '').replace(',', '.'));
+    const vMax = Number(valueMax.replace(/\./g, '').replace(',', '.'));
+    if (!vMin || vMin <= 0 || !vMax || vMax <= 0) {
+      setError('Informe os valores mínimo e máximo.');
+      return;
+    }
+    if (vMax < vMin) {
+      setError('O valor máximo não pode ser menor que o mínimo.');
       return;
     }
     if (!shop || !id) return;
     setSending(true);
     const { error: insErr } = await supabase
       .from('quotes')
-      .insert({ request_id: id, shop_id: shop.id, value: v, description: note.trim() || null, warranty_days: Math.max(0, parseInt(warranty, 10) || 0) });
+      .insert({ request_id: id, shop_id: shop.id, value: vMin, value_min: vMin, value_max: vMax, description: note.trim() || null, warranty_days: Math.max(0, parseInt(warranty, 10) || 0) });
     if (insErr) {
       setSending(false);
       setError(/duplicate|unique/i.test(insErr.message) ? 'Você já enviou um orçamento para esta solicitação.' : insErr.message);
@@ -216,17 +229,36 @@ export default function SolicitacaoDetail() {
             <Text style={styles.sheetTitle}>Enviar orçamento</Text>
             <Text style={styles.sheetSub}>{deviceName}</Text>
 
-            <Text style={styles.label}>Valor (R$)</Text>
-            <View style={styles.valueField}>
-              <Text style={styles.valuePrefix}>R$</Text>
-              <TextInput
-                value={value}
-                onChangeText={setValue}
-                placeholder="0,00"
-                placeholderTextColor={colors.gray400}
-                keyboardType="decimal-pad"
-                style={styles.valueInput}
-              />
+            <Text style={styles.sheetHint}>Informe uma faixa estimada. O valor final você confirma após o diagnóstico.</Text>
+            <View style={styles.valueRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Valor mínimo (R$)</Text>
+                <View style={styles.valueField}>
+                  <Text style={styles.valuePrefix}>R$</Text>
+                  <TextInput
+                    value={valueMin}
+                    onChangeText={(t) => setValueMin(maskBRL(t))}
+                    placeholder="200,00"
+                    placeholderTextColor={colors.gray400}
+                    keyboardType="number-pad"
+                    style={styles.valueInput}
+                  />
+                </View>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Valor máximo (R$)</Text>
+                <View style={styles.valueField}>
+                  <Text style={styles.valuePrefix}>R$</Text>
+                  <TextInput
+                    value={valueMax}
+                    onChangeText={(t) => setValueMax(maskBRL(t))}
+                    placeholder="500,00"
+                    placeholderTextColor={colors.gray400}
+                    keyboardType="number-pad"
+                    style={styles.valueInput}
+                  />
+                </View>
+              </View>
             </View>
 
             <Text style={[styles.label, { marginTop: 14 }]}>Garantia (dias)</Text>
@@ -296,6 +328,8 @@ const styles = StyleSheet.create({
   sheetTitle: { fontFamily: fonts.headBlack, fontSize: 20, color: colors.ink },
   sheetSub: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600, marginBottom: 12 },
   label: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink, marginBottom: 8 },
+  sheetHint: { fontFamily: fonts.body, fontSize: 12.5, color: colors.gray600, marginBottom: 12, lineHeight: 17 },
+  valueRow: { flexDirection: 'row', gap: 10 },
   valueField: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.lg, paddingHorizontal: 14 },
   valuePrefix: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.gray400, marginRight: 8 },
   valueInput: { flex: 1, paddingVertical: 14, fontFamily: fonts.head, fontSize: 20, color: colors.ink },

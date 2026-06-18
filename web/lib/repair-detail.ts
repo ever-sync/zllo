@@ -3,11 +3,21 @@
 export type RepairDetailQuote = {
   id: string;
   value: number;
+  value_min: number | null;
+  value_max: number | null;
   description: string | null;
   status: string;
   shop_id: string;
   shop: { name: string; rating: number; reviews_count: number } | null;
 };
+
+/** Faixa estimada do orçamento (mín–máx); cai para valor único se faltar. */
+export function quoteRangeLabel(q: RepairDetailQuote): string {
+  const min = q.value_min ?? q.value;
+  const max = q.value_max ?? q.value;
+  const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
+}
 
 export type RepairDetailRequest = {
   id: string;

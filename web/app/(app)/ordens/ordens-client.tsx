@@ -74,6 +74,24 @@ export function OrdensClient({ shopId, initial }: { shopId: string; initial: Ser
     await refetch();
   };
 
+  const defineValue = async (id: string, current: number) => {
+    const raw = window.prompt('Valor final do reparo (R$):', current > 0 ? String(current) : '');
+    if (raw == null) return;
+    const value = Number(raw.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+    if (!value || value <= 0) {
+      alert('Informe um valor válido.');
+      return;
+    }
+    setBusy(id);
+    const { error } = await supabase.rpc('set_order_value', { p_order_id: id, p_value: value });
+    setBusy(null);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await refetch();
+  };
+
   const active = FILTERS.find((f) => f.key === filter)!;
   const list = orders.filter((o) => active.match(o.status));
 
@@ -126,9 +144,23 @@ export function OrdensClient({ shopId, initial }: { shopId: string; initial: Ser
                 </div>
 
                 <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
-                  <span className="font-head text-base font-black text-ink">{formatPrice(o.value)}</span>
+                  <span className="font-head text-base font-black text-ink">
+                    {o.value > 0 ? formatPrice(o.value) : 'A definir'}
+                  </span>
                   {!terminal && (
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => defineValue(o.id, o.value)}
+                        disabled={busy === o.id}
+                        className={
+                          'rounded-lg px-3 py-2 font-head text-xs font-bold transition-opacity disabled:opacity-60 ' +
+                          (o.value > 0
+                            ? 'border border-line text-ink hover:bg-g100'
+                            : 'bg-lime text-ink')
+                        }
+                      >
+                        {o.value > 0 ? 'Ajustar valor' : 'Definir valor'}
+                      </button>
                       {next ? (
                         <button
                           onClick={() => advance(o.id, next.key as SOStatus)}
