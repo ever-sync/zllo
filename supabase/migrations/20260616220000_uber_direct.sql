@@ -58,6 +58,8 @@ create trigger trg_uber_deliveries_updated before update on public.uber_deliveri
 alter publication supabase_realtime add table public.uber_deliveries;
 
 -- ---------- create_product_order com frete Uber ----------
+drop function if exists public.create_product_order(uuid, jsonb, text, text);
+
 create or replace function public.create_product_order(
   p_shop_id         uuid,
   p_items           jsonb,

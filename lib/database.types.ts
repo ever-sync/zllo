@@ -600,6 +600,10 @@ export type Database = {
           status: Database["public"]["Enums"]["product_order_status"]
           total: number
           updated_at: string
+          delivery_fee: number
+          delivery_provider: string | null
+          uber_quote_id: string | null
+          dropoff_json: Json | null
         }
         Insert: {
           address?: string | null
@@ -617,6 +621,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_order_status"]
           total?: number
           updated_at?: string
+          delivery_fee?: number
+          delivery_provider?: string | null
+          uber_quote_id?: string | null
+          dropoff_json?: Json | null
         }
         Update: {
           address?: string | null
@@ -634,6 +642,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_order_status"]
           total?: number
           updated_at?: string
+          delivery_fee?: number
+          delivery_provider?: string | null
+          uber_quote_id?: string | null
+          dropoff_json?: Json | null
         }
         Relationships: [
           {
@@ -1170,6 +1182,12 @@ export type Database = {
           reviews_count: number
           service_radius_km: number
           updated_at: string
+          pickup_phone: string | null
+          pickup_street: string | null
+          pickup_number: string | null
+          pickup_cep: string | null
+          pickup_city: string | null
+          pickup_uf: string | null
         }
         Insert: {
           address?: string | null
@@ -1186,6 +1204,12 @@ export type Database = {
           reviews_count?: number
           service_radius_km?: number
           updated_at?: string
+          pickup_phone?: string | null
+          pickup_street?: string | null
+          pickup_number?: string | null
+          pickup_cep?: string | null
+          pickup_city?: string | null
+          pickup_uf?: string | null
         }
         Update: {
           address?: string | null
@@ -1202,6 +1226,12 @@ export type Database = {
           reviews_count?: number
           service_radius_km?: number
           updated_at?: string
+          pickup_phone?: string | null
+          pickup_street?: string | null
+          pickup_number?: string | null
+          pickup_cep?: string | null
+          pickup_city?: string | null
+          pickup_uf?: string | null
         }
         Relationships: [
           {
@@ -1209,6 +1239,71 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uber_deliveries: {
+        Row: {
+          id: string
+          kind: string
+          ref_id: string
+          shop_id: string | null
+          uber_delivery_id: string | null
+          uber_quote_id: string | null
+          status: string
+          fee_cents: number | null
+          tracking_url: string | null
+          courier_lat: number | null
+          courier_lng: number | null
+          pickup_address_json: Json
+          dropoff_address_json: Json
+          raw_last_event: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          kind?: string
+          ref_id: string
+          shop_id?: string | null
+          uber_delivery_id?: string | null
+          uber_quote_id?: string | null
+          status?: string
+          fee_cents?: number | null
+          tracking_url?: string | null
+          courier_lat?: number | null
+          courier_lng?: number | null
+          pickup_address_json?: Json
+          dropoff_address_json?: Json
+          raw_last_event?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          ref_id?: string
+          shop_id?: string | null
+          uber_delivery_id?: string | null
+          uber_quote_id?: string | null
+          status?: string
+          fee_cents?: number | null
+          tracking_url?: string | null
+          courier_lat?: number | null
+          courier_lng?: number | null
+          pickup_address_json?: Json
+          dropoff_address_json?: Json
+          raw_last_event?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uber_deliveries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -1321,6 +1416,10 @@ export type Database = {
           p_items: Json
           p_shipping_type: string
           p_shop_id: string
+          p_delivery_fee?: number
+          p_uber_quote_id?: string
+          p_dropoff_json?: Json
+          p_delivery_provider?: string
         }
         Returns: string
       }

@@ -8,6 +8,7 @@ export type ShopOrder = {
   status: string;
   shipping_type: 'retirada' | 'entrega';
   address: string | null;
+  delivery_provider: string | null;
   created_at: string;
   paid_at: string | null;
   client: { full_name: string | null } | null;
@@ -15,7 +16,7 @@ export type ShopOrder = {
 };
 
 export const SHOP_ORDER_SELECT =
-  'id, total, status, shipping_type, address, created_at, paid_at, client:profiles(full_name), items:product_order_items(id, name, qty, subtotal)';
+  'id, total, status, shipping_type, address, delivery_provider, created_at, paid_at, client:profiles(full_name), items:product_order_items(id, name, qty, subtotal)';
 
 export const STATUS_META: Record<string, { label: string; cls: string }> = {
   aguardando_pagamento: { label: 'Aguardando pagamento', cls: 'bg-[#FEF3C7] text-[#B45309]' },

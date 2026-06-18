@@ -30,9 +30,11 @@ echo "→ 4/4 deploy das functions (config.toml define verify_jwt por função)"
 supabase functions deploy create-pix-payment
 supabase functions deploy create-product-payment
 supabase functions deploy asaas-webhook
+supabase functions deploy uber-delivery-quote
+supabase functions deploy uber-delivery-dispatch
+supabase functions deploy uber-webhook
 
 echo ""
-echo "✅ Deploy concluído. Agora, no painel do Asaas, configure o webhook:"
-echo "   URL:   https://$REF.supabase.co/functions/v1/asaas-webhook"
-echo "   Token: o MESMO ASAAS_WEBHOOK_TOKEN do supabase/functions/.env (header asaas-access-token)"
-echo "   Eventos: PAYMENT_RECEIVED, PAYMENT_CONFIRMED, PAYMENT_REFUNDED"
+echo "✅ Deploy concluído. Webhooks:"
+echo "   Asaas: https://$REF.supabase.co/functions/v1/asaas-webhook"
+echo "   Uber:  https://$REF.supabase.co/functions/v1/uber-webhook"

@@ -52,6 +52,10 @@ function notificationHref(n, role = 'cliente') {
       }
       return listingId ? `/(client)/anuncio-chat/${listingId}` : '/(client)/vitrine';
     }
+    case 'delivery_update': {
+      const orderId = str(d, 'product_order_id');
+      return orderId ? `/(client)/pedido-produto/${orderId}` : '/(client)/(tabs)/pedidos';
+    }
     default:
       return null;
   }
@@ -87,6 +91,11 @@ assert.equal(
 assert.equal(
   notificationHref(row('listing_interest', { listing_id: 'lst-2', buyer_id: 'buy-2' })),
   '/(client)/anuncio-chat/lst-2?buyerId=buy-2',
+);
+
+assert.equal(
+  notificationHref(row('delivery_update', { product_order_id: 'po-uber-1' })),
+  '/(client)/pedido-produto/po-uber-1',
 );
 
 console.log('notification href tests OK');

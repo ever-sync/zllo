@@ -52,6 +52,8 @@ export function notificationHref(n: NotificationRow, role: UserRole = 'cliente')
         }
         return listingId ? `/anuncio-chat/${listingId}` : '/vitrine';
       }
+      case 'delivery_update':
+        return str(d, 'product_order_id') ? '/vendas' : null;
       default:
         return null;
     }
@@ -87,7 +89,23 @@ export function notificationHref(n: NotificationRow, role: UserRole = 'cliente')
       return requestId ? `/pedido/${requestId}` : '/pedidos';
     }
     case 'listing_interest':
-      return str(d, 'listing_id') ? `/anuncio/${d.listing_id}` : '/vitrine';
+      return str(d, 'listing_id')
+        ? str(d, 'buyer_id')
+          ? `/anuncio-chat/${d.listing_id}?buyerId=${encodeURIComponent(d.buyer_id as string)}`
+          : `/anuncio/${d.listing_id}`
+        : '/vitrine';
+    case 'listing_message': {
+      const listingId = str(d, 'listing_id');
+      const buyerId = str(d, 'buyer_id');
+      if (listingId && buyerId) {
+        return `/anuncio-chat/${listingId}?buyerId=${encodeURIComponent(buyerId)}`;
+      }
+      return listingId ? `/anuncio-chat/${listingId}` : '/vitrine';
+    }
+    case 'delivery_update': {
+      const orderId = str(d, 'product_order_id');
+      return orderId ? `/pedido-produto/${orderId}` : '/pedidos';
+    }
     default:
       return null;
   }

@@ -1,4 +1,5 @@
 import { useFocusEffect } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
@@ -9,6 +10,7 @@ import { confirmAsync, notify } from '@/lib/confirm';
 import { priceBRL } from '@/lib/products';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
+import { dispatchUberDelivery } from '@/lib/uber-quote';
 import { colors, fonts, radius } from '@/theme';
 
 type Item = { id: string; name: string; qty: number; subtotal: number };
@@ -21,7 +23,10 @@ type Order = {
   created_at: string;
   client: { full_name: string | null } | null;
   items: Item[];
+  delivery_provider?: string | null;
 };
+
+type UberRow = { ref_id: string; status: string; tracking_url: string | null };
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   aguardando_pagamento: { label: 'Aguardando pagamento', color: colors.amberText, bg: colors.amberBg },
@@ -52,12 +57,13 @@ export default function Vendas() {
   const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState('ativos');
   const [busy, setBusy] = useState<string | null>(null);
+  const [uberByOrder, setUberByOrder] = useState<Record<string, UberRow>>({});
 
   const load = useCallback(async () => {
     if (!shop) return;
     const { data, error } = await supabase
       .from('product_orders')
-      .select('id, total, status, shipping_type, address, created_at, client:profiles(full_name), items:product_order_items(id, name, qty, subtotal)')
+      .select('id, total, status, shipping_type, address, delivery_provider, created_at, client:profiles(full_name), items:product_order_items(id, name, qty, subtotal)')
       .eq('shop_id', shop.id)
       .order('created_at', { ascending: false });
     if (error) {
@@ -66,6 +72,16 @@ export default function Vendas() {
     }
     setLoadError(false);
     setRows((data as unknown as Order[]) ?? []);
+
+    const { data: uberRows } = await supabase
+      .from('uber_deliveries')
+      .select('ref_id, status, tracking_url')
+      .eq('kind', 'product_order');
+    const map: Record<string, UberRow> = {};
+    (uberRows ?? []).forEach((u: UberRow) => {
+      map[u.ref_id] = u;
+    });
+    setUberByOrder(map);
   }, [shop]);
 
   const scheduleLoad = useDebouncedReload(load);
@@ -98,6 +114,18 @@ export default function Vendas() {
     if (await confirmAsync('Cancelar pedido?', 'Esta ação não pode ser desfeita.', 'Cancelar', true)) {
       advance(id, 'cancelado');
     }
+  };
+
+  const callUber = async (id: string) => {
+    setBusy(id);
+    const res = await dispatchUberDelivery(id);
+    setBusy(null);
+    if (!res.ok) {
+      notify('Ops', res.error ?? 'Não foi possível chamar a Uber');
+      return;
+    }
+    notify('Uber acionada', 'O cliente foi notificado para acompanhar a entrega.');
+    load();
   };
 
   const active = FILTERS.find((f) => f.key === filter)!;
@@ -149,6 +177,12 @@ export default function Vendas() {
             const st = STATUS[o.status] ?? { label: o.status, color: colors.gray600, bg: colors.gray100 };
             const next = NEXT[o.status];
             const canCancel = ['pago', 'separando', 'pronto'].includes(o.status);
+            const uber = uberByOrder[o.id];
+            const canUber =
+              o.shipping_type === 'entrega' &&
+              o.delivery_provider === 'uber_direct' &&
+              ['pago', 'separando', 'pronto'].includes(o.status) &&
+              (!uber || ['canceled', 'failed', 'delivered'].includes(uber.status));
             return (
               <View key={o.id} style={styles.card}>
                 <View style={styles.cardTop}>
@@ -179,8 +213,18 @@ export default function Vendas() {
                   <Text style={styles.totalValue}>{priceBRL(o.total)}</Text>
                 </View>
 
-                {(next || canCancel) && (
+                {(next || canCancel || canUber || uber?.tracking_url) && (
                   <View style={styles.actions}>
+                    {canUber ? (
+                      <Pressable style={styles.uberBtn} onPress={() => callUber(o.id)} disabled={busy === o.id}>
+                        <Text style={styles.advanceText}>{busy === o.id ? '…' : 'Chamar Uber'}</Text>
+                      </Pressable>
+                    ) : null}
+                    {uber?.tracking_url ? (
+                      <Pressable style={styles.cancelBtn} onPress={() => void Linking.openURL(uber.tracking_url!)}>
+                        <Text style={styles.cancelText}>Rastrear</Text>
+                      </Pressable>
+                    ) : null}
                     {next ? (
                       <Pressable style={styles.advanceBtn} onPress={() => advance(o.id, next.status)} disabled={busy === o.id}>
                         <Text style={styles.advanceText}>{busy === o.id ? '…' : next.label}</Text>
@@ -221,6 +265,7 @@ const styles = StyleSheet.create({
   totalValue: { fontFamily: fonts.headBlack, fontSize: 18, color: colors.blue, letterSpacing: -0.5 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   advanceBtn: { flex: 1, backgroundColor: colors.blue, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center' },
+  uberBtn: { flex: 1, backgroundColor: colors.ink, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center' },
   advanceText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
   cancelBtn: { borderWidth: 1, borderColor: colors.gray200, borderRadius: radius.md, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   cancelText: { fontFamily: fonts.headBold, fontSize: 12.5, color: colors.red },

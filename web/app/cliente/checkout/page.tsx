@@ -9,7 +9,18 @@ export default async function CheckoutPage() {
 
   return (
     <ClientShell>
-      <CheckoutClient defaultAddress={profileAddress(profile)} />
+      <CheckoutClient
+        defaultAddress={profileAddress(profile)}
+        profileAddress={{
+          street: profile?.street,
+          number: profile?.number,
+          complement: profile?.complement,
+          neighborhood: profile?.neighborhood,
+          city: profile?.city,
+          uf: profile?.uf,
+          cep: profile?.cep,
+        }}
+      />
     </ClientShell>
   );
 }

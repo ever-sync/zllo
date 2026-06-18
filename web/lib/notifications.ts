@@ -33,6 +33,8 @@ export function notificationHref(n: NotificationRow, role: NotificationRole = 'c
           return str(d, 'product_order_id') ? `/pedidos?highlight=${d.product_order_id}` : '/pedidos';
         }
         return str(d, 'service_order_id') ? `/ordens?highlight=${d.service_order_id}` : '/ordens';
+      case 'delivery_update':
+        return '/pedidos';
       default:
         return null;
     }
@@ -80,6 +82,10 @@ export function notificationHref(n: NotificationRow, role: NotificationRole = 'c
         return `/cliente/vitrine/${listingId}/chat?buyerId=${encodeURIComponent(buyerId)}`;
       }
       return listingId ? `/cliente/vitrine/${listingId}/chat` : '/cliente/vitrine';
+    }
+    case 'delivery_update': {
+      const orderId = str(d, 'product_order_id');
+      return orderId ? `/cliente/pedido-produto/${orderId}` : '/cliente/pedidos';
     }
     default:
       return null;

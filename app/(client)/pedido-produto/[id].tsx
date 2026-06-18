@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
+import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -25,6 +26,8 @@ type Order = {
   status: string;
   shipping_type: 'retirada' | 'entrega';
   address: string | null;
+  delivery_fee?: number;
+  delivery_provider?: string | null;
   created_at: string;
   paid_at: string | null;
   shop: { name: string } | null;
@@ -50,6 +53,8 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   cancelado: { label: 'Cancelado', color: colors.redText, bg: colors.redBg },
 };
 
+type UberDelivery = { status: string; tracking_url: string | null };
+
 export default function PedidoProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -70,13 +75,14 @@ export default function PedidoProduto() {
   const [reviewStars, setReviewStars] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [uberDelivery, setUberDelivery] = useState<UberDelivery | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
     const { data, error } = await supabase
       .from('product_orders')
       .select(
-        'id, shop_id, total, status, shipping_type, address, created_at, paid_at, shop:shops(name), items:product_order_items(id, name, qty, unit_price, subtotal)',
+        'id, shop_id, total, status, shipping_type, address, delivery_fee, delivery_provider, created_at, paid_at, shop:shops(name), items:product_order_items(id, name, qty, unit_price, subtotal)',
       )
       .eq('id', id)
       .maybeSingle();
@@ -101,6 +107,14 @@ export default function PedidoProduto() {
       .eq('product_order_id', id)
       .maybeSingle();
     setMyReview((rev as Review) ?? null);
+
+    const { data: ud } = await supabase
+      .from('uber_deliveries')
+      .select('status, tracking_url')
+      .eq('kind', 'product_order')
+      .eq('ref_id', id)
+      .maybeSingle();
+    setUberDelivery((ud as UberDelivery) ?? null);
   }, [id]);
 
   const scheduleLoad = useDebouncedReload(load);
@@ -111,6 +125,7 @@ export default function PedidoProduto() {
     const ch = supabase
       .channel(`porder-${id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'product_orders', filter: `id=eq.${id}` }, scheduleLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'uber_deliveries', filter: `ref_id=eq.${id}` }, scheduleLoad)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -284,6 +299,16 @@ export default function PedidoProduto() {
         <Text style={styles.deliveryText}>
           {order.shipping_type === 'entrega' ? `Entrega: ${order.address ?? '—'}` : 'Retirar na loja'}
         </Text>
+        {order.delivery_fee && order.delivery_fee > 0 ? (
+          <Text style={styles.deliveryText}>Frete: {priceBRL(order.delivery_fee)}</Text>
+        ) : null}
+        {uberDelivery?.tracking_url ? (
+          <Button
+            label="Acompanhar entrega"
+            onPress={() => void Linking.openURL(uberDelivery.tracking_url!)}
+            style={{ marginTop: 10 }}
+          />
+        ) : null}
       </View>
 
       {dispute && dispute.status !== 'recusada' && dispute.status !== 'cancelada' ? (

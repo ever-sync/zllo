@@ -378,6 +378,18 @@ verify_jwt = true
 enabled = true
 verify_jwt = false
 
+[functions.uber-delivery-quote]
+enabled = true
+verify_jwt = true
+
+[functions.uber-delivery-dispatch]
+enabled = true
+verify_jwt = true
+
+[functions.uber-webhook]
+enabled = true
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

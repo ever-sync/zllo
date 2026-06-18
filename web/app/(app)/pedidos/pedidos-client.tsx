@@ -11,9 +11,11 @@ import {
   formatPrice,
   type ShopOrder,
 } from '@/lib/product-orders';
+import { dispatchUberDelivery } from '@/lib/uber-quote';
 import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 
 type POStatus = Database['public']['Enums']['product_order_status'];
+type UberRow = { ref_id: string; status: string; tracking_url: string | null };
 
 const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] = [
   { key: 'ativos', label: 'Ativos', match: (s) => ['pago', 'separando', 'pronto'].includes(s) },
@@ -31,6 +33,7 @@ function fmtDate(iso: string): string {
 export function PedidosClient({ shopId, initial }: { shopId: string; initial: ShopOrder[] }) {
   const supabase = useMemo(() => createClient(), []);
   const [orders, setOrders] = useState<ShopOrder[]>(initial);
+  const [uberByOrder, setUberByOrder] = useState<Record<string, UberRow>>({});
   const [filter, setFilter] = useState('ativos');
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -41,6 +44,16 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
       .eq('shop_id', shopId)
       .order('created_at', { ascending: false });
     setOrders((data as unknown as ShopOrder[]) ?? []);
+
+    const { data: uberRows } = await supabase
+      .from('uber_deliveries')
+      .select('ref_id, status, tracking_url')
+      .eq('kind', 'product_order');
+    const map: Record<string, UberRow> = {};
+    (uberRows ?? []).forEach((u: UberRow) => {
+      map[u.ref_id] = u;
+    });
+    setUberByOrder(map);
   }, [supabase, shopId]);
 
   const scheduleRefetch = useDebouncedCallback(() => {
@@ -51,6 +64,7 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
     const ch = supabase
       .channel(`shop-${shopId}-porders`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'product_orders', filter: `shop_id=eq.${shopId}` }, scheduleRefetch)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'uber_deliveries' }, scheduleRefetch)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -75,6 +89,17 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
     setBusy(null);
     if (error) {
       alert(error.message);
+      return;
+    }
+    await refetch();
+  };
+
+  const callUber = async (id: string) => {
+    setBusy(id);
+    const res = await dispatchUberDelivery(id);
+    setBusy(null);
+    if (!res.ok) {
+      alert(res.error ?? 'Não foi possível chamar a Uber');
       return;
     }
     await refetch();
@@ -118,6 +143,12 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
             const meta = STATUS_META[o.status] ?? { label: o.status, cls: 'bg-g100 text-g600' };
             const next = NEXT_ACTION[o.status];
             const canCancel = ['pago', 'separando', 'pronto'].includes(o.status);
+            const uber = uberByOrder[o.id];
+            const canUber =
+              o.shipping_type === 'entrega' &&
+              o.delivery_provider === 'uber_direct' &&
+              ['pago', 'separando', 'pronto'].includes(o.status) &&
+              (!uber || ['canceled', 'failed', 'delivered'].includes(uber.status));
             return (
               <div key={o.id} className="rounded-2xl border border-line bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -148,8 +179,27 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
                   <span className="font-head text-base font-black text-ink">{formatPrice(o.total)}</span>
                 </div>
 
-                {(next || canCancel) && (
-                  <div className="mt-3 flex gap-2">
+                {(next || canCancel || canUber || uber?.tracking_url) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {canUber ? (
+                      <button
+                        onClick={() => callUber(o.id)}
+                        disabled={busy === o.id}
+                        className="flex-1 rounded-lg bg-blue px-3 py-2 font-head text-xs font-bold text-white transition-opacity disabled:opacity-60"
+                      >
+                        {busy === o.id ? '…' : 'Chamar Uber'}
+                      </button>
+                    ) : null}
+                    {uber?.tracking_url ? (
+                      <a
+                        href={uber.tracking_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-line px-3 py-2 font-head text-xs font-bold text-ink hover:bg-g100"
+                      >
+                        Rastrear
+                      </a>
+                    ) : null}
                     {next ? (
                       <button
                         onClick={() => advance(o.id, next.status as POStatus)}

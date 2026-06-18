@@ -49,6 +49,7 @@ export function PedidoProdutoClient({
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [uberDelivery, setUberDelivery] = useState<{ status: string; tracking_url: string | null } | null>(null);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -79,6 +80,14 @@ export function PedidoProdutoClient({
       .eq('product_order_id', orderId)
       .maybeSingle();
     setReview((rev as Review) ?? null);
+
+    const { data: ud } = await supabase
+      .from('uber_deliveries')
+      .select('status, tracking_url')
+      .eq('kind', 'product_order')
+      .eq('ref_id', orderId)
+      .maybeSingle();
+    setUberDelivery((ud as { status: string; tracking_url: string | null } | null) ?? null);
   }, [supabase, orderId]);
 
   const scheduleLoad = useDebouncedCallback(() => {
@@ -91,6 +100,11 @@ export function PedidoProdutoClient({
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'product_orders', filter: `id=eq.${orderId}` },
+        scheduleLoad,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'uber_deliveries', filter: `ref_id=eq.${orderId}` },
         scheduleLoad,
       )
       .subscribe();
@@ -216,6 +230,16 @@ export function PedidoProdutoClient({
           <p className="mt-1 text-sm text-g600">
             {order.shipping_type === 'entrega' ? `Entrega · ${order.address ?? '—'}` : 'Retirar na loja'}
           </p>
+          {uberDelivery?.tracking_url ? (
+            <a
+              href={uberDelivery.tracking_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex rounded-lg bg-blue px-3 py-2 text-xs font-bold text-white"
+            >
+              Acompanhar entrega
+            </a>
+          ) : null}
         </div>
         <span className={'rounded-full px-2.5 py-1 text-xs font-bold ' + st.cls}>{st.label}</span>
       </header>
