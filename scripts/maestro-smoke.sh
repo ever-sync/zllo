@@ -30,6 +30,6 @@ if ! lsof -nP -iTCP:8081 -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 echo "→ Maestro smoke (appId=$APP_ID)"
-"$MAESTRO_BIN" test .maestro/flows
+"$MAESTRO_BIN" test --config .maestro/config.yaml .maestro/flows/0*.yaml
 
 echo "✓ Maestro smoke passou"

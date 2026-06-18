@@ -1,20 +1,13 @@
 # Conecta o Expo Dev Launcher ao Metro (simulador → 127.0.0.1:8081).
 appId: com.eversync.zllo
 ---
-# Servidor já listado na tela inicial
-- tapOn:
-    text: '127.0.0.1'
-    optional: true
-- tapOn:
-    text: 'localhost'
-    optional: true
+# Deep link (mais rápido quando Metro está na 8081)
+- openLink: exp+zllo://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
 
-# Sem servidor na lista — deep link
-- runFlow:
-    when:
-      visible: 'No development servers found'
-    commands:
-      - openLink: ${EXPO_DEV_CLIENT_URL}
+- extendedWaitUntil:
+    notVisible: 'DEVELOPMENT SERVERS'
+    timeout: 15000
+    optional: true
 
 # Fallback: URL manual
 - runFlow:
@@ -22,10 +15,7 @@ appId: com.eversync.zllo
       visible: 'Enter URL manually'
     commands:
       - tapOn: 'Enter URL manually'
-      - tapOn:
-          text: 'http'
-          optional: true
-      - inputText: ${EXPO_DEV_SERVER_URL}
+      - inputText: http://127.0.0.1:8081
       - tapOn:
           text: 'Connect'
           optional: true
