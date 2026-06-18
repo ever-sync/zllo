@@ -1,0 +1,15 @@
+# Fecha overlays do expo-dev-client (onboarding / dev menu).
+appId: com.eversync.zllo
+---
+- tapOn:
+    text: 'Continue'
+    optional: true
+
+- tapOn:
+    text: 'Go home'
+    optional: true
+
+# Dev menu é SwiftUI — às vezes só fecha por coordenada (botão X)
+- tapOn:
+    point: 93%,52%
+    optional: true

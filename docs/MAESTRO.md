@@ -22,6 +22,8 @@ brew link --overwrite mobile-dev-inc/tap/maestro
 maestro --version
 ```
 
+> **Development build EAS** abre o **Expo Dev Launcher** (não a tela welcome). Os flows usam `_helpers/open-dev-app.yaml` para conectar ao Metro via deep link com `disableOnboarding=1`.
+
 4. `.env` com Supabase apontando para o projeto com seed (`cliente@zllo.dev` / `assistencia@zllo.dev`, senha `senha123`)
 
 ## Executar (local)
@@ -39,7 +41,7 @@ Terminal 2 — flows (um comando por vez; não cole linhas com `#`):
 npm run maestro:smoke
 
 # Um flow
-maestro test .maestro/flows/01-welcome.yaml
+maestro test --config .maestro/config.yaml .maestro/flows/01-welcome.yaml
 
 # Android (package id)
 MAESTRO_APP_ID=com.eversync.zllo npm run maestro:smoke
@@ -65,11 +67,24 @@ MAESTRO_APP_ID=com.eversync.zllo npm run maestro:smoke
 
 ```bash
 # Só checkout Uber
-maestro test .maestro/flows/05-marketplace-checkout-uber.yaml
+maestro test --config .maestro/config.yaml .maestro/flows/05-marketplace-checkout-uber.yaml
 
 # E2E completo (mais lento)
-maestro test .maestro/flows/06-marketplace-dispatch-uber.yaml
+npm run maestro:marketplace
 ```
+
+## Troubleshooting
+
+| Sintoma | Causa | Solução |
+|---------|-------|---------|
+| `command not found: maestro` | PATH do npm/sh | `brew link --overwrite mobile-dev-inc/tap/maestro` |
+| `zsh: number expected` ao colar vários comandos | Comentários `#` no zsh | Rode **um comando por vez** |
+| `Element not found: Já tenho conta` | Expo Dev Launcher sem Metro | `npx expo start` antes dos flows |
+| Tela "DEVELOPMENT SERVERS" | Dev client aguardando bundler | Metro na 8081; helper conecta automaticamente |
+| Modal "developer menu" / onboarding | expo-dev-client | URL com `disableOnboarding=1` (já no helper) |
+| Botões não encontrados | `Button` renderiza em UPPERCASE | Flows usam `accessibilityLabel` ou texto original |
+
+Screenshots de falha: `~/.maestro/tests/<timestamp>/`
 
 ## Pós-build EAS
 

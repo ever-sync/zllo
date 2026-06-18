@@ -1,21 +1,20 @@
 # Conecta o Expo Dev Launcher ao Metro (simulador → 127.0.0.1:8081).
+# disableOnboarding=1 evita o modal do expo-dev-client (SDK 54).
 appId: com.eversync.zllo
 ---
-# Deep link (mais rápido quando Metro está na 8081)
-- openLink: exp+zllo://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
+- openLink: exp+zllo://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081%3FdisableOnboarding%3D1
 
 - extendedWaitUntil:
     notVisible: 'DEVELOPMENT SERVERS'
-    timeout: 15000
+    timeout: 20000
     optional: true
 
-# Fallback: URL manual
 - runFlow:
     when:
       visible: 'Enter URL manually'
     commands:
       - tapOn: 'Enter URL manually'
-      - inputText: http://127.0.0.1:8081
+      - inputText: http://127.0.0.1:8081?disableOnboarding=1
       - tapOn:
           text: 'Connect'
           optional: true

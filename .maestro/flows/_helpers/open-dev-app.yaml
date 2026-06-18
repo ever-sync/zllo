@@ -7,7 +7,7 @@ appId: com.eversync.zllo
 
 # Preview/production: vai direto para o app
 - extendedWaitUntil:
-    visible: 'Conserto de celular'
+    visible: 'Já tenho conta'
     timeout: 12000
     optional: true
 
@@ -22,6 +22,8 @@ appId: com.eversync.zllo
       visible: 'DEVELOPMENT SERVERS'
     file: connect-metro.yaml
 
+- runFlow: dismiss-expo-dev-ui.yaml
+
 - extendedWaitUntil:
-    visible: 'Conserto de celular'
+    visible: 'Já tenho conta'
     timeout: 90000

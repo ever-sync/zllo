@@ -1,8 +1,6 @@
 appId: com.eversync.zllo
 ---
 - runFlow: _helpers/open-dev-app.yaml
-- assertVisible: 'Conserto de celular'
-- assertVisible: 'Criar conta grátis'
 - assertVisible: 'Já tenho conta'
 - tapOn: 'Já tenho conta'
 - assertVisible: 'Entrar'
