@@ -1,8 +1,10 @@
 appId: com.eversync.zllo
 ---
-- launchApp:
-    clearState: true
+- runFlow: _helpers/open-dev-app.yaml
 - tapOn: 'Já tenho conta'
+- extendedWaitUntil:
+    visible: 'Entrar'
+    timeout: 10000
 - tapOn: 'Esqueci minha senha'
 - assertVisible: 'Recuperar senha'
 - back

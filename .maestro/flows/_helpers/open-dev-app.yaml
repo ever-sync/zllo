@@ -1,0 +1,27 @@
+# Abre o dev client e carrega o bundle Metro (development build EAS).
+# Pré-requisito: `npx expo start` rodando (porta 8081).
+appId: com.eversync.zllo
+---
+- launchApp:
+    clearState: true
+
+# Preview/production: vai direto para o app
+- extendedWaitUntil:
+    visible: 'Conserto de celular'
+    timeout: 12000
+    optional: true
+
+- extendedWaitUntil:
+    visible: 'Início'
+    timeout: 5000
+    optional: true
+
+# Development build: Expo Dev Launcher
+- runFlow:
+    when:
+      visible: 'DEVELOPMENT SERVERS'
+    file: connect-metro.yaml
+
+- extendedWaitUntil:
+    visible: 'Conserto de celular'
+    timeout: 90000

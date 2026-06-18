@@ -83,6 +83,8 @@ jobs:
             SHOP_PASSWORD=senha123
             MARKETPLACE_SHOP_EMAIL=loja1@zllo.dev
             MARKETPLACE_SHOP_PASSWORD=senha123
+            EXPO_DEV_SERVER_URL=http://127.0.0.1:8081
+            EXPO_DEV_CLIENT_URL=exp+zllo://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
 
       - name: Resultado
         if: always()

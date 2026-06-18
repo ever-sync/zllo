@@ -5,15 +5,34 @@ Testes de UI no **development build** (Expo Go não cobre push nem todos os plug
 ## Pré-requisitos
 
 1. Dev build instalado no simulador/device (`eas build:run -p ios --profile development`)
-2. [Maestro CLI](https://maestro.mobile.dev/docs/getting-started/installing-maestro):
+2. **Metro rodando** (obrigatório para development build EAS — senão o app fica no Expo Dev Launcher):
 
 ```bash
-brew tap mobile-dev-inc/tap && brew install maestro
+npx expo start
 ```
 
-3. `.env` com Supabase apontando para o projeto com seed (`cliente@zllo.dev` / `assistencia@zllo.dev`, senha `senha123`)
+3. [Maestro CLI](https://maestro.mobile.dev/docs/getting-started/installing-maestro):
+
+```bash
+brew tap mobile-dev-inc/tap
+brew trust mobile-dev-inc/tap
+brew install mobile-dev-inc/tap/maestro
+# Se `maestro` não aparecer no PATH (conflito com o cask GUI):
+brew link --overwrite mobile-dev-inc/tap/maestro
+maestro --version
+```
+
+4. `.env` com Supabase apontando para o projeto com seed (`cliente@zllo.dev` / `assistencia@zllo.dev`, senha `senha123`)
 
 ## Executar (local)
+
+Terminal 1 — bundler:
+
+```bash
+npx expo start
+```
+
+Terminal 2 — flows (um comando por vez; não cole linhas com `#`):
 
 ```bash
 # Todos os flows
@@ -95,10 +114,11 @@ Roda no **Maestro Cloud** (simuladores na nuvem) — não precisa runner macOS n
 
 ### Pré-requisito
 
-Precisa existir um build EAS **FINISHED** com profile `development`:
+Precisa existir um build EAS **FINISHED** com profile `development` **e** o Metro acessível para o simulador na nuvem (ou use profile `preview` sem dev client quando disponível):
 
 ```bash
 npm run eas:build:dev
+npx expo start   # local; na nuvem o helper usa deep link + EXPO_DEV_CLIENT_URL
 ```
 
 O workflow baixa o artefato mais recente via `scripts/maestro-cloud-prepare.sh`.

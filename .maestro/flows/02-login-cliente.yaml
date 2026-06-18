@@ -1,15 +1,13 @@
 appId: com.eversync.zllo
 ---
-- launchApp:
-    clearState: true
+- runFlow: _helpers/open-dev-app.yaml
 - tapOn: 'Já tenho conta'
-- tapOn: 'E-mail'
-- inputText: ${CLIENT_EMAIL}
-- tapOn: 'Senha'
-- inputText: ${CLIENT_PASSWORD}
-- hideKeyboard
+- extendedWaitUntil:
+    visible: 'Entrar'
+    timeout: 10000
+- tapOn: '🔑 Cliente Dev'
 - tapOn: 'Entrar'
 - extendedWaitUntil:
     visible: 'Início'
-    timeout: 15000
+    timeout: 20000
 - assertVisible: 'Pedidos'
