@@ -92,10 +92,16 @@ export function PedidoClient({
 
   useEffect(() => {
     const ch = supabase
-      .channel(`web-req-${requestId}-quotes`)
+      .channel(`web-req-${requestId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'quotes', filter: `request_id=eq.${requestId}` },
+        scheduleLoad,
+      )
+      // Status e valor final da OS mudam em tempo real quando a assistência avança.
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'service_orders', filter: `request_id=eq.${requestId}` },
         scheduleLoad,
       )
       .subscribe();
@@ -108,10 +114,16 @@ export function PedidoClient({
     const orderId = order?.id;
     if (!orderId) return;
     const ch = supabase
-      .channel(`web-pay-${orderId}`)
+      .channel(`web-order-${orderId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'payments', filter: `order_id=eq.${orderId}` },
+        scheduleLoad,
+      )
+      // Cada etapa nova da OS entra na linha do tempo ao vivo.
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'service_order_events', filter: `order_id=eq.${orderId}` },
         scheduleLoad,
       )
       .subscribe();
