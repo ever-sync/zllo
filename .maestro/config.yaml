@@ -13,3 +13,5 @@ env:
   CLIENT_PASSWORD: senha123
   SHOP_EMAIL: assistencia@zllo.dev
   SHOP_PASSWORD: senha123
+  MARKETPLACE_SHOP_EMAIL: loja1@zllo.dev
+  MARKETPLACE_SHOP_PASSWORD: senha123

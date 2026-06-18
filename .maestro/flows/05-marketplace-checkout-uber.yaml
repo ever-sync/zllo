@@ -1,0 +1,43 @@
+# Cliente: loja → carrinho → checkout entrega Uber → pedido criado
+appId: com.eversync.zllo
+---
+- runFlow: 02-login-cliente.yaml
+- tapOn: 'Loja'
+- extendedWaitUntil:
+    visible: 'Película 3D iPhone 13'
+    timeout: 25000
+- tapOn: 'Película 3D iPhone 13'
+- extendedWaitUntil:
+    visible: 'Adicionar ao carrinho'
+    timeout: 15000
+- tapOn: 'Adicionar ao carrinho'
+- extendedWaitUntil:
+    visible: 'Ver carrinho'
+    timeout: 5000
+- tapOn: 'Ver carrinho'
+- extendedWaitUntil:
+    visible: 'Finalizar pedido'
+    timeout: 10000
+- tapOn: 'Finalizar pedido'
+- extendedWaitUntil:
+    visible: 'Checkout'
+    timeout: 10000
+- tapOn: 'Entrega'
+- tapOn: 'Rua'
+- inputText: 'Av. Paulista'
+- tapOn: 'Número'
+- inputText: '1578'
+- tapOn: 'CEP'
+- inputText: '01310100'
+- tapOn: 'Cidade'
+- inputText: 'São Paulo'
+- tapOn: 'UF'
+- inputText: 'SP'
+- hideKeyboard
+- extendedWaitUntil:
+    visible: 'Frete Uber'
+    timeout: 25000
+- tapOn: 'Confirmar e pagar com Pix'
+- extendedWaitUntil:
+    visible: 'Aguardando pagamento'
+    timeout: 20000

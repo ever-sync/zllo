@@ -1,0 +1,39 @@
+# E2E marketplace: checkout Uber → pagamento teste → loja chama Uber
+appId: com.eversync.zllo
+---
+- runFlow: 05-marketplace-checkout-uber.yaml
+- tapOn:
+    text: 'Pagar (teste)'
+    optional: true
+- extendedWaitUntil:
+    visible: 'Pago'
+    timeout: 15000
+- tapOn: 'Perfil'
+- scrollUntilVisible:
+    element: 'Sair da conta'
+    direction: DOWN
+- tapOn: 'Sair da conta'
+- extendedWaitUntil:
+    visible: 'Já tenho conta'
+    timeout: 10000
+- tapOn: 'Já tenho conta'
+- tapOn: 'E-mail'
+- inputText: ${MARKETPLACE_SHOP_EMAIL}
+- tapOn: 'Senha'
+- inputText: ${MARKETPLACE_SHOP_PASSWORD}
+- hideKeyboard
+- tapOn: 'Entrar'
+- extendedWaitUntil:
+    visible: 'Vendas do marketplace'
+    timeout: 20000
+- tapOn: 'Vendas do marketplace'
+- extendedWaitUntil:
+    visible: 'Vendas'
+    timeout: 10000
+- extendedWaitUntil:
+    visible: 'Chamar Uber'
+    timeout: 20000
+- tapOn: 'Chamar Uber'
+- extendedWaitUntil:
+    visible: 'Rastrear'
+    timeout: 25000

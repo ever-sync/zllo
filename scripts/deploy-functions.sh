@@ -33,6 +33,7 @@ supabase functions deploy asaas-webhook
 supabase functions deploy uber-delivery-quote
 supabase functions deploy uber-delivery-dispatch
 supabase functions deploy uber-webhook
+supabase functions deploy product-order-cancel
 
 echo ""
 echo "✅ Deploy concluído. Webhooks:"

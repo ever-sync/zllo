@@ -12,6 +12,7 @@ import {
   type ShopOrder,
 } from '@/lib/product-orders';
 import { dispatchUberDelivery } from '@/lib/uber-quote';
+import { cancelShopProductOrder } from '@/lib/product-order-cancel';
 import { useDebouncedCallback } from '@/lib/use-debounced-callback';
 
 type POStatus = Database['public']['Enums']['product_order_status'];
@@ -83,12 +84,12 @@ export function PedidosClient({ shopId, initial }: { shopId: string; initial: Sh
   };
 
   const cancel = async (id: string) => {
-    if (!confirm('Cancelar este pedido?')) return;
+    if (!confirm('Cancelar este pedido? Estorno Pix e entrega Uber (se houver) serão acionados.')) return;
     setBusy(id);
-    const { error } = await supabase.rpc('advance_product_order', { p_order_id: id, p_status: 'cancelado' });
+    const res = await cancelShopProductOrder(id);
     setBusy(null);
-    if (error) {
-      alert(error.message);
+    if (!res.ok) {
+      alert(res.error ?? 'Não foi possível cancelar');
       return;
     }
     await refetch();

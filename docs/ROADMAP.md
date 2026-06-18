@@ -39,6 +39,7 @@ Status em jun/2026 após execução do plano de melhorias.
 ## Pendências (backlog)
 
 - Configurar secrets `EXPO_TOKEN`, `MAESTRO_API_KEY`, `MAESTRO_PROJECT_ID` no GitHub para ativar Maestro Cloud
+- Maestro flows `05`/`06` marketplace Uber (checkout + despacho)
 
 ## Fase 8C — Maestro E2E ✅
 

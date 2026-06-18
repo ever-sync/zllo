@@ -12,7 +12,15 @@ import {
   type DeliveryAddress,
 } from '@/lib/delivery-address';
 import { createClient } from '@/lib/supabase/client';
-import { fetchUberDeliveryQuote, type UberQuoteResult } from '@/lib/uber-quote';
+import {
+  ensureFreshUberQuote,
+  isUberQuoteExpired,
+  isUberQuoteUsable,
+  QUOTE_EXPIRY_BUFFER_MS,
+  uberQuoteMinutesLeft,
+} from '@/lib/uber-quote-lifecycle';
+import type { UberQuoteResult } from '@/lib/uber-quote';
+import { fetchUberDeliveryQuote } from '@/lib/uber-quote';
 
 type Shipping = 'retirada' | 'entrega';
 
@@ -61,6 +69,21 @@ export function CheckoutClient({
   }, [refreshQuote]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- auto re-quote before Uber TTL */
+  useEffect(() => {
+    if (shipping !== 'entrega' || !uber.expires) return;
+    const exp = Date.parse(uber.expires);
+    if (Number.isNaN(exp)) return;
+    const ms = exp - Date.now() - QUOTE_EXPIRY_BUFFER_MS;
+    if (ms <= 0) {
+      if (!quoting) void refreshQuote();
+      return;
+    }
+    const timer = setTimeout(() => void refreshQuote(), ms);
+    return () => clearTimeout(timer);
+  }, [shipping, uber.expires, uber.quote_id, quoting, refreshQuote]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   if (!hydrated) {
     return <div className="mx-auto max-w-2xl animate-pulse px-4 py-8 md:px-8"><div className="h-40 rounded-2xl bg-g100" /></div>;
   }
@@ -76,20 +99,18 @@ export function CheckoutClient({
     );
   }
 
-  const deliveryFee = uber.enabled && uber.quote_id ? (uber.fee ?? 0) : 0;
+  const deliveryFee = uber.enabled && uber.quote_id && isUberQuoteUsable(uber) ? (uber.fee ?? 0) : 0;
   const grandTotal = total + deliveryFee;
-  const useUber = uber.enabled && Boolean(uber.quote_id);
+  const useUber = uber.enabled && isUberQuoteUsable(uber);
+  const quoteExpired = Boolean(uber.quote_id && !quoting && isUberQuoteExpired(uber.expires));
+  const minsLeft = uberQuoteMinutesLeft(uber.expires);
 
   const onConfirm = async () => {
     setError(null);
     if (shipping === 'entrega') {
-      if (useUber) {
+      if (uber.enabled) {
         if (!isDeliveryAddressComplete(dropoff)) {
           setError('Complete rua, número, cidade, UF e CEP.');
-          return;
-        }
-        if (!uber.quote_id) {
-          setError(uber.error ?? 'Não foi possível cotar a entrega.');
           return;
         }
       } else if (addressText.trim().length < 5) {
@@ -97,21 +118,43 @@ export function CheckoutClient({
         return;
       }
     }
+
     setLoading(true);
+    let quoteToUse = uber;
+    if (shipping === 'entrega' && uber.enabled) {
+      const { quote, refreshed } = await ensureFreshUberQuote(shopId, dropoff, uber);
+      quoteToUse = quote;
+      if (refreshed) setUber(quote);
+      if (!isUberQuoteUsable(quote)) {
+        setLoading(false);
+        setError(quote.error ?? 'Não foi possível atualizar o frete. Tente novamente.');
+        return;
+      }
+    }
+
+    const useUberNow = shipping === 'entrega' && isUberQuoteUsable(quoteToUse);
+    const feeNow = useUberNow ? (quoteToUse.fee ?? 0) : 0;
+
     const { data: orderId, error: rpcErr } = await supabase.rpc('create_product_order', {
       p_shop_id: shopId,
       p_items: items.map((i) => ({ product_id: i.product_id, qty: i.qty })),
       p_shipping_type: shipping,
       p_address: shipping === 'entrega'
-        ? (useUber ? formatDeliveryAddress(dropoff) : addressText.trim())
+        ? (useUberNow ? formatDeliveryAddress(dropoff) : addressText.trim())
         : undefined,
-      p_delivery_fee: useUber ? deliveryFee : 0,
-      p_uber_quote_id: useUber ? uber.quote_id : undefined,
-      p_dropoff_json: useUber ? dropoff : undefined,
-      p_delivery_provider: useUber ? 'uber_direct' : undefined,
+      p_delivery_fee: useUberNow ? feeNow : 0,
+      p_uber_quote_id: useUberNow ? quoteToUse.quote_id : undefined,
+      p_dropoff_json: useUberNow ? dropoff : undefined,
+      p_delivery_provider: useUberNow ? 'uber_direct' : undefined,
     });
     setLoading(false);
     if (rpcErr) {
+      if (/cotação|quote/i.test(rpcErr.message) && shipping === 'entrega' && uber.enabled) {
+        const { quote } = await ensureFreshUberQuote(shopId, dropoff, null);
+        setUber(quote);
+        setError('O frete expirou. Atualizamos a cotação — confirme novamente.');
+        return;
+      }
       if (/indispon|carrinho|constraint|foreign key/i.test(rpcErr.message)) {
         clear();
         alert('Carrinho desatualizado. Os itens não estão mais disponíveis.');
@@ -177,8 +220,15 @@ export function CheckoutClient({
           )}
           {quoting ? (
             <p className="mt-3 text-sm text-g600">Calculando frete…</p>
-          ) : uber.fee_label ? (
-            <p className="mt-3 text-sm font-bold text-blue">Frete Uber: {uber.fee_label}</p>
+          ) : uber.enabled && uber.fee_label && isUberQuoteUsable(uber) ? (
+            <div className="mt-3">
+              <p className="text-sm font-bold text-blue">Frete Uber: {uber.fee_label}</p>
+              {minsLeft != null && minsLeft <= 5 ? (
+                <p className="mt-1 text-xs text-[#B45309]">Cotação válida por mais {minsLeft} min</p>
+              ) : null}
+            </div>
+          ) : quoteExpired ? (
+            <p className="mt-3 text-sm text-[#B45309]">Cotação expirada — recalculando frete…</p>
           ) : uber.error ? (
             <p className="mt-3 text-sm text-[#B91C1C]">{uber.error}</p>
           ) : null}

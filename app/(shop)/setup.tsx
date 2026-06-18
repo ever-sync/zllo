@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useShop } from '@/lib/shop';
+import { emptyShopPickup, shopPickupFromRow, shopPickupRpcArgs } from '@/lib/shop-pickup';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius } from '@/theme';
 
@@ -22,6 +23,7 @@ export default function ShopSetup() {
   const [brands, setBrands] = useState<string[]>(['Apple', 'Samsung']);
   const [radiusKm, setRadiusKm] = useState('10');
   const [walletId, setWalletId] = useState('');
+  const [pickup, setPickup] = useState(emptyShopPickup());
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export default function ShopSetup() {
     supabase.rpc('get_my_shop').then(({ data }) => {
       const row = Array.isArray(data) ? data[0] : data;
       if (row?.asaas_wallet_id) setWalletId(row.asaas_wallet_id);
+      if (row) setPickup(shopPickupFromRow(row));
     });
   }, []);
 
@@ -72,6 +75,7 @@ export default function ShopSetup() {
         p_lat: loc.lat,
         p_lng: loc.lng,
         p_is_online: true,
+        ...shopPickupRpcArgs(pickup),
       });
       if (rpcErr) throw rpcErr;
       await supabase.rpc('set_my_wallet', { p_wallet_id: walletId });
@@ -91,6 +95,25 @@ export default function ShopSetup() {
       <View style={{ gap: 13 }}>
         <TextField label="Nome da loja" placeholder="Ex: Reparo Smart" value={name} onChangeText={setName} />
         <TextField label="Endereço" placeholder="Rua, número — bairro, cidade" value={address} onChangeText={setAddress} />
+
+        <View>
+          <Text style={styles.label}>Coleta Uber Direct (marketplace)</Text>
+          <Text style={styles.locHint}>Endereço de onde a Uber busca os pedidos. Se vazio, usa o endereço da loja.</Text>
+          <View style={{ gap: 10, marginTop: 10 }}>
+            <TextField label="Telefone da loja" placeholder="(11) 99999-9999" keyboardType="phone-pad" value={pickup.pickup_phone} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_phone: v }))} />
+            <TextField label="Rua" placeholder="Rua Example" value={pickup.pickup_street} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_street: v }))} />
+            <TextField label="Número" placeholder="123" value={pickup.pickup_number} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_number: v }))} />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <TextField label="CEP" placeholder="01310-100" keyboardType="number-pad" value={pickup.pickup_cep} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_cep: v }))} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField label="UF" placeholder="SP" autoCapitalize="characters" value={pickup.pickup_uf} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_uf: v.toUpperCase().slice(0, 2) }))} />
+              </View>
+            </View>
+            <TextField label="Cidade" placeholder="São Paulo" value={pickup.pickup_city} onChangeText={(v) => setPickup((p) => ({ ...p, pickup_city: v }))} />
+          </View>
+        </View>
 
         <View>
           <Text style={styles.label}>Marcas atendidas</Text>

@@ -1,6 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { log } from '../_shared/log.ts';
+import { notifyUserPush } from '../_shared/notify.ts';
 import {
   createDelivery,
   createDeliveryQuote,
@@ -146,13 +147,14 @@ Deno.serve(async (req) => {
       .update({ delivery_provider: 'uber_direct' })
       .eq('id', product_order_id);
 
-    await admin.from('notifications').insert({
-      user_id: order.client_id,
-      title: 'Entregador a caminho',
-      body: 'Seu pedido saiu para entrega. Toque para acompanhar.',
-      type: 'delivery_update',
-      data: { product_order_id, tracking_url: delivery.tracking_url ?? null },
-    });
+    await notifyUserPush(
+      admin,
+      order.client_id,
+      'Entregador a caminho',
+      'Seu pedido saiu para entrega. Toque para acompanhar.',
+      'delivery_update',
+      { product_order_id, tracking_url: delivery.tracking_url ?? null },
+    );
 
     return jsonResponse(req, {
       ok: true,

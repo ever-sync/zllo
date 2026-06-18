@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { SHOP_LOCATION_FALLBACK } from '@/lib/shop-location';
+import { emptyShopPickup, shopPickupRpcArgs, type ShopPickup } from '@/lib/shop-pickup';
 import { createClient } from '@/lib/supabase/client';
 
 const ALL_BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'Motorola', 'Outros'];
@@ -18,6 +19,7 @@ export type ShopConfig = {
   asaas_wallet_id: string;
   lat?: number;
   lng?: number;
+  pickup: ShopPickup;
 };
 
 export type ProfileConfig = { fullName: string; cpf: string };
@@ -47,6 +49,7 @@ export function ConfiguracoesClient({
       service_radius_km: 10,
       is_online: true,
       asaas_wallet_id: '',
+      pickup: emptyShopPickup(),
     },
   );
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(() =>
@@ -57,6 +60,9 @@ export function ConfiguracoesClient({
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const set = <K extends keyof ShopConfig>(k: K, v: ShopConfig[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const setPickup = <K extends keyof ShopPickup>(k: K, v: ShopPickup[K]) =>
+    setForm((f) => ({ ...f, pickup: { ...f.pickup, [k]: v } }));
 
   const toggleBrand = (b: string) =>
     setForm((f) => ({
@@ -138,6 +144,7 @@ export function ConfiguracoesClient({
       p_lat: loc.lat,
       p_lng: loc.lng,
       p_is_online: form.is_online,
+      ...shopPickupRpcArgs(form.pickup),
     });
 
     if (shopErr) {
@@ -252,6 +259,43 @@ export function ConfiguracoesClient({
             className={field}
           />
         </label>
+
+        <div className="rounded-xl border border-line bg-g100 p-4">
+          <p className="font-head text-sm font-bold text-ink">Coleta Uber Direct</p>
+          <p className="mt-1 font-body text-xs text-g600">
+            Endereço de onde a Uber busca pedidos do marketplace. Se vazio, usa o endereço da loja.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="font-body text-sm text-g600">Telefone da loja</span>
+              <input value={form.pickup.pickup_phone} onChange={(e) => setPickup('pickup_phone', e.target.value)} className={field} />
+            </label>
+            <label className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className="font-body text-sm text-g600">Rua</span>
+              <input value={form.pickup.pickup_street} onChange={(e) => setPickup('pickup_street', e.target.value)} className={field} />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body text-sm text-g600">Número</span>
+              <input value={form.pickup.pickup_number} onChange={(e) => setPickup('pickup_number', e.target.value)} className={field} />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body text-sm text-g600">CEP</span>
+              <input value={form.pickup.pickup_cep} onChange={(e) => setPickup('pickup_cep', e.target.value)} className={field} />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body text-sm text-g600">Cidade</span>
+              <input value={form.pickup.pickup_city} onChange={(e) => setPickup('pickup_city', e.target.value)} className={field} />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-body text-sm text-g600">UF</span>
+              <input
+                value={form.pickup.pickup_uf}
+                onChange={(e) => setPickup('pickup_uf', e.target.value.toUpperCase().slice(0, 2))}
+                className={field}
+              />
+            </label>
+          </div>
+        </div>
 
         <div>
           <p className="font-body text-sm text-g600">Marcas atendidas</p>

@@ -172,6 +172,30 @@ export async function createDelivery(params: {
   };
 }
 
+export async function cancelDelivery(deliveryId: string) {
+  if (isUberMock()) {
+    return { id: deliveryId, status: 'canceled' };
+  }
+
+  const token = await getAccessToken();
+  const res = await fetch(customerPath(`/deliveries/${deliveryId}/cancel`), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 404) {
+      return { id: deliveryId, status: 'canceled' };
+    }
+    throw new Error(data?.message ?? data?.code ?? `Uber cancel ${res.status}`);
+  }
+  return data as { id: string; status: string };
+}
+
 export async function verifyUberWebhookSignature(
   rawBody: string,
   signature: string | null,

@@ -34,6 +34,23 @@ MAESTRO_APP_ID=com.eversync.zllo npm run maestro:smoke
 | `02-login-cliente.yaml` | Login cliente → tabs (Início) |
 | `03-login-assistencia.yaml` | Login loja → painel Orçamentos |
 | `04-auth-links.yaml` | Esqueci senha + link criar conta |
+| `05-marketplace-checkout-uber.yaml` | Cliente: loja → checkout entrega → cotação Uber → pedido |
+| `06-marketplace-dispatch-uber.yaml` | E2E completo: pagamento teste + loja chama Uber |
+
+## Pré-requisitos (flows 05–06)
+
+1. Seed/migration com produto **Película 3D iPhone 13** (loja Reparo Smart) e endereço do `cliente@zllo.dev`
+2. Supabase com **`UBER_DIRECT_MOCK=1`** nas Edge Functions (cotação/despacho simulados)
+3. Dev build com **`EXPO_PUBLIC_ALLOW_TEST_PAY=true`** (flow 06 — botão “Pagar (teste)”)
+4. Login da loja do marketplace: `loja1@zllo.dev` / `senha123` (`MARKETPLACE_SHOP_EMAIL` no config)
+
+```bash
+# Só checkout Uber
+maestro test .maestro/flows/05-marketplace-checkout-uber.yaml
+
+# E2E completo (mais lento)
+maestro test .maestro/flows/06-marketplace-dispatch-uber.yaml
+```
 
 ## Pós-build EAS
 

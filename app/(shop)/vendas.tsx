@@ -11,6 +11,7 @@ import { priceBRL } from '@/lib/products';
 import { useShop } from '@/lib/shop';
 import { supabase } from '@/lib/supabase';
 import { dispatchUberDelivery } from '@/lib/uber-quote';
+import { cancelShopProductOrder } from '@/lib/product-order-cancel';
 import { colors, fonts, radius } from '@/theme';
 
 type Item = { id: string; name: string; qty: number; subtotal: number };
@@ -111,8 +112,19 @@ export default function Vendas() {
   };
 
   const cancel = async (id: string) => {
-    if (await confirmAsync('Cancelar pedido?', 'Esta ação não pode ser desfeita.', 'Cancelar', true)) {
-      advance(id, 'cancelado');
+    if (await confirmAsync('Cancelar pedido?', 'Estorno Pix e entrega Uber (se houver) serão acionados.', 'Cancelar', true)) {
+      setBusy(id);
+      const res = await cancelShopProductOrder(id);
+      setBusy(null);
+      if (!res.ok) {
+        notify('Ops', res.error ?? 'Não foi possível cancelar');
+        return;
+      }
+      notify(
+        'Pedido cancelado',
+        res.refunded ? 'Estorno Pix solicitado ao Asaas.' : 'O cliente foi notificado.',
+      );
+      load();
     }
   };
 

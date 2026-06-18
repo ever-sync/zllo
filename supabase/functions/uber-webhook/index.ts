@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { log } from '../_shared/log.ts';
+import { notifyUserPush } from '../_shared/notify.ts';
 import { mapUberStatus, verifyUberWebhookSignature } from '../_shared/uber-direct.ts';
 
 Deno.serve(async (req) => {
@@ -81,16 +82,17 @@ Deno.serve(async (req) => {
       };
       const label = labels[status];
       if (label) {
-        await admin.from('notifications').insert({
-          user_id: order.client_id,
-          title: 'Atualização da entrega',
-          body: label,
-          type: 'delivery_update',
-          data: {
+        await notifyUserPush(
+          admin,
+          order.client_id,
+          'Atualização da entrega',
+          label,
+          'delivery_update',
+          {
             product_order_id: row.ref_id,
             tracking_url: body.data?.tracking_url ?? null,
           },
-        });
+        );
       }
     }
 

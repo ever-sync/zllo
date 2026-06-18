@@ -390,6 +390,10 @@ verify_jwt = true
 enabled = true
 verify_jwt = false
 
+[functions.product-order-cancel]
+enabled = true
+verify_jwt = true
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

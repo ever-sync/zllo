@@ -1492,6 +1492,12 @@ export type Database = {
           reviews_count: number
           service_radius_km: number
           updated_at: string
+          pickup_phone: string | null
+          pickup_street: string | null
+          pickup_number: string | null
+          pickup_cep: string | null
+          pickup_city: string | null
+          pickup_uf: string | null
         }
         SetofOptions: {
           from: "*"
@@ -1552,8 +1558,24 @@ export type Database = {
           p_lng: number
           p_name: string
           p_radius: number
+          p_pickup_phone?: string
+          p_pickup_street?: string
+          p_pickup_number?: string
+          p_pickup_cep?: string
+          p_pickup_city?: string
+          p_pickup_uf?: string
         }
         Returns: string
+      }
+      notify_user_push: {
+        Args: {
+          p_user: string
+          p_title: string
+          p_body: string
+          p_type: string
+          p_data?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {

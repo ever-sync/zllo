@@ -17,7 +17,15 @@ import {
 } from '@/lib/delivery-address';
 import { priceBRL } from '@/lib/products';
 import { supabase } from '@/lib/supabase';
-import { fetchUberDeliveryQuote, type UberQuoteResult } from '@/lib/uber-quote';
+import {
+  ensureFreshUberQuote,
+  isUberQuoteExpired,
+  isUberQuoteUsable,
+  QUOTE_EXPIRY_BUFFER_MS,
+  uberQuoteMinutesLeft,
+} from '@/lib/uber-quote-lifecycle';
+import type { UberQuoteResult } from '@/lib/uber-quote';
+import { fetchUberDeliveryQuote } from '@/lib/uber-quote';
 import { colors, fonts, radius } from '@/theme';
 
 type Shipping = 'retirada' | 'entrega';
@@ -57,6 +65,19 @@ export default function Checkout() {
     void refreshQuote();
   }, [refreshQuote]);
 
+  useEffect(() => {
+    if (shipping !== 'entrega' || !uber.expires) return;
+    const exp = Date.parse(uber.expires);
+    if (Number.isNaN(exp)) return;
+    const ms = exp - Date.now() - QUOTE_EXPIRY_BUFFER_MS;
+    if (ms <= 0) {
+      if (!quoting) void refreshQuote();
+      return;
+    }
+    const timer = setTimeout(() => void refreshQuote(), ms);
+    return () => clearTimeout(timer);
+  }, [shipping, uber.expires, uber.quote_id, quoting, refreshQuote]);
+
   if (items.length === 0 || !shopId) {
     return (
       <Screen background={colors.canvas}>
@@ -66,20 +87,18 @@ export default function Checkout() {
     );
   }
 
-  const deliveryFee = uber.enabled && uber.quote_id ? (uber.fee ?? 0) : 0;
+  const deliveryFee = uber.enabled && uber.quote_id && isUberQuoteUsable(uber) ? (uber.fee ?? 0) : 0;
   const grandTotal = total + deliveryFee;
-  const useUber = uber.enabled && Boolean(uber.quote_id);
+  const useUber = uber.enabled && isUberQuoteUsable(uber);
+  const quoteExpired = Boolean(uber.quote_id && !quoting && isUberQuoteExpired(uber.expires));
+  const minsLeft = uberQuoteMinutesLeft(uber.expires);
 
   const onConfirm = async () => {
     setError(null);
     if (shipping === 'entrega') {
-      if (useUber) {
+      if (uber.enabled) {
         if (!isDeliveryAddressComplete(dropoff)) {
           setError('Complete rua, número, cidade, UF e CEP.');
-          return;
-        }
-        if (!uber.quote_id) {
-          setError(uber.error ?? 'Não foi possível cotar a entrega.');
           return;
         }
       } else if (addressText.trim().length < 5) {
@@ -87,21 +106,43 @@ export default function Checkout() {
         return;
       }
     }
+
     setLoading(true);
+    let quoteToUse = uber;
+    if (shipping === 'entrega' && uber.enabled) {
+      const { quote, refreshed } = await ensureFreshUberQuote(shopId, dropoff, uber);
+      quoteToUse = quote;
+      if (refreshed) setUber(quote);
+      if (!isUberQuoteUsable(quote)) {
+        setLoading(false);
+        setError(quote.error ?? 'Não foi possível atualizar o frete. Tente novamente.');
+        return;
+      }
+    }
+
+    const useUberNow = shipping === 'entrega' && isUberQuoteUsable(quoteToUse);
+    const feeNow = useUberNow ? (quoteToUse.fee ?? 0) : 0;
+
     const { data: orderId, error: rpcErr } = await supabase.rpc('create_product_order', {
       p_shop_id: shopId,
       p_items: items.map((i) => ({ product_id: i.product_id, qty: i.qty })),
       p_shipping_type: shipping,
       p_address: shipping === 'entrega'
-        ? (useUber ? formatDeliveryAddress(dropoff) : addressText.trim())
+        ? (useUberNow ? formatDeliveryAddress(dropoff) : addressText.trim())
         : undefined,
-      p_delivery_fee: useUber ? deliveryFee : 0,
-      p_uber_quote_id: useUber ? uber.quote_id : undefined,
-      p_dropoff_json: useUber ? dropoff : undefined,
-      p_delivery_provider: useUber ? 'uber_direct' : undefined,
+      p_delivery_fee: useUberNow ? feeNow : 0,
+      p_uber_quote_id: useUberNow ? quoteToUse.quote_id : undefined,
+      p_dropoff_json: useUberNow ? dropoff : undefined,
+      p_delivery_provider: useUberNow ? 'uber_direct' : undefined,
     });
     setLoading(false);
     if (rpcErr) {
+      if (/cotação|quote/i.test(rpcErr.message) && shipping === 'entrega' && uber.enabled) {
+        const { quote } = await ensureFreshUberQuote(shopId, dropoff, null);
+        setUber(quote);
+        setError('O frete expirou. Atualizamos a cotação — confirme novamente.');
+        return;
+      }
       if (/indispon|carrinho|constraint|foreign key/i.test(rpcErr.message)) {
         clear();
         notify('Carrinho desatualizado', 'Os itens não estão mais disponíveis. Esvaziamos o carrinho — escolha novamente na Loja.');
@@ -169,8 +210,17 @@ export default function Checkout() {
               <ActivityIndicator size="small" color={colors.blue} />
               <Text style={styles.quoteHint}>Calculando frete…</Text>
             </View>
-          ) : uber.enabled && uber.fee_label ? (
-            <Text style={styles.quoteOk}>Frete Uber: {uber.fee_label}{uber.duration_minutes ? ` · ~${uber.duration_minutes} min` : ''}</Text>
+          ) : uber.enabled && uber.fee_label && isUberQuoteUsable(uber) ? (
+            <View>
+              <Text style={styles.quoteOk}>
+                Frete Uber: {uber.fee_label}{uber.duration_minutes ? ` · ~${uber.duration_minutes} min` : ''}
+              </Text>
+              {minsLeft != null && minsLeft <= 5 ? (
+                <Text style={styles.quoteWarn}>Cotação válida por mais {minsLeft} min</Text>
+              ) : null}
+            </View>
+          ) : quoteExpired ? (
+            <Text style={styles.quoteWarn}>Cotação expirada — recalculando frete…</Text>
           ) : uber.error ? (
             <Text style={styles.quoteErr}>{uber.error}</Text>
           ) : null}
@@ -255,6 +305,7 @@ const styles = StyleSheet.create({
   quoteRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   quoteHint: { fontFamily: fonts.body, fontSize: 13, color: colors.gray600 },
   quoteOk: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.blue, marginTop: 10 },
+  quoteWarn: { fontFamily: fonts.body, fontSize: 13, color: colors.amberText, marginTop: 6 },
   quoteErr: { fontFamily: fonts.body, fontSize: 13, color: colors.redText, marginTop: 10 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
   totalLabel: { fontFamily: fonts.headBold, fontSize: 16, color: colors.ink },

@@ -1,4 +1,5 @@
 import { parseShopLocation } from '@/lib/shop-location';
+import { shopPickupFromRow } from '@/lib/shop-pickup';
 import { createClient } from '@/lib/supabase/server';
 import { ConfiguracoesClient, type ShopConfig } from './configuracoes-client';
 
@@ -29,6 +30,7 @@ export default async function ConfiguracoesPage() {
       asaas_wallet_id: shop.asaas_wallet_id ?? '',
       lat: loc?.lat,
       lng: loc?.lng,
+      pickup: shopPickupFromRow(shop),
     };
   }
 

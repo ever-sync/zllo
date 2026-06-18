@@ -65,6 +65,16 @@ begin
 
   update public.profiles set role = 'cliente', full_name = 'Cliente Teste' where id = cid;
 
+  update public.profiles set
+    street = 'Av. Paulista',
+    number = '1578',
+    neighborhood = 'Bela Vista',
+    city = 'São Paulo',
+    uf = 'SP',
+    cep = '01310100',
+    phone = coalesce(nullif(trim(phone), ''), '11999990000')
+  where id = cid;
+
   insert into public.devices (owner_id, nickname, brand, model, storage, color)
   values (cid, 'Meu iPhone', 'Apple', 'iPhone 13 Pro', '128 GB', 'Grafite')
   on conflict do nothing;

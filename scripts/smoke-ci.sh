@@ -6,6 +6,9 @@ cd "$(dirname "$0")/.."
 echo "→ Notification href tests"
 npm run test:notifications
 
+echo "→ Uber quote lifecycle tests"
+npm run test:uber-quote
+
 echo "→ Mobile lint"
 npm run lint
 
