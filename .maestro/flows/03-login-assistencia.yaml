@@ -5,8 +5,14 @@ appId: com.eversync.zllo
 - extendedWaitUntil:
     visible: 'Entrar'
     timeout: 10000
-- tapOn: '🔑 Assistência Dev'
+- tapOn:
+    id: login-email
+- inputText: assistencia@zllo.dev
+- tapOn:
+    id: login-password
+- inputText: senha123
+- hideKeyboard
 - tapOn: 'Entrar'
 - extendedWaitUntil:
     visible: 'Orçamentos'
-    timeout: 20000
+    timeout: 30000

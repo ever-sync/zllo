@@ -17,10 +17,12 @@ appId: com.eversync.zllo
     visible: 'Já tenho conta'
     timeout: 10000
 - tapOn: 'Já tenho conta'
-- tapOn: 'E-mail'
-- inputText: ${MARKETPLACE_SHOP_EMAIL}
-- tapOn: 'Senha'
-- inputText: ${MARKETPLACE_SHOP_PASSWORD}
+- tapOn:
+    id: login-email
+- inputText: loja1@zllo.dev
+- tapOn:
+    id: login-password
+- inputText: senha123
 - hideKeyboard
 - tapOn: 'Entrar'
 - extendedWaitUntil:

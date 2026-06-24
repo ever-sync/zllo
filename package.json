@@ -18,7 +18,7 @@
     "test:uber-quote": "node scripts/test-uber-quote-lifecycle.mjs",
     "smoke:platform": "bash scripts/platform-smoke.sh",
     "maestro:smoke": "bash scripts/maestro-smoke.sh",
-    "maestro:marketplace": "maestro test --config .maestro/config.yaml .maestro/flows/05-marketplace-checkout-uber.yaml .maestro/flows/06-marketplace-dispatch-uber.yaml",
+    "maestro:marketplace": "maestro test .maestro/flows/05-marketplace-checkout-uber.yaml .maestro/flows/06-marketplace-dispatch-uber.yaml",
     "maestro:cloud:prepare": "bash scripts/maestro-cloud-prepare.sh",
     "eas:post-build": "bash scripts/eas-post-build.sh"
   },

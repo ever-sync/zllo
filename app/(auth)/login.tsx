@@ -77,6 +77,7 @@ export default function Login() {
       <View style={styles.form}>
         <TextField
           label="E-mail"
+          testID="login-email"
           placeholder="voce@email.com"
           autoCapitalize="none"
           keyboardType="email-address"
@@ -86,6 +87,7 @@ export default function Login() {
         />
         <TextField
           label="Senha"
+          testID="login-password"
           placeholder="••••••••"
           secureTextEntry
           value={password}

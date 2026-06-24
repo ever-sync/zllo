@@ -30,6 +30,16 @@ if ! lsof -nP -iTCP:8081 -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 echo "→ Maestro smoke (appId=$APP_ID)"
-"$MAESTRO_BIN" test --config .maestro/config.yaml .maestro/flows/0*.yaml
+FAILED=0
+for flow in .maestro/flows/0*.yaml; do
+  echo "  → $(basename "$flow")"
+  if ! "$MAESTRO_BIN" test .maestro/flows/"$(basename "$flow")"; then
+    FAILED=1
+    break
+  fi
+done
+if [[ "$FAILED" -ne 0 ]]; then
+  exit 1
+fi
 
 echo "✓ Maestro smoke passou"
